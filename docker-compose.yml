@@ -1,0 +1,22 @@
+version: "3.3"
+
+services:
+
+  # postgresql + postgis database
+  postgres:
+    image: mdillon/postgis:11
+    networks:
+    - geostreams
+    ports:
+    - 5432:5432
+    volumes:
+    - postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+
+networks:
+  geostreams:
+
+volumes:
+  postgres:
+
+
