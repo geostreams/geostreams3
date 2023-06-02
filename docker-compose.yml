@@ -2,16 +2,19 @@ version: "3.3"
 
 services:
 
-  # postgresql + postgis database
+  # postgresql + postgis + timescale database
   postgres:
-    image: mdillon/postgis:11
+    image: timescale/timescaledb-ha:pg14-latest
     networks:
     - geostreams
     ports:
     - 5432:5432
+    environment:
+    - POSTGRES_PASSWORD=geostreams
     volumes:
     - postgres:/var/lib/postgresql/data
     restart: unless-stopped
+
 
 networks:
   geostreams:

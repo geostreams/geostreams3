@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = ""
+SECRET_KEY = "django-insecure-m#=7*^sb%-q-5kxx%m7_9&)m^znx^04ol&d0tj$=^@@uql41bs"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -80,13 +80,15 @@ WSGI_APPLICATION = "Django_Geostreams.wsgi.application"
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'geostream',
-        'USER': 'geostreams',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        "ENGINE": "timescale.db.backends.postgis",
+        "NAME": "geostreams",
+        "USER": "postgres",
+        "PASSWORD": "geostreams",
+        "HOST": "localhost",
+        "PORT": "5432",
     }
 }
+
 
 
 # Password validation
