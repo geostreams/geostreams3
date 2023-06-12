@@ -2,3 +2,6 @@ Django_Geostreams/__pycache__/
 geostreams/__pycache__/
 geostreams/migrations/__pycache__/
 .idea/
+.env
+.DS_Store
+```
