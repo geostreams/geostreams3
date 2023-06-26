@@ -8,7 +8,7 @@ def send_email_verification(request, user, token):
     message = f"""
     Hi {user.username},
     Thank you for registering to use Geostreams API Framework. In order to activate your account, please click on the link below:
-    http://{request.build_absolute_uri(reverse('verify-email'))}?token={token}
+    http://{request.build_absolute_uri(reverse('verify-email'))}?token={token}&username={user.username}
     
     Thank you,
     Geostreams Team

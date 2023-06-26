@@ -103,16 +103,20 @@ class LoginAPI(APIView):
 @permission_classes([AllowAny])
 def verify_email(request):
     token = request.GET.get('token')
+    username = request.GET.get('username')
     if token is None:
         return Response({'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
-    for user in User.objects.all():
-        if default_token_generator.check_token(user, token):
-            if not user.is_active:
+    try:
+        user = User.objects.get(username=username)
+        if not user.is_active:
+            if default_token_generator.check_token(user, token):
                 user.is_active = True
                 user.save()
                 return Response({'detail': 'Email verified successfully!'}, status=status.HTTP_200_OK)
             else:
-                return Response({'detail': 'Email already verified!'}, status=status.HTTP_400_BAD_REQUEST)
-
-    return Response({'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'detail': 'Email already verified!'}, status=status.HTTP_400_BAD_REQUEST)
+    except User.DoesNotExist:
+        return Response({'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
