@@ -1,7 +1,7 @@
 from django.urls import include,path
 from rest_framework.authtoken import views as auth_views
 from rest_framework import routers
-from .views import SensorsViewSet, ParametersViewSet, RegisterAPI, LoginAPI, verify_email
+from .views import SensorsViewSet, ParametersViewSet, RegisterAPI, LoginAPI, verify_email, ChangePasswordAPI
 
 router = routers.DefaultRouter()
 router.register(r'sensors', SensorsViewSet, basename='sensors')
@@ -11,6 +11,7 @@ urlpatterns = [
     path('auth/register/', RegisterAPI.as_view(), name='register'),
     path('auth/login/', LoginAPI.as_view(), name='login'),
     path('auth/verify-email/', verify_email, name='verify-email'),
+    path('auth/change-password/', ChangePasswordAPI.as_view(), name='change-password'),
     path("", include(router.urls)),
     path('parameters/delete_by_name/<str:name>/', ParametersViewSet.as_view({'delete': 'delete_by_name'}),
          name='delete_by_name'),

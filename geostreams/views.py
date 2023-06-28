@@ -1,10 +1,11 @@
-from rest_framework.decorators import api_view, renderer_classes, permission_classes
+from rest_framework.decorators import api_view, renderer_classes, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.authentication import TokenAuthentication
 
 # Importing libraries related to authentication
 from knox.models import AuthToken
@@ -75,7 +76,8 @@ class RegisterAPI(APIView):
         except IntegrityError as e:
             if 'auth_user_username_key' in str(e):
                 # Handle the duplicate username error
-                return Response({'detail': 'Username already exists. Please choose a different username.'},status=status.HTTP_400_BAD_REQUEST)
+                return Response({'detail': 'Username already exists. Please choose a different username.'},
+                                status=status.HTTP_400_BAD_REQUEST)
             else:
                 print("An IntegrityError occurred:", e)
                 return Response({'detail': 'An IntegrityError occurred ' + str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -88,16 +90,29 @@ class LoginAPI(APIView):
         serializer = AuthTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
-        login(request, user)
-        return Response(
-            {
-                "user": {"id": user.id, "username": user.username},
-                "token": AuthToken.objects.create(user)[1],
-            },
-            status=status.HTTP_200_OK
-        )
+        _, token = AuthToken.objects.create(user)
+        return Response({
+            'user_id': user.id,
+            'username': user.username,
+            'token': token
+        })
 
 
+# Change password API view
+class ChangePasswordAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        new_password = request.data.get('new_password')
+        user = request.user
+        print(user)
+        print(new_password)
+        user.set_password(new_password)
+        user.save()
+        return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
+
+
+# Verify email API
 @api_view(['GET'])
 @renderer_classes([JSONRenderer])
 @permission_classes([AllowAny])
@@ -120,3 +135,22 @@ def verify_email(request):
             return Response({'detail': 'Email already verified!'}, status=status.HTTP_400_BAD_REQUEST)
     except User.DoesNotExist:
         return Response({'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+# @api_view(['POST'])
+# @renderer_classes([JSONRenderer])
+# @permission_classes([AllowAny])
+# def reset_password(request):
+#     email = request.data.get('email')
+#     if email is None:
+#         return Response({'detail': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+#
+#     try:
+#         user = User.objects.get(email=email)
+#         if user.is_active:
+#             # Generate password reset token and send the email
+#             password_reset_token = default_token_generator.make_token(user)
+#             reset_password_email(request, user, password_reset_token)
+#         else:
+#             return Response({'detail': 'User not verified!'}, status=status.HTTP_400_BAD_REQUEST)
+#     except User.DoesNotExist:
+#         return Response({'detail': 'Invalid email'}, status=status.HTTP_400_BAD_REQUEST)
