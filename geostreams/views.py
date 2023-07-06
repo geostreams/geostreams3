@@ -1,4 +1,5 @@
 from rest_framework.decorators import api_view, renderer_classes, permission_classes
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework import viewsets
@@ -12,9 +13,9 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.db import IntegrityError
-from django.shortcuts import render
-from django.core.cache import cache
-from rest_framework.authtoken.serializers import AuthTokenSerializer
+from django.shortcuts import redirect, render
+# from django.core.cache import cache
+# from rest_framework.authtoken.serializers import AuthTokenSerializer
 from .utils import send_email_verification
 
 # Importing serializers and models
@@ -99,19 +100,22 @@ class LoginAPI(APIView):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            return Response({
-                'user_id': user.id,
-                'username': user.username,
-                'token': access_token
-            }, status=status.HTTP_200_OK)
+            # refresh = RefreshToken.for_user(user)
+            # access_token = str(refresh.access_token)
+            login(request, user)
+            return redirect('home')
+            # return Response({
+            #     'user_id': user.id,
+            #     'username': user.username,
+            #     'token': access_token
+            # }, status=status.HTTP_200_OK)
         else:
             return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 # Change password API view
 class ChangePasswordAPI(APIView):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -152,6 +156,14 @@ def verify_email(request):
 
 
 # Helper functions
+
+def home(request):
+    base_url = request.build_absolute_uri('/')
+    links = [
+        {'title': 'Change Password', 'url': base_url + 'api/auth/change-password'},
+    ]
+    return render(request, 'home.html', {'links': links})
+
 
 # Function to cache the login token for two hours after login
 # def generate_cache_token(user):
