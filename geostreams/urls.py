@@ -1,7 +1,8 @@
 from django.urls import include,path
 from rest_framework.authtoken import views as auth_views
 from rest_framework import routers
-from .views import SensorsViewSet, ParametersViewSet, SignupAPI, LoginAPI, verify_email, ChangePasswordAPI, HomePageAPI, LogoutAPI
+from .views import SignupAPI, LoginAPI, verify_email, ChangePasswordAPI, HomePageAPI, LogoutAPI
+# \,SensorsViewSet, ParametersViewSet,
 
 # router = routers.DefaultRouter()
 # router.register(r'sensors', SensorsViewSet, basename='sensors')

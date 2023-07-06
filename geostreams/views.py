@@ -121,12 +121,20 @@ class ChangePasswordAPI(LoginRequiredMixin, View):
         return render(request, 'change_password.html')
 
     def post(self, request, *args, **kwargs):
-        new_password = request.data.get('new_password')
-        user = request.user
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
 
-        user.set_password(new_password)
-        user.save()
-        return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
+        if new_password != confirm_password:
+            error_message = "Passwords do not match"
+            return render(request, 'change_password.html', {'error_message': error_message})
+        else:
+            user = request.user
+            user.set_password(new_password)
+            user.save()
+            logout(request)
+
+            message = "Successfully changed password. Please login again"
+            return render(request, 'login.html', {'message': message})
 
 
 class HomePageAPI(LoginRequiredMixin, View):
