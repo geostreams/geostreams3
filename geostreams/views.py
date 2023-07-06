@@ -1,14 +1,12 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
-from rest_framework.decorators import api_view, renderer_classes, permission_classes, authentication_classes
+from rest_framework.decorators import api_view, renderer_classes, permission_classes
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
-from rest_framework import viewsets
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
 
 # Importing libraries related to authentication
 from django.contrib.auth import authenticate, logout, login
@@ -17,36 +15,35 @@ from django.contrib.auth.tokens import default_token_generator
 from django.db import IntegrityError
 from django.shortcuts import redirect, render
 # from django.core.cache import cache
-# from rest_framework.authtoken.serializers import AuthTokenSerializer
 from .utils import send_email_verification
 
 # Importing serializers and models
-from .serializers import SensorsSerializer, ParametersSerializer, DatapointsSerializer
-from .models import Sensors, Parameters, Datapoints
+# from .serializers import SensorsSerializer, ParametersSerializer, DatapointsSerializer
+# from .models import Sensors, Parameters, Datapoints
 
 
 # Views from serializers and models
-class SensorsViewSet(viewsets.ModelViewSet):
-    queryset = Sensors.objects.all()
-    serializer_class = SensorsSerializer
-    permission_classes = [IsAuthenticated]
-
-
-class DatapointsViewSet(viewsets.ModelViewSet):
-    queryset = Datapoints.objects.all()
-    serializer_class = DatapointsSerializer
-
-
-class ParametersViewSet(viewsets.ModelViewSet):
-    queryset = Parameters.objects.all()
-    serializer_class = ParametersSerializer
-    permission_classes = [IsAuthenticated]
-
-    def delete_by_name(self, name):
-        print("Look here")
-        print(name)
-        self.queryset.filter(name=name).delete()
-        return Response({'message': 'Parameter' + str(name) + ' deleted successfully!'})
+# class SensorsViewSet(viewsets.ModelViewSet):
+#     queryset = Sensors.objects.all()
+#     serializer_class = SensorsSerializer
+#     permission_classes = [IsAuthenticated]
+#
+#
+# class DatapointsViewSet(viewsets.ModelViewSet):
+#     queryset = Datapoints.objects.all()
+#     serializer_class = DatapointsSerializer
+#
+#
+# class ParametersViewSet(viewsets.ModelViewSet):
+#     queryset = Parameters.objects.all()
+#     serializer_class = ParametersSerializer
+#     permission_classes = [IsAuthenticated]
+#
+#     def delete_by_name(self, name):
+#         print("Look here")
+#         print(name)
+#         self.queryset.filter(name=name).delete()
+#         return Response({'message': 'Parameter' + str(name) + ' deleted successfully!'})
 
 
 # Authentication views
