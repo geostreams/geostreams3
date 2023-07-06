@@ -1,14 +1,14 @@
 from django.urls import include,path
 from rest_framework.authtoken import views as auth_views
 from rest_framework import routers
-from .views import SensorsViewSet, ParametersViewSet, RegisterAPI, LoginAPI, verify_email, ChangePasswordAPI
+from .views import SensorsViewSet, ParametersViewSet, SignupAPI, LoginAPI, verify_email, ChangePasswordAPI
 
 router = routers.DefaultRouter()
 router.register(r'sensors', SensorsViewSet, basename='sensors')
 router.register(r'parameters', ParametersViewSet, basename='parameters')
 
 urlpatterns = [
-    path('auth/register/', RegisterAPI.as_view(), name='register'),
+    path('auth/signup/', SignupAPI.as_view(), name='signup'),
     path('auth/login/', LoginAPI.as_view(), name='login'),
     path('auth/verify-email/', verify_email, name='verify-email'),
     path('auth/change-password/', ChangePasswordAPI.as_view(), name='change-password'),

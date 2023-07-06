@@ -1,18 +1,19 @@
-from rest_framework.decorators import api_view, renderer_classes, permission_classes, authentication_classes
+from rest_framework.decorators import api_view, renderer_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
 
 # Importing libraries related to authentication
-from knox.models import AuthToken
-from django.contrib.auth import login
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.db import IntegrityError
+from django.shortcuts import render
+from django.core.cache import cache
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from .utils import send_email_verification
 
@@ -46,8 +47,11 @@ class ParametersViewSet(viewsets.ModelViewSet):
 
 
 # Authentication views
-class RegisterAPI(APIView):
+class SignupAPI(APIView):
     permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        return render(request, 'signup.html')
 
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')
@@ -86,27 +90,37 @@ class RegisterAPI(APIView):
 class LoginAPI(APIView):
     permission_classes = [AllowAny]
 
+    def get(self, request, *args, **kwargs):
+        return render(request, 'login.html')
+
     def post(self, request, *args, **kwargs):
-        serializer = AuthTokenSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        _, token = AuthToken.objects.create(user)
-        return Response({
-            'user_id': user.id,
-            'username': user.username,
-            'token': token
-        })
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            return Response({
+                'user_id': user.id,
+                'username': user.username,
+                'token': access_token
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 # Change password API view
 class ChangePasswordAPI(APIView):
     permission_classes = [IsAuthenticated]
 
+    def get(self, request, *args, **kwargs):
+        return render(request, 'change_password.html')
+
     def post(self, request, *args, **kwargs):
         new_password = request.data.get('new_password')
         user = request.user
-        print(user)
-        print(new_password)
+
         user.set_password(new_password)
         user.save()
         return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
@@ -135,6 +149,26 @@ def verify_email(request):
             return Response({'detail': 'Email already verified!'}, status=status.HTTP_400_BAD_REQUEST)
     except User.DoesNotExist:
         return Response({'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Helper functions
+
+# Function to cache the login token for two hours after login
+# def generate_cache_token(user):
+#     _, token = AuthToken.objects.create(user)
+#     cache_key = 'token_' + str(user.id)
+#     cache.set(cache_key, token, timeout=7200)
+#
+#     return token
+#
+#
+# # Function to retrieve the cached token
+# def get_cache_token(user):
+#     cache_key = 'token_' + str(user.id)
+#     token = cache.get(cache_key)
+#
+#     return token
+
 
 # @api_view(['POST'])
 # @renderer_classes([JSONRenderer])
