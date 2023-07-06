@@ -154,4 +154,4 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 
-LOGIN_URL = '/api/auth/login/'
+LOGIN_URL = 'login'

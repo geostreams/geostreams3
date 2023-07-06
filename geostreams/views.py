@@ -1,4 +1,6 @@
-from rest_framework.decorators import api_view, renderer_classes, permission_classes
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views import View
+from rest_framework.decorators import api_view, renderer_classes, permission_classes, authentication_classes
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
@@ -9,7 +11,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 # Importing libraries related to authentication
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, logout, login
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.db import IntegrityError
@@ -59,10 +61,7 @@ class SignupAPI(APIView):
         password = request.data.get('password')
         email = request.data.get('email')
         if not username or not password or not email:
-            return Response(
-                {"error": "Username, password and email are required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return render(request, 'signup.html', {'error_message': 'Please fill all the fields'})
         try:
             user = User.objects.create_user(username=username, email=email, password=password)
             user.is_active = False  # Deactivate account till it is confirmed
@@ -72,26 +71,24 @@ class SignupAPI(APIView):
             email_verification_token = default_token_generator.make_token(user)
             send_email_verification(request, user, email_verification_token)
 
-            return Response(
-                {
-                    "user": {"id": user.id, "username": user.username, "email": user.email}
-                },
-                status=status.HTTP_201_CREATED
-            )
+            message = "Check your email to verify your account"
+            return render(request, 'login.html', {'message': message})
+
         except IntegrityError as e:
             if 'auth_user_username_key' in str(e):
                 # Handle the duplicate username error
-                return Response({'detail': 'Username already exists. Please choose a different username.'},
-                                status=status.HTTP_400_BAD_REQUEST)
+                return render(request, 'signup.html', {'error_message': 'Username already exists'})
             else:
                 print("An IntegrityError occurred:", e)
-                return Response({'detail': 'An IntegrityError occurred ' + str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                return render(request, 'signup.html', {'error_message': 'Error occurred while creating account'})
 
 
-class LoginAPI(APIView):
+class LoginAPI(View):
     permission_classes = [AllowAny]
 
     def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('home')
         return render(request, 'login.html')
 
     def post(self, request, *args, **kwargs):
@@ -100,21 +97,26 @@ class LoginAPI(APIView):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            # refresh = RefreshToken.for_user(user)
-            # access_token = str(refresh.access_token)
             login(request, user)
             return redirect('home')
-            # return Response({
-            #     'user_id': user.id,
-            #     'username': user.username,
-            #     'token': access_token
-            # }, status=status.HTTP_200_OK)
+
         else:
-            return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+            error_message = "Invalid username or password"
+            return render(request, 'login.html', {'error_message': error_message})
+
+
+class LogoutAPI(APIView):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        message = "Sucessfully Logged out"
+        return render(request, 'login.html', {'message': message})
 
 
 # Change password API view
-class ChangePasswordAPI(APIView):
+class ChangePasswordAPI(LoginRequiredMixin, View):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -130,6 +132,20 @@ class ChangePasswordAPI(APIView):
         return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
 
 
+class HomePageAPI(LoginRequiredMixin, View):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        base_url = request.build_absolute_uri('/')
+        links = [
+            {'title': 'Change Password', 'url': base_url + 'admin/change-password'},
+            {'title': 'Logout', 'url': base_url + 'admin/logout'},
+        ]
+        return render(request, 'home.html', {'links': links})
+
+
+# Helper functions
 # Verify email API
 @api_view(['GET'])
 @renderer_classes([JSONRenderer])
@@ -153,17 +169,6 @@ def verify_email(request):
             return Response({'detail': 'Email already verified!'}, status=status.HTTP_400_BAD_REQUEST)
     except User.DoesNotExist:
         return Response({'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
-
-
-# Helper functions
-
-def home(request):
-    base_url = request.build_absolute_uri('/')
-    links = [
-        {'title': 'Change Password', 'url': base_url + 'api/auth/change-password'},
-    ]
-    return render(request, 'home.html', {'links': links})
-
 
 # Function to cache the login token for two hours after login
 # def generate_cache_token(user):

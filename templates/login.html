@@ -7,6 +7,12 @@
     <h2>Login</h2>
     <form method="post" action="{% url 'login' %}">
         {% csrf_token %}
+        {% if message %}
+            <p style="color: green;">{{ message }}</p>
+        {% endif %}
+        {% if error_message %}
+            <p style="color: red;">{{ error_message }}</p>
+        {% endif %}
         <label for="username">Username:</label>
         <input type="text" name="username" id="username" required><br>
 
@@ -15,5 +21,7 @@
 
         <input type="submit" value="Login">
     </form>
+
+<p>Don't have an account? <a href="{% url 'signup' %}">Sign up</a></p>
 </body>
 </html>

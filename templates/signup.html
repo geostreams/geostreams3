@@ -7,6 +7,9 @@
     <h2>Sign up</h2>
     <form method="post" action="{% url 'signup' %}">
         {% csrf_token %}
+        {% if error_message %}
+            <p style="color: red;">{{ error_message }}</p>
+        {% endif %}
         <label for="username">Username:</label>
         <input type="text" name="username" id="username" required><br>
 
