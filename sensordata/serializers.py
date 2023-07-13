@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, ParameterCategory, Parameter, Sensor, Stream, Datapoint
+from .models import Category, ParameterCategory, Parameter, Sensor, Stream, Datapoint, DatapointBin
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -35,4 +35,10 @@ class StreamSerializer(serializers.ModelSerializer):
 class DatapointSerializer(serializers.ModelSerializer):
    class Meta:
       model = Datapoint
+      fields = '__all__'
+
+
+class DatapointBinSerializer(serializers.ModelSerializer):
+   class Meta:
+      model = DatapointBin
       fields = '__all__'

@@ -69,3 +69,6 @@ class Datapoint(TimescaleModel):
 
    class Meta:
       db_table = 'datapoints'
+
+class DatapointBin(models.Model):
+   bucket = models.DateTimeField()

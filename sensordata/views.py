@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .serializers import SensorSerializer, ParameterSerializer, DatapointSerializer
 from .models import Sensor, Parameter, Datapoint
-from .serializers import DatapointSerializer
+from .serializers import DatapointSerializer, DatapointBinSerializer
 
 
 class ParametersViewSet(viewsets.ModelViewSet):
@@ -35,7 +35,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
 class DatapointsRecentHourly(viewsets.ModelViewSet):
     date_range = (timezone.now() - timedelta(hours=2), timezone.now())
     queryset = Datapoint.timescale.time_bucket('time', '1 day')
-    serializer_class = DatapointSerializer
+    serializer_class = DatapointBinSerializer
 
 
 class DatapointsDynamicExample(viewsets.ModelViewSet):
