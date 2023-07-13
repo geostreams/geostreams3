@@ -4,9 +4,8 @@ from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .serializers import SensorSerializer, ParameterSerializer, DatapointSerializer
-from .models import Sensor, Parameter, Datapoint
-from .serializers import DatapointSerializer, DatapointBinSerializer
+from .models import Sensor, Stream, Parameter, Datapoint
+from .serializers import SensorSerializer, ParameterSerializer, StreamSerializer, DatapointSerializer, DatapointBinSerializer
 
 
 class ParametersViewSet(viewsets.ModelViewSet):
@@ -24,7 +23,13 @@ class ParametersViewSet(viewsets.ModelViewSet):
 class SensorsViewSet(viewsets.ModelViewSet):
     queryset = Sensor.objects.all()
     serializer_class = SensorSerializer
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
+
+
+class StreamsViewSet(viewsets.ModelViewSet):
+    queryset = Stream.objects.all()
+    serializer_class = StreamSerializer
+    #permission_classes = [IsAuthenticated]
 
 
 class DatapointsViewSet(viewsets.ModelViewSet):

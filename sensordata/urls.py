@@ -2,11 +2,12 @@ from django.urls import include, path
 from rest_framework.authtoken import views as auth_views
 from rest_framework.routers import DefaultRouter
 
-from .views import ParametersViewSet, SensorsViewSet, DatapointsViewSet, DatapointsRecentHourly, DatapointsDynamicExample
+from .views import ParametersViewSet, SensorsViewSet, StreamsViewSet, DatapointsViewSet, DatapointsRecentHourly, DatapointsDynamicExample
 
 router = DefaultRouter()
-router.register(r'parameters', ParametersViewSet, basename='parameters')
-router.register(r'sensors', SensorsViewSet, basename='sensors')
+router.register('parameters', ParametersViewSet, basename='parameters')
+router.register('sensors', SensorsViewSet, basename='sensors')
+router.register('streams', StreamsViewSet, basename='streams')
 router.register('datapoints', DatapointsViewSet, basename='sensordata')
 router.register('datapointsh', DatapointsRecentHourly, basename='sensordata')
 router.register('datapointse', DatapointsDynamicExample, basename='sensordata')
