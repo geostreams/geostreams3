@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+<body>
+    <h2>Login</h2>
+    <form method="post" action="{% url 'oidc_authentication_init' %}">
+        {% csrf_token %}
+        <button type="submit">Login with Keycloak</button>
+    </form>
+</body>
+</html>

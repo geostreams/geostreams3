@@ -11,10 +11,12 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from decouple import config
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -27,7 +29,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,8 +39,10 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "mozilla_django_oidc",
     "sensordata.apps.SensordataConfig",
     "drf_yasg"
+    "authentication"
 ]
 
 MIDDLEWARE = [
@@ -72,7 +75,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "geostreams3.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
@@ -86,8 +88,6 @@ DATABASES = {
         "PORT": "5432",
     }
 }
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -107,7 +107,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -119,7 +118,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
@@ -129,3 +127,21 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'mozilla_django_oidc.contrib.drf.OIDCAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+}
+
+# OIDC-Keycloak settings
+OIDC_RP_CLIENT_ID = config('KEYCLOAK_CLIENT_ID')
+OIDC_RP_CLIENT_SECRET = config('KEYCLOAK_CLIENT_SECRET')
+OIDC_OP_AUTHORIZATION_ENDPOINT = config('KEYCLOAK_AUTHORIZATION_ENDPOINT')
+OIDC_OP_TOKEN_ENDPOINT = config('KEYCLOAK_TOKEN_ENDPOINT')
+OIDC_OP_USER_ENDPOINT = config('KEYCLOAK_USER_ENDPOINT')
+
+# TODO: Add redirect urls
+# LOGIN_REDIRECT_URL = "<URL path to redirect to after login>"
+# LOGOUT_REDIRECT_URL = "<URL path to redirect to after logout>"

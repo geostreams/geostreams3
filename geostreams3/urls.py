@@ -39,4 +39,5 @@ urlpatterns = [
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path("sensordata/", include("sensordata.urls")),
     path("admin/", admin.site.urls),
+    path("auth/", include("authentication.urls")),
 ]
