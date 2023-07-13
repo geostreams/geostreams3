@@ -13,15 +13,6 @@ class Category(models.Model):
       db_table = 'categories'
 
 
-class ParameterCategory(models.Model):
-   gid = models.AutoField(primary_key=True)
-   parameter_gid = models.ForeignKey('Parameters', models.DO_NOTHING, db_column='parameter_gid')
-   category_gid = models.ForeignKey(Category, models.DO_NOTHING, db_column='category_gid')
-
-   class Meta:
-      db_table = 'parameter_categories'
-
-
 class Parameter(models.Model):
    gid = models.AutoField(primary_key=True)
    name = models.CharField(unique=True, max_length=200)
@@ -34,6 +25,15 @@ class Parameter(models.Model):
 
    class Meta:
       db_table = 'parameters'
+
+
+class ParameterCategory(models.Model):
+   gid = models.AutoField(primary_key=True)
+   parameter_gid = models.ForeignKey(Parameter, models.DO_NOTHING, db_column='parameter_gid')
+   category_gid = models.ForeignKey(Category, models.DO_NOTHING, db_column='category_gid')
+
+   class Meta:
+      db_table = 'parameter_categories'
 
 
 class Sensor(models.Model):
@@ -55,7 +55,7 @@ class Stream(models.Model):
    metadata = models.JSONField()
 
    class Meta:
-      db_table = 'sensors'
+      db_table = 'streams'
 
 
 class Datapoint(TimescaleModel):
