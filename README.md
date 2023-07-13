@@ -1,1 +1,0 @@
-# Geostreams API on Django REST 
