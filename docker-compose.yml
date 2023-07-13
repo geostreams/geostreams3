@@ -8,12 +8,13 @@ services:
     networks:
     - geostreams
     ports:
-    - 5434:5432
+    - 5432:5432
     environment:
     - POSTGRES_PASSWORD=geostreams
     volumes:
     - postgres:/home/postgres/pgdata/data
     restart: unless-stopped
+
 
 networks:
   geostreams:
