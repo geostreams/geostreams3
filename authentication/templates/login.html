@@ -1,13 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Login</title>
-</head>
-<body>
-    <h2>Login</h2>
-    <form method="post" action="{% url 'oidc_authentication_init' %}">
+{% if user.is_authenticated %}
+    <p>Current user: {{ user.email }}</p>
+    <form action="{% url 'oidc_logout' %}" method="post">
         {% csrf_token %}
-        <button type="submit">Login with Keycloak</button>
+        <input type="submit" value="logout">
     </form>
-</body>
-</html>
+{% else %}
+    <a href="{% url 'oidc_authentication_init' %}">Login</a>
+    <p>Username: {{ user.username }}</p>
+    <p>Email: {{ user.email }}</p>
+    <p> Is Authenticated: {{ user.is_authenticated }}</p>
+{% endif %}
