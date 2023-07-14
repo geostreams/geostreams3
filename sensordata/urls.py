@@ -14,7 +14,6 @@ router.register('datapointse', DatapointsDynamicExample, basename='sensordata')
 
 #urlpatterns = router.urls
 urlpatterns = [
-    path("api-token-auth/", auth_views.obtain_auth_token, name='api-token-auth'),
     path("", include(router.urls)),
     path('parameters/delete_by_name/<str:name>/', ParametersViewSet.as_view({'delete': 'delete_by_name'}),
          name='delete_by_name'),

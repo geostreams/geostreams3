@@ -11,7 +11,6 @@ from .serializers import SensorSerializer, ParameterSerializer, StreamSerializer
 class ParametersViewSet(viewsets.ModelViewSet):
     queryset = Parameter.objects.all()
     serializer_class = ParameterSerializer
-    permission_classes = [IsAuthenticated]
 
     def delete_by_name(self, name):
         print("Look here")
