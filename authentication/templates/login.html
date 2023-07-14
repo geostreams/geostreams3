@@ -9,4 +9,8 @@
     <p>Username: {{ user.username }}</p>
     <p>Email: {{ user.email }}</p>
     <p> Is Authenticated: {{ user.is_authenticated }}</p>
+    <form action="{% url 'oidc_logout' %}" method="post">
+        {% csrf_token %}
+        <input type="submit" value="logout">
+    </form>
 {% endif %}

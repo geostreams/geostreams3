@@ -53,6 +53,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "mozilla_django_oidc.middleware.SessionRefresh",
 ]
 
 ROOT_URLCONF = "geostreams3.urls"
@@ -130,10 +131,13 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
         'mozilla_django_oidc.contrib.drf.OIDCAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
 }
+
+
 
 # OIDC-Keycloak settings
 OIDC_RP_CLIENT_ID = config('KEYCLOAK_CLIENT_ID')
@@ -141,7 +145,12 @@ OIDC_RP_CLIENT_SECRET = config('KEYCLOAK_CLIENT_SECRET')
 OIDC_OP_AUTHORIZATION_ENDPOINT = config('KEYCLOAK_AUTHORIZATION_ENDPOINT')
 OIDC_OP_TOKEN_ENDPOINT = config('KEYCLOAK_TOKEN_ENDPOINT')
 OIDC_OP_USER_ENDPOINT = config('KEYCLOAK_USER_ENDPOINT')
+OIDC_RP_SIGN_ALGO = 'RS256'
+OIDC_OP_JWKS_ENDPOINT = config('KEYCLOAK_JWKS_ENDPOINT')
+OIDC_RP_USE_NONCE = True
+OIDC_RP_VERIFY_NONCE = True
+
 
 # TODO: Add redirect urls
-# LOGIN_REDIRECT_URL = "<URL path to redirect to after login>"
-# LOGOUT_REDIRECT_URL = "<URL path to redirect to after logout>"
+LOGIN_REDIRECT_URL = "http://localhost:8000/*"
+LOGOUT_REDIRECT_URL = "http://localhost:8000/*"
