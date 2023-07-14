@@ -101,3 +101,79 @@ class ParameterApiTest(TestCase):
         # Verify the parameter is deleted
         get_response = self.client.get(f'/sensordata/parameters/{parameter_id}/')
         self.assertEqual(get_response.status_code, 404)  # Expecting a not found status code
+
+
+class CategoryApiTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_create_category(self):
+        data = {
+            'name': 'Temperature',
+            'detail_type': 'time',
+        }
+
+        response = self.client.post('/sensordata/categories/', data=data, format='json')
+        self.assertEqual(response.status_code, 201)  # Expecting a successful creation status code
+        category_id = response.json().get('id')
+
+        # Verify the created category by fetching its details
+        get_response = self.client.get(f'/sensordata/categories/{category_id}/')
+        self.assertEqual(get_response.status_code, 200)  # Expecting a successful retrieval status code
+        category = get_response.json()
+        self.assertEqual(category['name'], 'Temperature')
+        self.assertEqual(category['detail_type'], 'time')
+
+    def test_get_all_categories(self):
+        response = self.client.get('/sensordata/categories/')
+        self.assertEqual(response.status_code, 200)  # Expecting a successful retrieval status code
+        categories = response.json()
+        self.assertIsInstance(categories, list)
+
+    def test_update_category(self):
+        # Create a category first
+        data = {
+            'name': 'Pressure',
+            'detail_type': 'stacked-line',
+        }
+
+        create_response = self.client.post('/sensordata/categories/', data=data, format='json')
+        self.assertEqual(create_response.status_code, 201)
+
+        category_id = create_response.json().get('id')
+
+        # Update the category
+        updated_data = {
+            'name': 'Pressure Level',
+            'detail_type': 'stacked-bar',
+        }
+
+        update_response = self.client.put(f'/sensordata/categories/{category_id}/', data=updated_data, format='json')
+        self.assertEqual(update_response.status_code, 200)  # Expecting a successful update status code
+
+        # Verify the updated category
+        get_response = self.client.get(f'/sensordata/categories/{category_id}/')
+        self.assertEqual(get_response.status_code, 200)
+        category = get_response.json()
+        self.assertEqual(category['name'], 'Pressure Level')
+        self.assertEqual(category['detail_type'], 'stacked-bar')
+
+    def test_delete_category(self):
+        # Create a category first
+        data = {
+            'name': 'Weight',
+            'detail_type': 'time',
+        }
+
+        create_response = self.client.post('/sensordata/categories/', data=data, format='json')
+        self.assertEqual(create_response.status_code, 201)
+
+        category_id = create_response.json().get('id')
+
+        # Delete the category
+        delete_response = self.client.delete(f'/sensordata/categories/{category_id}/')
+        self.assertEqual(delete_response.status_code, 204)  # Expecting a successful delete status code
+
+        # Verify the category is deleted
+        get_response = self.client.get(f'/sensordata/categories/{category_id}/')
+        self.assertEqual(get_response.status_code, 404)  # Expecting a not found status code
