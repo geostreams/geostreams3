@@ -27,7 +27,7 @@ schema_view = get_schema_view(
         default_version="v1",
         description="API for the Geostreams3 project",
         terms_of_service="https://www.google.com/policies/terms/",
-        contact=openapi.Contact(email="mohanar2@illinois.edu"),
+        contact=openapi.Contact(url="https://github.com/geostreams/geostreams3"),
         license=openapi.License(name="BSD License"),
     ),
     public=True,
