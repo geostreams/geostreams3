@@ -29,8 +29,8 @@ class Parameter(models.Model):
    unit = models.CharField(max_length=20, blank=True, null=True)
    search_view = models.BooleanField(blank=True, null=True)
    explore_view = models.BooleanField(blank=True, null=True)
-   scale_names = ArrayField(models.CharField(max_length=250))
-   scale_colors = ArrayField(models.CharField(max_length=100))
+   scale_names = ArrayField(models.CharField(max_length=250),blank=True, null=True)
+   scale_colors = ArrayField(models.CharField(max_length=100),blank=True, null=True)
 
    class Meta:
       db_table = 'parameters'
@@ -45,8 +45,8 @@ class ParameterCategory(models.Model):
    For example, alkalinity can be in both a stacked-line graph and a time series graph
    or Alkalinity could show up as time series in two categories/tabs: Contaminants and Nutrients"""
    id = models.AutoField(primary_key=True)
-   parameter_id = models.ForeignKey(Parameter, models.DO_NOTHING)
-   category_id = models.ForeignKey(Category, models.DO_NOTHING)
+   parameter = models.ForeignKey(Parameter, models.DO_NOTHING)
+   category = models.ForeignKey(Category, models.DO_NOTHING)
 
    class Meta:
       db_table = 'parameter_categories'
@@ -77,7 +77,7 @@ class Sensor(models.Model):
 
 class Stream(models.Model):
    id = models.AutoField(primary_key=True)
-   sensor_id = models.ForeignKey(Sensor, models.DO_NOTHING)
+   sensor = models.ForeignKey(Sensor, models.DO_NOTHING)
    name = models.CharField(max_length=255, blank=True, null=True)
    geog = geomodels.GeometryField(blank=False, null=False)
    created = models.DateTimeField(blank=True, null=True, default=datetime.now)
@@ -93,7 +93,7 @@ class Stream(models.Model):
 
 class Datapoint(TimescaleModel):
    id = models.AutoField(primary_key=True)
-   stream_id = models.ForeignKey(Stream, models.DO_NOTHING)
+   stream = models.ForeignKey(Stream, models.DO_NOTHING)
    geog = geomodels.GeometryField(blank=False, null=False)  # if missing, use sensor geog
    time = TimescaleDateTimeField(interval='7 days')
    end_time = models.DateTimeField(blank=True, null=True)
