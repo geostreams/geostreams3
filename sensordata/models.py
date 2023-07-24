@@ -105,3 +105,4 @@ class Datapoint(TimescaleModel):
 
 class DatapointBin(models.Model):
    bucket = models.DateTimeField()
+   avg_value = models.FloatField()

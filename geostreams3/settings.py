@@ -83,7 +83,7 @@ DATABASES = {
         "USER": "postgres",
         "PASSWORD": "geostreams",
         "HOST": "localhost",
-        "PORT": "5432",
+        "PORT": "5434",
     }
 }
 

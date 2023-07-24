@@ -1,5 +1,6 @@
 from datetime import timedelta
-from django.db.models import Q
+from django.db.models import F, Q, Avg, FloatField
+from django.db.models.functions import Cast
 from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -39,15 +40,38 @@ class StreamsViewSet(viewsets.ModelViewSet):
 
 
 class DatapointsViewSet(viewsets.ModelViewSet):
+    """View all datapoints."""
     queryset = Datapoint.objects.all()
     serializer_class = DatapointSerializer
 
 
 class DatapointsRecentHourly(viewsets.ModelViewSet):
+    var = "nitrogen"
     date_range = (timezone.now() - timedelta(hours=2), timezone.now())
-    queryset = Datapoint.timescale.time_bucket('time', '1 day')
+    queryset = Datapoint.timescale.time_bucket('time', '1 hour')
+    queryset = queryset.annotate(avg_value=Avg(Cast('data__%s' % var, output_field=FloatField())))
     serializer_class = DatapointBinSerializer
 
+class DatapointsRecentDaily(viewsets.ModelViewSet):
+    var = "nitrogen"
+    date_range = (timezone.now() - timedelta(hours=2), timezone.now())
+    queryset = Datapoint.timescale.time_bucket('time', '1 day')
+    queryset = queryset.annotate(avg_value=Avg(Cast('data__%s' % var, output_field=FloatField())))
+    serializer_class = DatapointBinSerializer
+
+class DatapointsRecentWeekly(viewsets.ModelViewSet):
+    var = "nitrogen"
+    date_range = (timezone.now() - timedelta(hours=2), timezone.now())
+    queryset = Datapoint.timescale.time_bucket('time', '1 week')
+    queryset = queryset.annotate(avg_value=Avg(Cast('data__%s' % var, output_field=FloatField())))
+    serializer_class = DatapointBinSerializer
+
+class DatapointsRecentMonthly(viewsets.ModelViewSet):
+    var = "nitrogen"
+    date_range = (timezone.now() - timedelta(hours=2), timezone.now())
+    queryset = Datapoint.timescale.time_bucket('time', '1 month')
+    queryset = queryset.annotate(avg_value=Avg(Cast('data__%s' % var, output_field=FloatField())))
+    serializer_class = DatapointBinSerializer
 
 class DatapointsDynamicExample(viewsets.ModelViewSet):
     var = "nitrogen"
