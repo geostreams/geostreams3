@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "mozilla_django_oidc",
     "sensordata.apps.SensordataConfig",
-    "drf_yasg"
+    "drf_yasg",
     "authentication"
 ]
 
@@ -129,9 +129,13 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+AUTHENTICATION_BACKENDS = (
+    'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
+    # ...
+)
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
         'mozilla_django_oidc.contrib.drf.OIDCAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
@@ -147,10 +151,10 @@ OIDC_OP_TOKEN_ENDPOINT = config('KEYCLOAK_TOKEN_ENDPOINT')
 OIDC_OP_USER_ENDPOINT = config('KEYCLOAK_USER_ENDPOINT')
 OIDC_RP_SIGN_ALGO = 'RS256'
 OIDC_OP_JWKS_ENDPOINT = config('KEYCLOAK_JWKS_ENDPOINT')
-OIDC_RP_USE_NONCE = True
-OIDC_RP_VERIFY_NONCE = True
+# OIDC_RP_USE_NONCE = True
+# OIDC_RP_VERIFY_NONCE = True
 
 
 # TODO: Add redirect urls
-LOGIN_REDIRECT_URL = "http://localhost:8000/*"
-LOGOUT_REDIRECT_URL = "http://localhost:8000/*"
+LOGIN_REDIRECT_URL = "http://localhost:8000/"
+LOGOUT_REDIRECT_URL = "http://localhost:8000/"
