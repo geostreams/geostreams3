@@ -1,6 +1,8 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
 
+from sensordata.models import Datapoint, Sensor, Stream, Parameter, Category
+
 
 class ParameterApiTest(TestCase):
     def setUp(self):
@@ -177,3 +179,113 @@ class CategoryApiTest(TestCase):
         # Verify the category is deleted
         get_response = self.client.get(f'/sensordata/categories/{category_id}/')
         self.assertEqual(get_response.status_code, 404)  # Expecting a not found status code
+
+
+class SensorStreamDatapointApiTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.sensor_data = {
+          "name": "Reifsteck",
+          "geog": "POINT(35.6895 139.6917)",
+          "created": "2023-07-24T17:14:47.783Z",
+          "parameters": [
+            "nitrogen",
+            "phosphorus"
+          ],
+          "properties": {},
+          "min_start_time": "2023-04-24T17:14:47.783Z",
+          "max_end_time": "2024-04-24T17:14:47.783Z"
+}
+        self.stream_data = {
+          "name": "RS-2",
+          "geog": "POINT(35.6895 139.6917)",
+          "created": "2023-07-24T17:14:47.783Z",
+          "parameters": [
+            "nitrogen",
+            "phosphorus"
+          ],
+          "properties": {},
+          "min_start_time": "2023-04-24T17:14:47.783Z",
+          "max_end_time": "2024-04-24T17:14:47.783Z",
+          "sensor": 1
+        }
+        self.datapoint_data = {
+            "stream": 1,  # Assuming you have a stream with ID 1 in the database
+            "geog": "POINT(40.7128 -74.0060)",
+            "time": "2023-06-01 09:00:00+00",
+            "data": {"nitrogen": 1.23, "phosphorus": 0.45},
+        }
+
+    def create_sensor_via_api(self):
+        url = '/sensordata/sensors/'
+        response = self.client.post(url, data=self.sensor_data, format="json")
+        print(response)
+        self.assertEqual(response.status_code, 201)
+        return response.json()
+
+    def test_create_sensor(self):
+        sensor_data = self.create_sensor_via_api()
+        sensor_id = sensor_data["id"]
+        url = f'/sensordata/sensors/{sensor_id}'
+        response = self.client.get(url, follow=True)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["name"], self.sensor_data["name"])
+
+    def test_delete_sensor(self):
+        sensor_data = self.create_sensor_via_api()
+        sensor_id = sensor_data["id"]
+        url = url = f'/sensordata/sensors/{sensor_id}/'
+        response = self.client.delete(url, follow=True)
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(Sensor.objects.count(), 0)
+
+    def create_stream_via_api(self):
+        sensor_data = self.create_sensor_via_api()
+        self.stream_data["sensor"] = sensor_data["id"]
+        url = '/sensordata/streams/'
+        response = self.client.post(url, data=self.stream_data, format="json")
+        self.assertEqual(response.status_code, 201)
+        return response.json()
+
+    def test_create_stream(self):
+        stream_data = self.create_stream_via_api()
+        stream_id = stream_data["id"]
+        url = f'/sensordata/streams/{stream_id}'
+        response = self.client.get(url, follow=True)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["name"], self.stream_data["name"])
+
+    def test_delete_stream(self):
+        stream_data = self.create_stream_via_api()
+        stream_id = stream_data["id"]
+        url = f'/sensordata/streams/{stream_id}/'
+        response = self.client.delete(url, follow=True)
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(Stream.objects.count(), 0)
+
+    def create_datapoint_via_api(self):
+        stream_data = self.create_stream_via_api()
+        self.datapoint_data["stream"] = stream_data["id"]
+        url = '/sensordata/datapoints/'
+        response = self.client.post(url, data=self.datapoint_data, format="json")
+        self.assertEqual(response.status_code, 201)
+        return response.json()
+
+    def test_create_datapoint(self):
+        datapoint_data = self.create_datapoint_via_api()
+        datapoint_id = datapoint_data["id"]
+        url = f'/sensordata/datapoints/{datapoint_id}'
+        response = self.client.get(url, follow=True)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["data"], self.datapoint_data["data"])
+
+    def test_delete_datapoint(self):
+        datapoint_data = self.create_datapoint_via_api()
+        datapoint_id = datapoint_data["id"]
+        url = f'/sensordata/datapoints/{datapoint_id}/'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(Datapoint.objects.count(), 0)
