@@ -104,5 +104,32 @@ class Datapoint(TimescaleModel):
 
 
 class DatapointBin(models.Model):
-   bucket = models.DateTimeField()
-   avg_value = models.FloatField()
+   date = models.DateTimeField()
+   label = models.CharField()
+   count = models.IntegerField()
+   average = models.FloatField()
+   sources = ArrayField(models.CharField(), blank=True, null=True, default=[])
+
+class DatapointHourlyBin(DatapointBin):
+   year = models.IntegerField()
+   month = models.IntegerField()
+   day = models.IntegerField()
+   hour = models.IntegerField()
+
+
+class DatapointDailyBin(DatapointBin):
+   year = models.IntegerField()
+   month = models.IntegerField()
+   day = models.IntegerField()
+
+class DatapointWeeklyBin(DatapointBin):
+   year = models.IntegerField()
+   month = models.IntegerField()
+   day = models.IntegerField()
+
+class DatapointMonthlyBin(DatapointBin):
+   year = models.IntegerField()
+   month = models.IntegerField()
+
+class DatapointYearlyBin(DatapointBin):
+   year = models.IntegerField()

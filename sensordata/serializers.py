@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Category, ParameterCategory, Parameter, Sensor, Stream, Datapoint, DatapointBin
+from .models import Category, ParameterCategory, Parameter, Sensor, Stream, Datapoint, \
+   DatapointBin, DatapointHourlyBin, DatapointDailyBin, DatapointWeeklyBin, DatapointMonthlyBin, DatapointYearlyBin
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -41,4 +42,29 @@ class DatapointSerializer(serializers.ModelSerializer):
 class DatapointBinSerializer(serializers.ModelSerializer):
    class Meta:
       model = DatapointBin
+      fields = '__all__'
+
+class DatapointHourlyBinSerializer(serializers.ModelSerializer):
+   class Meta:
+      model = DatapointHourlyBin
+      fields = '__all__'
+
+class DatapointDailyBinSerializer(serializers.ModelSerializer):
+   class Meta:
+      model = DatapointDailyBin
+      fields = '__all__'
+
+class DatapointWeeklyBinSerializer(serializers.ModelSerializer):
+   class Meta:
+      model = DatapointWeeklyBin
+      fields = '__all__'
+
+class DatapointMonthlyBinSerializer(serializers.ModelSerializer):
+   class Meta:
+      model = DatapointMonthlyBin
+      fields = '__all__'
+
+class DatapointYearlyBinSerializer(serializers.ModelSerializer):
+   class Meta:
+      model = DatapointYearlyBin
       fields = '__all__'
