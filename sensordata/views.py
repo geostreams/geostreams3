@@ -1,25 +1,30 @@
 from datetime import timedelta
 from django.db.models import F, Q, Value, Avg, Count, FloatField, CharField
 from django.db.models.functions import Cast, Concat, Right, ExtractYear, ExtractMonth, ExtractDay, ExtractHour
-from django.utils import timezone
+from rest_framework.decorators import action
 from rest_framework import viewsets
 from rest_framework.response import Response
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .models import Sensor, Stream, Parameter, Datapoint, Category
 from .serializers import SensorSerializer, ParameterSerializer, StreamSerializer, DatapointSerializer, \
-    DatapointBinSerializer, CategorySerializer, \
-    DatapointHourlyBinSerializer, DatapointDailyBinSerializer, DatapointWeeklyBinSerializer, DatapointMonthlyBinSerializer, DatapointYearlyBinSerializer
+    CategorySerializer, DatapointHourlyBinSerializer, DatapointDailyBinSerializer, DatapointWeeklyBinSerializer, \
+    DatapointMonthlyBinSerializer, DatapointYearlyBinSerializer
 
 
 class ParametersViewSet(viewsets.ModelViewSet):
     queryset = Parameter.objects.all()
     serializer_class = ParameterSerializer
 
-    def delete_by_name(self, name):
-        print("Look here")
-        print(name)
-        self.queryset.filter(name=name).delete()
-        return Response({'message': 'Parameter' + str(name) + ' deleted successfully!'})
+    @action(detail=True, methods=['DELETE'])
+    def delete_by_name(self,request, name):
+        try:
+            parameter = Parameter.objects.get(name=name)
+            serializer = ParameterSerializer(parameter)
+            parameter.delete()
+            return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+        except Parameter.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
@@ -59,13 +64,13 @@ class DatapointsRecentHourly(viewsets.ModelViewSet):
         .annotate(day=ExtractDay('bucket')) \
         .annotate(hour=ExtractHour('bucket')) \
         .annotate(label=Concat(
-            Cast(ExtractYear('bucket'), output_field=CharField()),
-            Value('-'),
-            Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
-            Value('-'),
-            Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2),
-            Value(' '),
-            Right(Concat(Value('00'), Cast(ExtractHour('bucket'), output_field=CharField())), 2)
+        Cast(ExtractYear('bucket'), output_field=CharField()),
+        Value('-'),
+        Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
+        Value('-'),
+        Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2),
+        Value(' '),
+        Right(Concat(Value('00'), Cast(ExtractHour('bucket'), output_field=CharField())), 2)
     ))
     serializer_class = DatapointHourlyBinSerializer
 
@@ -74,20 +79,20 @@ class DatapointsRecentDaily(viewsets.ModelViewSet):
     # TODO: Make this into parameter + start/end time
     var = "nitrogen"
 
-    queryset = Datapoint.timescale.time_bucket('time', '1 day')\
-        .annotate(average=Avg(Cast('data__%s' % var, output_field=FloatField())))\
-        .annotate(count=Count('data__%s' % var))\
-        .annotate(date=F('bucket'))\
-        .annotate(year=ExtractYear('bucket'))\
-        .annotate(month=ExtractMonth('bucket'))\
-        .annotate(day=ExtractDay('bucket'))\
+    queryset = Datapoint.timescale.time_bucket('time', '1 day') \
+        .annotate(average=Avg(Cast('data__%s' % var, output_field=FloatField()))) \
+        .annotate(count=Count('data__%s' % var)) \
+        .annotate(date=F('bucket')) \
+        .annotate(year=ExtractYear('bucket')) \
+        .annotate(month=ExtractMonth('bucket')) \
+        .annotate(day=ExtractDay('bucket')) \
         .annotate(label=Concat(
-            Cast(ExtractYear('bucket'), output_field=CharField()),
-            Value('-'),
-            Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
-            Value('-'),
-            Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2)
-        ))
+        Cast(ExtractYear('bucket'), output_field=CharField()),
+        Value('-'),
+        Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
+        Value('-'),
+        Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2)
+    ))
     serializer_class = DatapointDailyBinSerializer
 
 
@@ -103,11 +108,11 @@ class DatapointsRecentWeekly(viewsets.ModelViewSet):
         .annotate(month=ExtractMonth('bucket')) \
         .annotate(day=ExtractDay('bucket')) \
         .annotate(label=Concat(
-            Cast(ExtractYear('bucket'), output_field=CharField()),
-            Value('-'),
-            Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
-            Value('-'),
-            Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2)
+        Cast(ExtractYear('bucket'), output_field=CharField()),
+        Value('-'),
+        Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
+        Value('-'),
+        Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2)
     ))
     serializer_class = DatapointWeeklyBinSerializer
 
@@ -123,9 +128,9 @@ class DatapointsRecentMonthly(viewsets.ModelViewSet):
         .annotate(year=ExtractYear('bucket')) \
         .annotate(month=ExtractMonth('bucket')) \
         .annotate(label=Concat(
-            Cast(ExtractYear('bucket'), output_field=CharField()),
-            Value('-'),
-            Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2)
+        Cast(ExtractYear('bucket'), output_field=CharField()),
+        Value('-'),
+        Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2)
     ))
     serializer_class = DatapointMonthlyBinSerializer
 
@@ -141,6 +146,7 @@ class DatapointsRecentYearly(viewsets.ModelViewSet):
         .annotate(year=ExtractYear('bucket')) \
         .annotate(label=Cast(ExtractYear('bucket'), output_field=CharField()))
     serializer_class = DatapointYearlyBinSerializer
+
 
 class DatapointsDynamicExample(viewsets.ModelViewSet):
     """Simple example of filter query with N value <= 1 and P value >= 1."""
