@@ -59,13 +59,13 @@ class DatapointsRecentHourly(viewsets.ModelViewSet):
         .annotate(day=ExtractDay('bucket')) \
         .annotate(hour=ExtractHour('bucket')) \
         .annotate(label=Concat(
-        Cast(ExtractYear('bucket'), output_field=CharField()),
-        Value('-'),
-        Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
-        Value('-'),
-        Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2),
-        Value(' '),
-        Right(Concat(Value('00'), Cast(ExtractHour('bucket'), output_field=CharField())), 2)
+            Cast(ExtractYear('bucket'), output_field=CharField()),
+            Value('-'),
+            Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
+            Value('-'),
+            Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2),
+            Value(' '),
+            Right(Concat(Value('00'), Cast(ExtractHour('bucket'), output_field=CharField())), 2)
     ))
     serializer_class = DatapointHourlyBinSerializer
 
@@ -103,11 +103,11 @@ class DatapointsRecentWeekly(viewsets.ModelViewSet):
         .annotate(month=ExtractMonth('bucket')) \
         .annotate(day=ExtractDay('bucket')) \
         .annotate(label=Concat(
-        Cast(ExtractYear('bucket'), output_field=CharField()),
-        Value('-'),
-        Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
-        Value('-'),
-        Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2)
+            Cast(ExtractYear('bucket'), output_field=CharField()),
+            Value('-'),
+            Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
+            Value('-'),
+            Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2)
     ))
     serializer_class = DatapointWeeklyBinSerializer
 
@@ -123,9 +123,9 @@ class DatapointsRecentMonthly(viewsets.ModelViewSet):
         .annotate(year=ExtractYear('bucket')) \
         .annotate(month=ExtractMonth('bucket')) \
         .annotate(label=Concat(
-        Cast(ExtractYear('bucket'), output_field=CharField()),
-        Value('-'),
-        Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2)
+            Cast(ExtractYear('bucket'), output_field=CharField()),
+            Value('-'),
+            Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2)
     ))
     serializer_class = DatapointMonthlyBinSerializer
 
