@@ -17,7 +17,7 @@ class ParametersViewSet(viewsets.ModelViewSet):
     serializer_class = ParameterSerializer
 
     @action(detail=True, methods=['DELETE'])
-    def delete_by_name(self,request, name):
+    def delete_by_name(self, request, name):
         try:
             parameter = Parameter.objects.get(name=name)
             serializer = ParameterSerializer(parameter)
@@ -50,102 +50,97 @@ class DatapointsViewSet(viewsets.ModelViewSet):
     queryset = Datapoint.objects.all()
     serializer_class = DatapointSerializer
 
+    @action(detail=False, methods=['GET'])
+    def get_hourly_average_datapoints_by_parameter(self, request, parameter):
+        """Get hourly average datapoints by parameter."""
+        queryset = Datapoint.timescale.time_bucket('time', '1 hour') \
+            .annotate(average=Avg(Cast('data__%s' % parameter, output_field=FloatField()))) \
+            .annotate(count=Count('data__%s' % parameter)) \
+            .annotate(date=F('bucket')) \
+            .annotate(year=ExtractYear('bucket')) \
+            .annotate(month=ExtractMonth('bucket')) \
+            .annotate(day=ExtractDay('bucket')) \
+            .annotate(hour=ExtractHour('bucket')) \
+            .annotate(label=Concat(
+            Cast(ExtractYear('bucket'), output_field=CharField()),
+            Value('-'),
+            Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
+            Value('-'),
+            Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2),
+            Value(' '),
+            Right(Concat(Value('00'), Cast(ExtractHour('bucket'), output_field=CharField())), 2)
+        ))
+        serializer = DatapointHourlyBinSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-class DatapointsRecentHourly(viewsets.ModelViewSet):
-    # TODO: Make this into parameter + start/end time
-    var = "nitrogen"
+    @action(detail=False, methods=['GET'])
+    def get_daily_average_datapoints_by_parameter(self, request, parameter):
+        """Get daily average datapoints by parameter."""
+        queryset = Datapoint.timescale.time_bucket('time', '1 day') \
+            .annotate(average=Avg(Cast('data__%s' % parameter, output_field=FloatField()))) \
+            .annotate(count=Count('data__%s' % parameter)) \
+            .annotate(date=F('bucket')) \
+            .annotate(year=ExtractYear('bucket')) \
+            .annotate(month=ExtractMonth('bucket')) \
+            .annotate(day=ExtractDay('bucket')) \
+            .annotate(label=Concat(
+            Cast(ExtractYear('bucket'), output_field=CharField()),
+            Value('-'),
+            Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
+            Value('-'),
+            Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2)
+        ))
+        serializer = DatapointDailyBinSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-    queryset = Datapoint.timescale.time_bucket('time', '1 hour') \
-        .annotate(average=Avg(Cast('data__%s' % var, output_field=FloatField()))) \
-        .annotate(count=Count('data__%s' % var)) \
-        .annotate(date=F('bucket')) \
-        .annotate(year=ExtractYear('bucket')) \
-        .annotate(month=ExtractMonth('bucket')) \
-        .annotate(day=ExtractDay('bucket')) \
-        .annotate(hour=ExtractHour('bucket')) \
-        .annotate(label=Concat(
-        Cast(ExtractYear('bucket'), output_field=CharField()),
-        Value('-'),
-        Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
-        Value('-'),
-        Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2),
-        Value(' '),
-        Right(Concat(Value('00'), Cast(ExtractHour('bucket'), output_field=CharField())), 2)
-    ))
-    serializer_class = DatapointHourlyBinSerializer
+    @action(detail=False, methods=['GET'])
+    def get_weekly_average_datapoints_by_parameter(self, request, parameter):
+        """Get daily average datapoints by parameter."""
+        queryset = Datapoint.timescale.time_bucket('time', '1 week') \
+            .annotate(average=Avg(Cast('data__%s' % parameter, output_field=FloatField()))) \
+            .annotate(count=Count('data__%s' % parameter)) \
+            .annotate(date=F('bucket')) \
+            .annotate(year=ExtractYear('bucket')) \
+            .annotate(month=ExtractMonth('bucket')) \
+            .annotate(day=ExtractDay('bucket')) \
+            .annotate(label=Concat(
+            Cast(ExtractYear('bucket'), output_field=CharField()),
+            Value('-'),
+            Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
+            Value('-'),
+            Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2)
+))
+        serializer = DatapointWeeklyBinSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['GET'])
+    def get_monthly_average_datapoints_by_parameter(self, request, parameter):
+        """Get daily average datapoints by parameter."""
+        queryset = Datapoint.timescale.time_bucket('time', '1 month') \
+            .annotate(average=Avg(Cast('data__%s' % parameter, output_field=FloatField()))) \
+            .annotate(count=Count('data__%s' % parameter)) \
+            .annotate(date=F('bucket')) \
+            .annotate(year=ExtractYear('bucket')) \
+            .annotate(month=ExtractMonth('bucket')) \
+            .annotate(label=Concat(
+            Cast(ExtractYear('bucket'), output_field=CharField()),
+            Value('-'),
+            Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2)
+))
+        serializer = DatapointMonthlyBinSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-class DatapointsRecentDaily(viewsets.ModelViewSet):
-    # TODO: Make this into parameter + start/end time
-    var = "nitrogen"
-
-    queryset = Datapoint.timescale.time_bucket('time', '1 day') \
-        .annotate(average=Avg(Cast('data__%s' % var, output_field=FloatField()))) \
-        .annotate(count=Count('data__%s' % var)) \
-        .annotate(date=F('bucket')) \
-        .annotate(year=ExtractYear('bucket')) \
-        .annotate(month=ExtractMonth('bucket')) \
-        .annotate(day=ExtractDay('bucket')) \
-        .annotate(label=Concat(
-        Cast(ExtractYear('bucket'), output_field=CharField()),
-        Value('-'),
-        Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
-        Value('-'),
-        Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2)
-    ))
-    serializer_class = DatapointDailyBinSerializer
-
-
-class DatapointsRecentWeekly(viewsets.ModelViewSet):
-    # TODO: Make this into parameter + start/end time
-    var = "nitrogen"
-
-    queryset = Datapoint.timescale.time_bucket('time', '1 week') \
-        .annotate(average=Avg(Cast('data__%s' % var, output_field=FloatField()))) \
-        .annotate(count=Count('data__%s' % var)) \
-        .annotate(date=F('bucket')) \
-        .annotate(year=ExtractYear('bucket')) \
-        .annotate(month=ExtractMonth('bucket')) \
-        .annotate(day=ExtractDay('bucket')) \
-        .annotate(label=Concat(
-        Cast(ExtractYear('bucket'), output_field=CharField()),
-        Value('-'),
-        Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
-        Value('-'),
-        Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2)
-    ))
-    serializer_class = DatapointWeeklyBinSerializer
-
-
-class DatapointsRecentMonthly(viewsets.ModelViewSet):
-    # TODO: Make this into parameter + start/end time
-    var = "nitrogen"
-
-    queryset = Datapoint.timescale.time_bucket('time', '1 month') \
-        .annotate(average=Avg(Cast('data__%s' % var, output_field=FloatField()))) \
-        .annotate(count=Count('data__%s' % var)) \
-        .annotate(date=F('bucket')) \
-        .annotate(year=ExtractYear('bucket')) \
-        .annotate(month=ExtractMonth('bucket')) \
-        .annotate(label=Concat(
-        Cast(ExtractYear('bucket'), output_field=CharField()),
-        Value('-'),
-        Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2)
-    ))
-    serializer_class = DatapointMonthlyBinSerializer
-
-
-class DatapointsRecentYearly(viewsets.ModelViewSet):
-    # TODO: Make this into parameter + start/end time
-    var = "nitrogen"
-
-    queryset = Datapoint.timescale.time_bucket('time', '1 year') \
-        .annotate(average=Avg(Cast('data__%s' % var, output_field=FloatField()))) \
-        .annotate(count=Count('data__%s' % var)) \
-        .annotate(date=F('bucket')) \
-        .annotate(year=ExtractYear('bucket')) \
-        .annotate(label=Cast(ExtractYear('bucket'), output_field=CharField()))
-    serializer_class = DatapointYearlyBinSerializer
+    @action(detail=False, methods=['GET'])
+    def get_yearly_average_datapoints_by_parameter(self, request, parameter):
+        """Get daily average datapoints by parameter."""
+        queryset = Datapoint.timescale.time_bucket('time', '1 year') \
+            .annotate(average=Avg(Cast('data__%s' % parameter, output_field=FloatField()))) \
+            .annotate(count=Count('data__%s' % parameter)) \
+            .annotate(date=F('bucket')) \
+            .annotate(year=ExtractYear('bucket')) \
+            .annotate(label=Cast(ExtractYear('bucket'), output_field=CharField()))
+        serializer = DatapointYearlyBinSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class DatapointsDynamicExample(viewsets.ModelViewSet):
