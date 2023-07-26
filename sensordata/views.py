@@ -16,8 +16,9 @@ class ParametersViewSet(viewsets.ModelViewSet):
     queryset = Parameter.objects.all()
     serializer_class = ParameterSerializer
 
-    @action(detail=True, methods=['DELETE'])
-    def delete_by_name(self, request, name):
+    @action(detail=False, methods=['DELETE'])
+    def delete_by_name(self, request):
+        name = request.data.get('name')
         try:
             parameter = Parameter.objects.get(name=name)
             serializer = ParameterSerializer(parameter)
@@ -51,8 +52,9 @@ class DatapointsViewSet(viewsets.ModelViewSet):
     serializer_class = DatapointSerializer
 
     @action(detail=False, methods=['GET'])
-    def get_hourly_average_datapoints_by_parameter(self, request, parameter):
+    def get_hourly_average_datapoints_by_parameter(self, request):
         """Get hourly average datapoints by parameter."""
+        parameter = request.data.get('parameter')
         queryset = Datapoint.timescale.time_bucket('time', '1 hour') \
             .annotate(average=Avg(Cast('data__%s' % parameter, output_field=FloatField()))) \
             .annotate(count=Count('data__%s' % parameter)) \
@@ -74,8 +76,9 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'])
-    def get_daily_average_datapoints_by_parameter(self, request, parameter):
+    def get_daily_average_datapoints_by_parameter(self, request):
         """Get daily average datapoints by parameter."""
+        parameter = request.data.get('parameter')
         queryset = Datapoint.timescale.time_bucket('time', '1 day') \
             .annotate(average=Avg(Cast('data__%s' % parameter, output_field=FloatField()))) \
             .annotate(count=Count('data__%s' % parameter)) \
@@ -94,8 +97,9 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'])
-    def get_weekly_average_datapoints_by_parameter(self, request, parameter):
+    def get_weekly_average_datapoints_by_parameter(self, request):
         """Get daily average datapoints by parameter."""
+        parameter = request.data.get('parameter')
         queryset = Datapoint.timescale.time_bucket('time', '1 week') \
             .annotate(average=Avg(Cast('data__%s' % parameter, output_field=FloatField()))) \
             .annotate(count=Count('data__%s' % parameter)) \
@@ -114,8 +118,9 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'])
-    def get_monthly_average_datapoints_by_parameter(self, request, parameter):
+    def get_monthly_average_datapoints_by_parameter(self, request):
         """Get daily average datapoints by parameter."""
+        parameter = request.data.get('parameter')
         queryset = Datapoint.timescale.time_bucket('time', '1 month') \
             .annotate(average=Avg(Cast('data__%s' % parameter, output_field=FloatField()))) \
             .annotate(count=Count('data__%s' % parameter)) \
@@ -131,8 +136,9 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'])
-    def get_yearly_average_datapoints_by_parameter(self, request, parameter):
+    def get_yearly_average_datapoints_by_parameter(self, request):
         """Get daily average datapoints by parameter."""
+        parameter = request.data.get('parameter')
         queryset = Datapoint.timescale.time_bucket('time', '1 year') \
             .annotate(average=Avg(Cast('data__%s' % parameter, output_field=FloatField()))) \
             .annotate(count=Count('data__%s' % parameter)) \
