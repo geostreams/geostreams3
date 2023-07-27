@@ -104,11 +104,13 @@ class Datapoint(TimescaleModel):
 
 
 class DatapointBin(models.Model):
+   sensor_name = models.CharField()
+   parameter = models.CharField()
    date = models.DateTimeField()
    label = models.CharField()
    count = models.IntegerField()
    average = models.FloatField()
-   sources = ArrayField(models.CharField(), blank=True, null=True, default=[])
+   sources = ArrayField(models.CharField(), blank=True, null=True, default=list)
 
 class DatapointHourlyBin(DatapointBin):
    year = models.IntegerField()
@@ -133,3 +135,5 @@ class DatapointMonthlyBin(DatapointBin):
 
 class DatapointYearlyBin(DatapointBin):
    year = models.IntegerField()
+
+

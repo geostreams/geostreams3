@@ -158,10 +158,12 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                     Cast(ExtractYear('bucket'), output_field=CharField()),
                     Value('-'),
                     Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2)
-                ))
+                )) \
+                    .annotate(parameter=Value(parameter, output_field=CharField())) \
+                    .annotate(sensor_name=F('stream__sensor__name'))
                 querysets.append(queryset)
             queryset = list(chain(*querysets))
-            serializer = DatapointMonthlyBinSerializer(queryset, many=True)
+            serializer = DatapointMonthlyBinSerializer(queryset)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'])
