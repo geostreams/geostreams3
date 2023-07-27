@@ -104,7 +104,6 @@ class Datapoint(TimescaleModel):
 
 
 class DatapointBin(models.Model):
-   sensor_name = models.CharField()
    parameter = models.CharField()
    date = models.DateTimeField()
    label = models.CharField()

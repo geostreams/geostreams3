@@ -63,16 +63,16 @@ class DatapointWeeklyBinSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class DatapointMonthlyHelperBinSerializer(serializers.ModelSerializer):
+class DatapointMonthlyBinSerializer(serializers.ModelSerializer):
     class Meta:
         model = DatapointMonthlyBin
         fields = '__all__'
 
     def to_representation(self, instance):
+
         # Get the default representation
         representation = super().to_representation(instance)
-        parameter_name = representation['parameter']
-        datapoint_rep = {parameter_name: {
+        datapoint_rep = {representation["parameter"]: {
            'date': representation['date'],
            'label': representation['label'],
            'count': representation['count'],
@@ -83,19 +83,7 @@ class DatapointMonthlyHelperBinSerializer(serializers.ModelSerializer):
         }}
         return datapoint_rep
 
-class DatapointMonthlyBinSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DatapointMonthlyBin
-        fields = '__all__'
 
-    def to_representation(self, instance):
-        # Get the default representation
-        # representation = super().to_representation(instance)
-        # TODO - need to implement check in case query returns empty
-        representation = dict()
-        representation["sensor_name"] = instance[0]["sensor_name"]
-        representation['properties'] = DatapointMonthlyHelperBinSerializer(instance, many=True).data
-        return representation
 
 class DatapointYearlyBinSerializer(serializers.ModelSerializer):
     class Meta:
