@@ -110,7 +110,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         if parameter is not None:
             if type(parameter) is str:
                 if parameter not in parameters:
-                    return Response({"message": "Parameter does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"message": "Sensor does not have parameter"}, status=status.HTTP_400_BAD_REQUEST)
                 filter_param = param_to_data_key(parameter)
                 query = Datapoint.timescale.time_bucket('time', time_period) \
                     .filter(stream__sensor__id=sensor_id) \
