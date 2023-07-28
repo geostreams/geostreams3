@@ -345,25 +345,33 @@ class DatapointsViewSetTestCase(TestCase):
             self.client.post('/sensordata/datapoints/', data=datapoint, format='json')
 
     def test_get_hourly_average_datapoints_by_parameter(self):
-        response = self.client.get('/sensordata/cache/hour/',{'sensor_id': 1, 'parameter': 'nitrogen'})
+        sensor_id = self.client.get('/sensordata/sensors/').data[0]['id']
+        parameter = self.client.get('/sensordata/parameters/').data[0]['name']
+        response = self.client.get('/sensordata/cache/hour/', data={'sensor_id': sensor_id, 'parameter': parameter})
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIsInstance(data, dict)
 
     def test_get_daily_average_datapoints_by_parameter(self):
-        response = self.client.get('/sensordata/cache/day/')
+        sensor_id = self.client.get('/sensordata/sensors/').data[0]['id']
+        parameter = self.client.get('/sensordata/parameters/').data[0]['name']
+        response = self.client.get('/sensordata/cache/day/', data={'sensor_id': sensor_id, 'parameter': parameter})
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIsInstance(data, dict)
 
     def test_get_monthly_average_datapoints_by_parameter(self):
-        response = self.client.get('/sensordata/cache/month/')
+        sensor_id = self.client.get('/sensordata/sensors/').data[0]['id']
+        parameter = self.client.get('/sensordata/parameters/').data[0]['name']
+        response = self.client.get('/sensordata/cache/month/', data={'sensor_id': sensor_id, 'parameter': parameter})
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIsInstance(data, dict)
 
     def test_get_yearly_average_datapoints_by_parameter(self):
-        response = self.client.get('/sensordata/cache/year/')
+        sensor_id = self.client.get('/sensordata/sensors/').data[0]['id']
+        parameter = self.client.get('/sensordata/parameters/').data[0]['name']
+        response = self.client.get('/sensordata/cache/year/', data={'sensor_id': sensor_id, 'parameter': parameter})
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIsInstance(data, dict)
