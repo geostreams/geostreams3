@@ -61,119 +61,90 @@ class DatapointsViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'])
     def get_hourly_average_datapoints_by_parameter(self, request):
         """Get hourly average datapoints by parameter."""
+        sensor_id = request.data.get('sensor_id')
         parameter = request.data.get('parameter')
-        queryset = Datapoint.timescale.time_bucket('time', '1 hour') \
-            .annotate(average=Avg(Cast(param_to_data_key(parameter), output_field=FloatField()))) \
-            .annotate(count=Count(param_to_data_key(parameter))) \
-            .annotate(date=F('bucket')) \
-            .annotate(year=ExtractYear('bucket')) \
-            .annotate(month=ExtractMonth('bucket')) \
-            .annotate(day=ExtractDay('bucket')) \
-            .annotate(hour=ExtractHour('bucket')) \
-            .annotate(label=Concat(
-            Cast(ExtractYear('bucket'), output_field=CharField()),
-            Value('-'),
-            Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
-            Value('-'),
-            Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2),
-            Value(' '),
-            Right(Concat(Value('00'), Cast(ExtractHour('bucket'), output_field=CharField())), 2)
-        ))
-        serializer = DatapointHourlyBinSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, parameter, '1 hour',
+                                                                  DatapointHourlyBinSerializer)
 
     @action(detail=False, methods=['GET'])
     def get_daily_average_datapoints_by_parameter(self, request):
         """Get daily average datapoints by parameter."""
+        sensor_id = request.data.get('sensor_id')
         parameter = request.data.get('parameter')
-        queryset = Datapoint.timescale.time_bucket('time', '1 day') \
-            .annotate(average=Avg(Cast(param_to_data_key(parameter), output_field=FloatField()))) \
-            .annotate(count=Count(param_to_data_key(parameter))) \
-            .annotate(date=F('bucket')) \
-            .annotate(year=ExtractYear('bucket')) \
-            .annotate(month=ExtractMonth('bucket')) \
-            .annotate(day=ExtractDay('bucket')) \
-            .annotate(label=Concat(
-            Cast(ExtractYear('bucket'), output_field=CharField()),
-            Value('-'),
-            Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
-            Value('-'),
-            Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2)
-        ))
-        serializer = DatapointDailyBinSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @action(detail=False, methods=['GET'])
-    def get_weekly_average_datapoints_by_parameter(self, request):
-        """Get daily average datapoints by parameter."""
-        parameter = request.data.get('parameter')
-        queryset = Datapoint.timescale.time_bucket('time', '1 week') \
-            .annotate(average=Avg(Cast(param_to_data_key(parameter), output_field=FloatField()))) \
-            .annotate(count=Count(param_to_data_key(parameter))) \
-            .annotate(date=F('bucket')) \
-            .annotate(year=ExtractYear('bucket')) \
-            .annotate(month=ExtractMonth('bucket')) \
-            .annotate(day=ExtractDay('bucket')) \
-            .annotate(label=Concat(
-            Cast(ExtractYear('bucket'), output_field=CharField()),
-            Value('-'),
-            Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2),
-            Value('-'),
-            Right(Concat(Value('00'), Cast(ExtractDay('bucket'), output_field=CharField())), 2)
-        ))
-        serializer = DatapointWeeklyBinSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, parameter, '1 day',
+                                                                  DatapointDailyBinSerializer)
 
     @action(detail=False, methods=['GET'])
     def get_monthly_average_datapoints_by_parameter(self, request):
-        """Get daily average datapoints by parameter."""
+        """Get monthly average datapoints by parameter."""
         parameter = request.data.get('parameter')
         sensor_id = request.data.get('sensor_id')
-        parameters = Sensor.objects.get(id=sensor_id).parameters
+        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, parameter, '1 month',
+                                                                  DatapointMonthlyBinSerializer)
+
+    @action(detail=False, methods=['GET'])
+    def get_yearly_average_datapoints_by_parameter(self, request):
+        """Get yearly average datapoints by parameter."""
+        sensor_id = request.data.get('sensor_id')
+        parameter = request.data.get('parameter')
+        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, parameter, '1 year',
+                                                                  DatapointYearlyBinSerializer)
+
+    class DatapointsDynamicExample(viewsets.ModelViewSet):
+        """Simple example of filter query with N value <= 1 and P value >= 1."""
+        var = "nitrogen"
+        queryset = (Datapoint.timescale.filter(Q(**{"data__%s__lte" % var: 1})))
+        queryset = queryset.filter(Q(**{"data__phosphorus__gte": 1}))
+        serializer_class = DatapointSerializer
+
+    @staticmethod
+    def get_time_period_binned_datapoint(sensor_id, parameter, time_period, time_period_serializer):
+        """Helper function to get datapoints binned by a timeperiod"""
         if sensor_id is None:
             return Response({"message": "Sensor ID is needed"}, status=status.HTTP_400_BAD_REQUEST)
         try:
             sensor = Sensor.objects.get(id=sensor_id)
         except Sensor.DoesNotExist:
             return Response({"message": "Sensor does not exist"}, status=status.HTTP_404_NOT_FOUND)
-        # TODO we can have parameter as a list of parameters or a single parameter
+        parameters = sensor.parameters
         if parameter is not None:
             if type(parameter) is str:
                 if parameter not in parameters:
                     return Response({"message": "Parameter does not exist"}, status=status.HTTP_400_BAD_REQUEST)
-                query = Datapoint.timescale.time_bucket('time', '1 month') \
+                filter_param = param_to_data_key(parameter)
+                query = Datapoint.timescale.time_bucket('time', time_period) \
                     .filter(stream__sensor__id=sensor_id) \
-                    .annotate(average=Avg(Cast(param_to_data_key(parameter), output_field=FloatField()))) \
-                    .annotate(count=Count(param_to_data_key(parameter))) \
+                    .annotate(average=Avg(Cast(filter_param, output_field=FloatField()))) \
+                    .annotate(count=Count(filter_param)) \
                     .annotate(date=F('bucket')) \
                     .annotate(year=ExtractYear('bucket')) \
-                    .annotate(month=ExtractMonth('bucket')) \
                     .annotate(label=Concat(
                     Cast(ExtractYear('bucket'), output_field=CharField()),
                     Value('-'),
                     Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2)
                 )) \
                     .annotate(parameter=Value(parameter, output_field=CharField()))
+                query = DatapointsViewSet.query_add_ons(time_period, query)
             elif type(parameter) is list:
                 queries = []
-                for param in parameter:
-                    if param not in parameters:
-                        return Response({"message": "Parameter " + str(param) + " does not exist"},
+                for parameter in parameter:
+                    if parameter not in parameters:
+                        return Response({"message": "Parameter " + str(parameter) + " does not exist"},
                                         status=status.HTTP_400_BAD_REQUEST)
-                    filter_param = 'data__%s' % param
-                    query = Datapoint.timescale.time_bucket('time', '1 month') \
+                    filter_param = param_to_data_key(parameter)
+                    query = Datapoint.timescale.time_bucket('time', time_period) \
                         .filter(stream__sensor__id=sensor_id) \
                         .annotate(average=Avg(Cast(filter_param, output_field=FloatField()))) \
                         .annotate(count=Count(filter_param)) \
                         .annotate(date=F('bucket')) \
                         .annotate(year=ExtractYear('bucket')) \
-                        .annotate(month=ExtractMonth('bucket')) \
                         .annotate(label=Concat(
                         Cast(ExtractYear('bucket'), output_field=CharField()),
                         Value('-'),
                         Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2)
                     )) \
-                        .annotate(parameter=Value(param, output_field=CharField()))
+                        .annotate(parameter=Value(parameter, output_field=CharField()))
+                    query = DatapointsViewSet.query_add_ons(time_period, query)
                     queries.append(query)
                 query = list(chain(*queries))
         else:
@@ -181,42 +152,35 @@ class DatapointsViewSet(viewsets.ModelViewSet):
 
             for parameter in parameters:
                 filter_param = param_to_data_key(parameter)
-                query = Datapoint.timescale.time_bucket('time', '1 month') \
+                query = Datapoint.timescale.time_bucket('time', time_period) \
                     .filter(stream__sensor__id=sensor_id) \
                     .annotate(average=Avg(Cast(filter_param, output_field=FloatField()))) \
                     .annotate(count=Count(filter_param)) \
                     .annotate(date=F('bucket')) \
                     .annotate(year=ExtractYear('bucket')) \
-                    .annotate(month=ExtractMonth('bucket')) \
+                    .annotate(parameter=Value(parameter, output_field=CharField())) \
                     .annotate(label=Concat(
                     Cast(ExtractYear('bucket'), output_field=CharField()),
                     Value('-'),
                     Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2)
                 )) \
                     .annotate(parameter=Value(parameter, output_field=CharField()))
+
+                query = DatapointsViewSet.query_add_ons(time_period, query)
+
                 queries.append(query)
             query = list(chain(*queries))
         response = {"sensor_name": sensor.name,
-                    "properties": DatapointMonthlyBinSerializer(query, many=True).data}
+                    "properties": time_period_serializer(query, many=True).data}
         return Response(response, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['GET'])
-    def get_yearly_average_datapoints_by_parameter(self, request):
-        """Get daily average datapoints by parameter."""
-        parameter = request.data.get('parameter')
-        queryset = Datapoint.timescale.time_bucket('time', '1 year') \
-            .annotate(average=Avg(Cast(param_to_data_key(parameter), output_field=FloatField()))) \
-            .annotate(count=Count(param_to_data_key(parameter))) \
-            .annotate(date=F('bucket')) \
-            .annotate(year=ExtractYear('bucket')) \
-            .annotate(label=Cast(ExtractYear('bucket'), output_field=CharField()))
-        serializer = DatapointYearlyBinSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class DatapointsDynamicExample(viewsets.ModelViewSet):
-    """Simple example of filter query with N value <= 1 and P value >= 1."""
-    var = "nitrogen"
-    queryset = (Datapoint.timescale.filter(Q(**{"data__%s__lte" % var: 1})))
-    queryset = queryset.filter(Q(**{"data__phosphorus__gte": 1}))
-    serializer_class = DatapointSerializer
+    @staticmethod
+    def query_add_ons(time_period, query):
+        """Helper function to add extra annotations to the query"""
+        if time_period != '1 year':
+            query = query.annotate(month=ExtractMonth('bucket'))
+        if time_period != '1 year' and time_period != '1 month':
+            query = query.annotate(day=ExtractDay('bucket'))
+        if time_period == '1 hour':
+            query = query.annotate(hour=ExtractHour('bucket'))
+        return query
