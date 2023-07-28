@@ -1,3 +1,5 @@
+import random
+
 from django.test import TestCase
 from rest_framework.test import APIClient
 
@@ -177,3 +179,191 @@ class CategoryApiTest(TestCase):
         # Verify the category is deleted
         get_response = self.client.get(f'/sensordata/categories/{category_id}/')
         self.assertEqual(get_response.status_code, 404)  # Expecting a not found status code
+
+
+class DatapointsViewSetTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        # Add any necessary setup code here (e.g., create Sensor and Datapoint instances)
+        # Create a sensor
+        sensor_data = {
+            "name": "Reifsteck",
+            "geog": "POINT(35.6895 139.6917)",
+            "created": "2023-07-24T17:14:47.783Z",
+            "parameters": [
+                "nitrogen",
+                "phosphorus"
+            ],
+            "properties": {},
+            "min_start_time": "2023-04-24T17:14:47.783Z",
+            "max_end_time": "2024-04-24T17:14:47.783Z"
+        }
+        sensor_data = self.client.post('/sensordata/sensors/', data=sensor_data, format='json')
+        # Create parameters
+        parameter_data = [
+            {
+                "name": "nitrogen",
+                "title": "nitrogen",
+                "unit": "%"
+            },
+            {
+                "name": "phosphorus",
+                "title": "phosphorus",
+                "unit": "%"
+            }
+        ]
+        for parameter in parameter_data:
+            self.client.post('/sensordata/parameters/', data=parameter, format='json')
+        # Create a stream
+        stream_data = [
+            {
+                "name": "RS-2",
+                "geog": "POINT(35.6895 139.6917)",
+                "created": "2023-07-24T17:14:47.783Z",
+                "parameters": [
+                    "nitrogen",
+                    "phosphorus"
+                ],
+                "properties": {},
+                "min_start_time": "2023-04-24T17:14:47.783Z",
+                "max_end_time": "2024-04-24T17:14:47.783Z",
+                "sensor": sensor_data.data["id"]
+            },
+            {
+                "name": "RS-2",
+                "geog": "SRID=4326;POINT (35.6895 139.6917)",
+                "created": "2023-07-24T17:14:47.783000Z",
+                "parameters": [
+                    "nitrogen",
+                    "phosphorus"
+                ],
+                "properties": {},
+                "start_time": None,
+                "end_time": None,
+                "sensor":sensor_data.data["id"]
+            }
+        ]
+        stream_ids = []
+        for stream in stream_data:
+            stream = self.client.post('/sensordata/streams/', data=stream, format='json')
+            stream_ids.append(stream.data["id"])
+        # Create datapoints
+        datapoint_data = [
+                            {
+                                "geog": "SRID=4326;POINT (40.7128 -74.006)",
+                                "time": "2023-06-01T09:00:00Z",
+                                "end_time": None,
+                                "data": {
+                                    "nitrogen": 1.23,
+                                    "phosphorus": 0.45
+                                }
+                            },
+                            {
+                                "geog": "SRID=4326;POINT (34.0522 -118.2437)",
+                                "time": "2023-06-01T12:00:00Z",
+                                "end_time": None,
+                                "data": {
+                                    "nitrogen": 0.75,
+                                    "phosphorus": 1.1
+                                }
+                            },
+                            {
+                                "geog": "SRID=4326;POINT (51.5074 -0.1278)",
+                                "time": "2023-06-01T16:00:00Z",
+                                "end_time": None,
+                                "data": {
+                                    "nitrogen": 0.91,
+                                    "phosphorus": 0.82
+                                }
+                            },
+                            {
+                                "geog": "SRID=4326;POINT (37.7749 -122.4194)",
+                                "time": "2023-06-01T18:00:00Z",
+                                "end_time": None,
+                                "data": {
+                                    "nitrogen": 1.55,
+                                    "phosphorus": 0.98
+                                }
+                            },
+                            {
+                                "geog": "SRID=4326;POINT (52.52 13.405)",
+                                "time": "2023-06-01T09:30:00Z",
+                                "end_time": None,
+                                "data": {
+                                    "nitrogen": 0.65,
+                                    "phosphorus": 1.25
+                                }
+                            },
+                            {
+                                "geog": "SRID=4326;POINT (35.6895 139.6917)",
+                                "time": "2023-06-01T11:30:00Z",
+                                "end_time": None,
+                                "data": {
+                                    "nitrogen": 1.1,
+                                    "phosphorus": 0.75
+                                }
+                            },
+                            {
+                                "geog": "SRID=4326;POINT (-33.8651 151.2099)",
+                                "time": "2023-06-01T13:30:00Z",
+                                "end_time": None,
+                                "data": {
+                                    "nitrogen": 0.95,
+                                    "phosphorus": 0.82
+                                }
+                            },
+                            {
+                                "geog": "SRID=4326;POINT (37.9838 23.7275)",
+                                "time": "2023-06-01T15:30:00Z",
+                                "end_time": None,
+                                "data": {
+                                    "nitrogen": 1.35,
+                                    "phosphorus": 0.93
+                                }
+                            },
+                            {
+                                "geog": "SRID=4326;POINT (40.4168 -3.7038)",
+                                "time": "2023-06-01T17:30:00Z",
+                                "end_time": None,
+                                "data": {
+                                    "nitrogen": 0.78,
+                                    "phosphorus": 1.02
+                                }
+                            },
+                            {
+                                "geog": "SRID=4326;POINT (51.5074 -0.1278)",
+                                "time": "2023-05-01T16:00:00Z",
+                                "end_time": None,
+                                "data": {
+                                    "nitrogen": 0.31,
+                                    "phosphorus": 0.22
+                                }
+                            }
+                        ]
+        for datapoint in datapoint_data:
+            datapoint['stream'] = random.choice(stream_ids)
+            self.client.post('/sensordata/datapoints/', data=datapoint, format='json')
+
+    def test_get_hourly_average_datapoints_by_parameter(self):
+        response = self.client.get('/sensordata/cache/hour/',{'sensor_id': 1, 'parameter': 'nitrogen'})
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsInstance(data, dict)
+
+    def test_get_daily_average_datapoints_by_parameter(self):
+        response = self.client.get('/sensordata/cache/day/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsInstance(data, dict)
+
+    def test_get_monthly_average_datapoints_by_parameter(self):
+        response = self.client.get('/sensordata/cache/month/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsInstance(data, dict)
+
+    def test_get_yearly_average_datapoints_by_parameter(self):
+        response = self.client.get('/sensordata/cache/year/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsInstance(data, dict)

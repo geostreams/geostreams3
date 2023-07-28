@@ -11,7 +11,7 @@ from itertools import chain
 from .models import Sensor, Stream, Parameter, Datapoint, Category
 from .serializers import SensorSerializer, ParameterSerializer, StreamSerializer, DatapointSerializer, \
     CategorySerializer, DatapointHourlyBinSerializer, DatapointDailyBinSerializer, \
-    DatapointMonthlyBinSerializer, DatapointYearlyBinSerializer
+    DatapointMonthlyBinSerializer, DatapointYearlyBinSerializer, DatapointBinSerializer
 
 
 # Helper functions
@@ -61,32 +61,40 @@ class DatapointsViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'])
     def get_hourly_average_datapoints_by_parameter(self, request):
         """Get hourly average datapoints by parameter."""
-        sensor_id = request.data.get('sensor_id')
-        parameter = request.data.get('parameter')
+        sensor_id = request.GET.get('sensor_id')
+        parameter = request.GET.getlist('parameter')
+        if not parameter:  
+            parameter = request.GET.get('parameter', None)
         return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, parameter, '1 hour',
                                                                   DatapointHourlyBinSerializer)
 
     @action(detail=False, methods=['GET'])
     def get_daily_average_datapoints_by_parameter(self, request):
         """Get daily average datapoints by parameter."""
-        sensor_id = request.data.get('sensor_id')
-        parameter = request.data.get('parameter')
+        sensor_id = request.GET.get('sensor_id')
+        parameter = request.GET.getlist('parameter')
+        if not parameter:  
+            parameter = request.GET.get('parameter', None)
         return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, parameter, '1 day',
-                                                                  DatapointDailyBinSerializer)
+                                                                  DatapointBinSerializer)
 
     @action(detail=False, methods=['GET'])
     def get_monthly_average_datapoints_by_parameter(self, request):
         """Get monthly average datapoints by parameter."""
-        parameter = request.data.get('parameter')
-        sensor_id = request.data.get('sensor_id')
+        parameter = request.GET.getlist('parameter')
+        if not parameter:  
+            parameter = request.GET.get('parameter', None)
+        sensor_id = request.GET.get('sensor_id')
         return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, parameter, '1 month',
                                                                   DatapointMonthlyBinSerializer)
 
     @action(detail=False, methods=['GET'])
     def get_yearly_average_datapoints_by_parameter(self, request):
         """Get yearly average datapoints by parameter."""
-        sensor_id = request.data.get('sensor_id')
-        parameter = request.data.get('parameter')
+        sensor_id = request.GET.get('sensor_id')
+        parameter = request.GET.getlist('parameter')
+        if not parameter:  
+            parameter = request.GET.get('parameter', None)
         return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, parameter, '1 year',
                                                                   DatapointYearlyBinSerializer)
 
@@ -163,15 +171,14 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                     Cast(ExtractYear('bucket'), output_field=CharField()),
                     Value('-'),
                     Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2)
-                )) \
-                    .annotate(parameter=Value(parameter, output_field=CharField()))
+                ))
 
                 query = DatapointsViewSet.query_add_ons(time_period, query)
 
                 queries.append(query)
             query = list(chain(*queries))
         response = {"sensor_name": sensor.name,
-                    "properties": time_period_serializer(query, many=True).data}
+                    "properties": time_period_serializer(query).data}
         return Response(response, status=status.HTTP_200_OK)
 
     @staticmethod
