@@ -123,10 +123,6 @@ class DatapointDailyBin(DatapointBin):
    month = models.IntegerField()
    day = models.IntegerField()
 
-class DatapointWeeklyBin(DatapointBin):
-   year = models.IntegerField()
-   month = models.IntegerField()
-   day = models.IntegerField()
 
 class DatapointMonthlyBin(DatapointBin):
    year = models.IntegerField()

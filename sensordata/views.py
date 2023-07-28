@@ -10,7 +10,7 @@ from itertools import chain
 
 from .models import Sensor, Stream, Parameter, Datapoint, Category
 from .serializers import SensorSerializer, ParameterSerializer, StreamSerializer, DatapointSerializer, \
-    CategorySerializer, DatapointHourlyBinSerializer, DatapointDailyBinSerializer, DatapointWeeklyBinSerializer, \
+    CategorySerializer, DatapointHourlyBinSerializer, DatapointDailyBinSerializer, \
     DatapointMonthlyBinSerializer, DatapointYearlyBinSerializer
 
 
