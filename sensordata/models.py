@@ -104,7 +104,6 @@ class Datapoint(TimescaleModel):
 
 
 class DatapointBin(models.Model):
-   parameter = models.CharField()
    date = models.DateTimeField()
    label = models.CharField()
    count = models.IntegerField()

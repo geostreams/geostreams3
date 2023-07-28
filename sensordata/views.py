@@ -11,7 +11,7 @@ from itertools import chain
 from .models import Sensor, Stream, Parameter, Datapoint, Category
 from .serializers import SensorSerializer, ParameterSerializer, StreamSerializer, DatapointSerializer, \
     CategorySerializer, DatapointHourlyBinSerializer, DatapointDailyBinSerializer, \
-    DatapointMonthlyBinSerializer, DatapointYearlyBinSerializer, DatapointBinSerializer
+    DatapointMonthlyBinSerializer, DatapointYearlyBinSerializer
 
 
 # Helper functions
@@ -76,7 +76,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         if not parameter:  
             parameter = request.GET.get('parameter', None)
         return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, parameter, '1 day',
-                                                                  DatapointBinSerializer)
+                                                                  DatapointDailyBinSerializer)
 
     @action(detail=False, methods=['GET'])
     def get_monthly_average_datapoints_by_parameter(self, request):
@@ -115,6 +115,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         except Sensor.DoesNotExist:
             return Response({"message": "Sensor does not exist"}, status=status.HTTP_404_NOT_FOUND)
         parameters = sensor.parameters
+        properties = []
         if parameter is not None:
             if type(parameter) is str:
                 if parameter not in parameters:
@@ -133,8 +134,10 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 )) \
                     .annotate(parameter=Value(parameter, output_field=CharField()))
                 query = DatapointsViewSet.query_add_ons(time_period, query)
+                properties.append({parameter: time_period_serializer(query, many=True).data})
             elif type(parameter) is list:
                 queries = []
+                properties = []
                 for parameter in parameter:
                     if parameter not in parameters:
                         return Response({"message": "Parameter " + str(parameter) + " does not exist"},
@@ -153,11 +156,10 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                     )) \
                         .annotate(parameter=Value(parameter, output_field=CharField()))
                     query = DatapointsViewSet.query_add_ons(time_period, query)
-                    queries.append(query)
-                query = list(chain(*queries))
+                    properties.append({parameter: time_period_serializer(query, many=True).data})
         else:
             queries = []
-
+            properties = []
             for parameter in parameters:
                 filter_param = param_to_data_key(parameter)
                 query = Datapoint.timescale.time_bucket('time', time_period) \
@@ -174,11 +176,10 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 ))
 
                 query = DatapointsViewSet.query_add_ons(time_period, query)
+                properties.append({parameter: time_period_serializer(query, many=True).data})
 
-                queries.append(query)
-            query = list(chain(*queries))
         response = {"sensor_name": sensor.name,
-                    "properties": time_period_serializer(query).data}
+                    "properties": properties}
         return Response(response, status=status.HTTP_200_OK)
 
     @staticmethod

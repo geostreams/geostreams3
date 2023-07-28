@@ -62,20 +62,6 @@ class DatapointMonthlyBinSerializer(serializers.ModelSerializer):
         model = DatapointMonthlyBin
         fields = '__all__'
 
-    def to_representation(self, instance):
-
-        # Get the default representation
-        representation = super().to_representation(instance)
-        datapoint_rep = {representation["parameter"]: {
-           'date': representation['date'],
-           'label': representation['label'],
-           'count': representation['count'],
-           'average': representation['average'],
-           'sources': representation['sources'],
-           'year': representation['year'],
-           'month': representation['month']
-        }}
-        return datapoint_rep
 
 
 
