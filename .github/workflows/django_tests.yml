@@ -1,0 +1,54 @@
+name: Django CI with TimescaleDB
+
+on:
+  push:
+
+  pull_request:
+    types:
+      - opened
+      - reopened
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      timescaledb:
+        image: timescale/timescaledb-ha:pg14-latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+          POSTGRES_PASSWORD: ${{ secrets.TIMESCALEDB_PASSWORD }}
+        ports:
+          - 5432:5432
+
+    env:
+      DJANGO_SETTINGS_MODULE: geostreams3.settings
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Install postgresql-client and GDAL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          sudo apt-get install gdal-bin libgdal-dev
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Database Migrations
+        run: |
+          python manage.py migrate
+
+      - name: Run Tests
+        run: |
+          python manage.py test
