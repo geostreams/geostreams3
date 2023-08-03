@@ -54,7 +54,7 @@ class ParameterCategory(models.Model):
 
 class Region(models.Model):
    id = models.AutoField(primary_key=True)
-   geog = geomodels.GeometryField(blank=False, null=False)
+   geog = geomodels.GeometryField(dim=3, blank=False, null=False)
    properties = models.JSONField()
 
    class Meta:
@@ -64,7 +64,7 @@ class Region(models.Model):
 class Sensor(models.Model):
    id = models.AutoField(primary_key=True)
    name = models.CharField(max_length=255, blank=True, null=True)
-   geog = geomodels.GeometryField(blank=False, null=False)
+   geog = geomodels.GeometryField(dim=3, blank=False, null=False)
    created = models.DateTimeField(blank=True, null=True, default=datetime.now)
    parameters = ArrayField(models.CharField())
    properties = models.JSONField()
@@ -79,7 +79,7 @@ class Stream(models.Model):
    id = models.AutoField(primary_key=True)
    sensor = models.ForeignKey(Sensor, models.DO_NOTHING)
    name = models.CharField(max_length=255, blank=True, null=True)
-   geog = geomodels.GeometryField(blank=False, null=False)
+   geog = geomodels.GeometryField(dim=3, blank=False, null=False)
    created = models.DateTimeField(blank=True, null=True, default=datetime.now)
    parameters = ArrayField(models.CharField(max_length=200))
    properties = models.JSONField()
@@ -94,7 +94,7 @@ class Stream(models.Model):
 class Datapoint(TimescaleModel):
    id = models.AutoField(primary_key=True)
    stream = models.ForeignKey(Stream, models.DO_NOTHING)
-   geog = geomodels.GeometryField(blank=False, null=False)  # if missing, use sensor geog
+   geog = geomodels.GeometryField(dim=3, blank=False, null=False)  # if missing, use sensor geog
    time = TimescaleDateTimeField(interval='7 days')
    end_time = models.DateTimeField(blank=True, null=True)
    data = models.JSONField()
