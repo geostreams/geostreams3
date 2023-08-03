@@ -1,12 +1,12 @@
 import pandas as pd
 from requests import get, post
 import json
-
-
+from tqdm import tqdm
 root_url = 'http://localhost:9007/'
 
 # Get all sensors
 sensors_df = pd.read_csv('data/sensors.csv')
+tqdm.pandas()
 
 def post_sensor(sensor):
     """Post a sensor to the database."""
@@ -26,7 +26,10 @@ def post_sensor(sensor):
     else:
         print('Success!')
 
+
 streams_df = pd.read_csv('data/streams.csv')
+
+
 def post_stream(stream):
     """Post a stream to the database."""
     try:
@@ -53,5 +56,65 @@ def post_stream(stream):
         print(stream['name'])
         print(stream['params'])
 
+
+parameters_df = pd.read_csv('data/parameters.csv')
+
+
+def post_parameter(parameter):
+    """Post a parameter to the database."""
+    url = root_url + 'sensordata/parameters/'
+    data = {
+        'name': parameter['name'],
+        'title': parameter['title'],
+        'unit': parameter['unit']
+    }
+    response = post(url, data=data)
+    if response.status_code != 201:
+        print(response.status_code)
+        print(response.text)
+    else:
+        print('Success!')
+
+
+categories_df = pd.read_csv('data/categories.csv')
+
+
+def post_categories(category):
+    """Post a category to the database."""
+    url = root_url + 'sensordata/categories/'
+    data = {
+        'name': category['name'],
+        'detail_type': category['detail_type'],
+    }
+    response = post(url, data=data)
+    if response.status_code != 201:
+        print(response.status_code)
+        print(response.text)
+    else:
+        print('Success!')
+
+
+datapoints_df = pd.read_csv('data/datapoints.csv')
+
+
+def post_datapoints(datapoint):
+    url = root_url + 'sensordata/datapoints/'
+    stream_id = get(root_url + 'sensordata/streams/?name=' + datapoint['sensor_name']).json()[0]['id']
+    dp_data = {
+        'geog': datapoint['geog'],
+        'time': datapoint['start_time'],
+        'end_time': datapoint['end_time'],
+        'data': json.dumps(datapoint['data']),
+        'stream': stream_id
+    }
+    response = post(url, data=dp_data)
+    if response.status_code != 201:
+        print(response.status_code)
+        print(response.text)
+
+
 # sensors_df.apply(post_sensor, axis=1)
-streams_df.apply(post_stream, axis=1)
+# streams_df.apply(post_stream, axis=1)
+# parameters_df.apply(post_parameter, axis=1)
+# categories_df.progress_apply(post_categories, axis=1)
+datapoints_df.progress_apply(post_datapoints, axis=1)
