@@ -2,11 +2,14 @@ import pandas as pd
 from requests import get, post
 import json
 from tqdm import tqdm
+import concurrent.futures
+
 root_url = 'http://localhost:9007/'
 
 # Get all sensors
 sensors_df = pd.read_csv('data/sensors.csv')
 tqdm.pandas()
+
 
 def post_sensor(sensor):
     """Post a sensor to the database."""
@@ -104,7 +107,7 @@ def post_datapoints(datapoint):
         'geog': datapoint['geog'],
         'time': datapoint['start_time'],
         'end_time': datapoint['end_time'],
-        'data': json.dumps(datapoint['data']),
+        'data': str(datapoint['data']),
         'stream': stream_id
     }
     response = post(url, data=dp_data)
@@ -113,8 +116,14 @@ def post_datapoints(datapoint):
         print(response.text)
 
 
+def apply_function_in_parallel(data, function):
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = list(tqdm(executor.map(function, data), total=len(data)))
+    return results
+
+
 # sensors_df.apply(post_sensor, axis=1)
 # streams_df.apply(post_stream, axis=1)
 # parameters_df.apply(post_parameter, axis=1)
 # categories_df.progress_apply(post_categories, axis=1)
-datapoints_df.progress_apply(post_datapoints, axis=1)
+apply_function_in_parallel(datapoints_df.to_dict('records'), post_datapoints)
