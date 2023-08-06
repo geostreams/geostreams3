@@ -46,17 +46,41 @@ class SensorsViewSet(viewsets.ModelViewSet):
     serializer_class = SensorSerializer
     # permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        queryset = Sensor.objects.all()
+        name_filter = self.request.query_params.get('name', None)
+
+        if name_filter:
+            queryset = queryset.filter(name=name_filter)
+
+        return queryset
+
 
 class StreamsViewSet(viewsets.ModelViewSet):
     queryset = Stream.objects.all()
     serializer_class = StreamSerializer
     # permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        queryset = Stream.objects.all()
+        name_filter = self.request.query_params.get('name', None)
+
+        if name_filter:
+            queryset = queryset.filter(name=name_filter)
+
+        return queryset
+
 
 class DatapointsViewSet(viewsets.ModelViewSet):
     """View all datapoints."""
     queryset = Datapoint.objects.all()
     serializer_class = DatapointSerializer
+
+    def perform_create(self, serializer):
+        """Create new datapoint."""
+        datapoint = serializer.validated_data
+        datapoint["data"] = {key: value for key, value in datapoint["data"].items() if value is not None}
+        serializer.save()
 
     @action(detail=False, methods=['GET'])
     def get_hourly_average_datapoints_by_parameter(self, request):
@@ -117,7 +141,8 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         parameters = sensor.parameters
         properties = []
         if parameter is not None:
-            if type(parameter) is str:
+            if len(parameter) == 1:
+                parameter = parameter[0]
                 if parameter not in parameters:
                     return Response({"message": "Sensor does not have parameter"}, status=status.HTTP_400_BAD_REQUEST)
                 filter_param = param_to_data_key(parameter)
