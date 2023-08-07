@@ -188,7 +188,7 @@ class DatapointsViewSetTestCase(TestCase):
         # Create a sensor
         sensor_data = {
             "name": "Reifsteck",
-            "geog": "POINT(35.6895 139.6917)",
+            "geog": "POINT(35.6895 139.6917 0)",
             "created": "2023-07-24T17:14:47.783Z",
             "parameters": [
                 "nitrogen",
@@ -218,7 +218,7 @@ class DatapointsViewSetTestCase(TestCase):
         stream_data = [
             {
                 "name": "RS-2",
-                "geog": "POINT(35.6895 139.6917)",
+                "geog": "POINT(35.6895 139.6917 0)",
                 "created": "2023-07-24T17:14:47.783Z",
                 "parameters": [
                     "nitrogen",
@@ -231,7 +231,7 @@ class DatapointsViewSetTestCase(TestCase):
             },
             {
                 "name": "RS-2",
-                "geog": "SRID=4326;POINT (35.6895 139.6917)",
+                "geog": "SRID=4326;POINT (35.6895 139.6917 0)",
                 "created": "2023-07-24T17:14:47.783000Z",
                 "parameters": [
                     "nitrogen",
@@ -250,7 +250,7 @@ class DatapointsViewSetTestCase(TestCase):
         # Create datapoints
         datapoint_data = [
                             {
-                                "geog": "SRID=4326;POINT (40.7128 -74.006)",
+                                "geog": "SRID=4326;POINT (40.7128 -74.006 0)",
                                 "time": "2023-06-01T09:00:00Z",
                                 "end_time": None,
                                 "data": {
@@ -259,7 +259,7 @@ class DatapointsViewSetTestCase(TestCase):
                                 }
                             },
                             {
-                                "geog": "SRID=4326;POINT (34.0522 -118.2437)",
+                                "geog": "SRID=4326;POINT (34.0522 -118.2437 0)",
                                 "time": "2023-06-01T12:00:00Z",
                                 "end_time": None,
                                 "data": {
@@ -268,7 +268,7 @@ class DatapointsViewSetTestCase(TestCase):
                                 }
                             },
                             {
-                                "geog": "SRID=4326;POINT (51.5074 -0.1278)",
+                                "geog": "SRID=4326;POINT (51.5074 -0.1278 0)",
                                 "time": "2023-06-01T16:00:00Z",
                                 "end_time": None,
                                 "data": {
@@ -277,7 +277,7 @@ class DatapointsViewSetTestCase(TestCase):
                                 }
                             },
                             {
-                                "geog": "SRID=4326;POINT (37.7749 -122.4194)",
+                                "geog": "SRID=4326;POINT (37.7749 -122.4194 0)",
                                 "time": "2023-06-01T18:00:00Z",
                                 "end_time": None,
                                 "data": {
@@ -286,7 +286,7 @@ class DatapointsViewSetTestCase(TestCase):
                                 }
                             },
                             {
-                                "geog": "SRID=4326;POINT (52.52 13.405)",
+                                "geog": "SRID=4326;POINT (52.52 13.405 0)",
                                 "time": "2023-06-01T09:30:00Z",
                                 "end_time": None,
                                 "data": {
@@ -295,7 +295,7 @@ class DatapointsViewSetTestCase(TestCase):
                                 }
                             },
                             {
-                                "geog": "SRID=4326;POINT (35.6895 139.6917)",
+                                "geog": "SRID=4326;POINT (35.6895 139.6917 0)",
                                 "time": "2023-06-01T11:30:00Z",
                                 "end_time": None,
                                 "data": {
@@ -304,7 +304,7 @@ class DatapointsViewSetTestCase(TestCase):
                                 }
                             },
                             {
-                                "geog": "SRID=4326;POINT (-33.8651 151.2099)",
+                                "geog": "SRID=4326;POINT (-33.8651 151.2099 0)",
                                 "time": "2023-06-01T13:30:00Z",
                                 "end_time": None,
                                 "data": {
@@ -313,7 +313,7 @@ class DatapointsViewSetTestCase(TestCase):
                                 }
                             },
                             {
-                                "geog": "SRID=4326;POINT (37.9838 23.7275)",
+                                "geog": "SRID=4326;POINT (37.9838 23.7275 0)",
                                 "time": "2023-06-01T15:30:00Z",
                                 "end_time": None,
                                 "data": {
@@ -322,7 +322,7 @@ class DatapointsViewSetTestCase(TestCase):
                                 }
                             },
                             {
-                                "geog": "SRID=4326;POINT (40.4168 -3.7038)",
+                                "geog": "SRID=4326;POINT (40.4168 -3.7038 0)",
                                 "time": "2023-06-01T17:30:00Z",
                                 "end_time": None,
                                 "data": {
@@ -331,7 +331,7 @@ class DatapointsViewSetTestCase(TestCase):
                                 }
                             },
                             {
-                                "geog": "SRID=4326;POINT (51.5074 -0.1278)",
+                                "geog": "SRID=4326;POINT (51.5074 -0.1278 0)",
                                 "time": "2023-05-01T16:00:00Z",
                                 "end_time": None,
                                 "data": {
