@@ -101,29 +101,31 @@ datapoints_df = pd.read_csv('data/datapoints.csv')
 
 
 def post_datapoints(datapoint):
-    url = root_url + 'sensordata/datapoints/'
-    stream_id = get(root_url + 'sensordata/streams/?name=' + datapoint['sensor_name']).json()[0]['id']
-    dp_data = {
-        'geog': datapoint['geog'],
-        'time': datapoint['start_time'],
-        'end_time': datapoint['end_time'],
-        'data': str(datapoint['data']),
-        'stream': stream_id
-    }
-    response = post(url, data=dp_data)
-    if response.status_code != 201:
-        print(response.status_code)
-        print(response.text)
+    try:
+        url = root_url + 'sensordata/datapoints/'
+        stream_id = get(root_url + 'sensordata/streams/?name=' + datapoint['sensor_name']).json()[0]['id']
+        dp_data = {
+            'geog': datapoint['geog'],
+            'time': datapoint['start_time'],
+            'end_time': datapoint['end_time'],
+            'data': str(datapoint['data']),
+            'stream': stream_id
+        }
+        response = post(url, data=dp_data)
+        if response.status_code != 201:
+            print(response.status_code)
+            print(response.text)
+    except Exception as e:
+        print(e)
+        print(datapoint['sensor_name'])
+        print(datapoint['start_time'])
+        print(datapoint['end_time'])
+        print(datapoint['data'])
 
 
-def apply_function_in_parallel(data, function):
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = list(tqdm(executor.map(function, data), total=len(data)))
-    return results
-
-
-# sensors_df.apply(post_sensor, axis=1)
-# streams_df.apply(post_stream, axis=1)
 # parameters_df.apply(post_parameter, axis=1)
 # categories_df.progress_apply(post_categories, axis=1)
-apply_function_in_parallel(datapoints_df.to_dict('records'), post_datapoints)
+# sensors_df.apply(post_sensor, axis=1)
+# streams_df.apply(post_stream, axis=1)
+datapoints_df[datapoints_df['sensor_name']!='Reinhart'].progress_apply(post_datapoints, axis=1)
+
