@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    "mozilla_django_oidc",
     "sensordata.apps.SensordataConfig",
     "drf_yasg",
     "authentication"
@@ -53,7 +52,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "mozilla_django_oidc.middleware.SessionRefresh",
 ]
 
 ROOT_URLCONF = "geostreams3.urls"
@@ -129,30 +127,20 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTHENTICATION_BACKENDS = (
-    'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
-    # ...
-)
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'mozilla_django_oidc.contrib.drf.OIDCAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
 }
 
 
 
-# OIDC-Keycloak settings
-OIDC_RP_CLIENT_ID = config('KEYCLOAK_CLIENT_ID')
-OIDC_RP_CLIENT_SECRET = config('KEYCLOAK_CLIENT_SECRET')
-OIDC_OP_AUTHORIZATION_ENDPOINT = config('KEYCLOAK_AUTHORIZATION_ENDPOINT')
-OIDC_OP_TOKEN_ENDPOINT = config('KEYCLOAK_TOKEN_ENDPOINT')
-OIDC_OP_USER_ENDPOINT = config('KEYCLOAK_USER_ENDPOINT')
-OIDC_RP_SIGN_ALGO = 'RS256'
-OIDC_OP_JWKS_ENDPOINT = config('KEYCLOAK_JWKS_ENDPOINT')
-# OIDC_RP_USE_NONCE = True
-# OIDC_RP_VERIFY_NONCE = True
+# Keycloak settings
+KEYCLOAK_BASE_URL = config('KEYCLOAK_BASE_URL')
+KEYCLOAK_CLIENT_ID = config('KEYCLOAK_CLIENT_ID')
+KEYCLOAK_REALM = config('KEYCLOAK_REALM')
 
 
 # TODO: Add redirect urls

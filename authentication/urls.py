@@ -1,8 +1,7 @@
 from django.urls import include, path
-from .views import login_view, oidc_callback
+from .views import login_view, callback_view
 
 urlpatterns = [
-    path('callback/', oidc_callback, name='oidc_callback'),
-    path('', include('mozilla_django_oidc.urls')),
-    path('login/', login_view, name='login'),
+    path("login/", login_view, name="login"),
+    path("callback/", callback_view, name="callback")
 ]

@@ -1,24 +1,29 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from mozilla_django_oidc.auth import OIDCAuthenticationBackend
-
-
+from django.http import HttpResponseRedirect
+from keycloak import KeycloakOpenID
+from django.conf import settings
 # Create your views here.
 
-# Login View
 def login_view(request):
-    return render(request, 'login.html')
+    keycloak_openid = KeycloakOpenID(
+        server_url=settings.KEYCLOAK_BASE_URL,
+        client_id=settings.KEYCLOAK_CLIENT_ID,
+        realm_name=settings.KEYCLOAK_REALM
+    )
+    # Redirect the user to the Keycloak provider for authentication
+    auth_url = keycloak_openid.auth_url('http://localhost:9007/auth/callback')
+    return HttpResponseRedirect(auth_url)
 
+def callback_view(request):
+    code = request.GET.get('code')
+    keycloak_openid = KeycloakOpenID(
+        server_url=settings.KEYCLOAK_BASE_URL,
+        client_id=settings.KEYCLOAK_CLIENT_ID,
+        realm_name=settings.KEYCLOAK_REALM
+    )
 
-def oidc_callback(request):
-    print(request)
-    oidc_backend = OIDCAuthenticationBackend()
-    user = oidc_backend.authenticate(request=request)
-    print(user)
-    if user is not None:
-        login(request, user)
-        # Redirect to a desired page after successful authentication
-        return redirect('login')
-    else:
-        # Handle authentication failure
-        return redirect('login')
+    # Exchange the authorization code for a token
+    token_response = keycloak_openid.token(code)
+    access_token = token_response.get('access_token')
+
+    # Get the user's information
+    userinfo = keycloak_openid.userinfo(access_token)
