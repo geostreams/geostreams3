@@ -27,10 +27,6 @@ class Parameter(models.Model):
     name = models.CharField(unique=True, max_length=200)
     title = models.CharField(max_length=200, blank=True, null=True)
     unit = models.CharField(max_length=20, blank=True, null=True)
-    search_view = models.BooleanField(blank=True, null=True)
-    explore_view = models.BooleanField(blank=True, null=True)
-    scale_names = ArrayField(models.CharField(max_length=250), blank=True, null=True)
-    scale_colors = ArrayField(models.CharField(max_length=100), blank=True, null=True)
 
     class Meta:
         db_table = 'parameters'
@@ -96,7 +92,8 @@ class Datapoint(TimescaleModel):
     geog = geomodels.GeometryField(dim=3, blank=False, null=False)  # if missing, use sensor geog
     time = TimescaleDateTimeField(interval='7 days')
     end_time = models.DateTimeField(blank=True, null=True)
-    data = models.JSONField()
+    parameter = models.ForeignKey(Parameter, models.DO_NOTHING,null=True)
+    value = models.FloatField(blank=True, null=True)
 
     class Meta:
         db_table = 'datapoints'
@@ -109,6 +106,9 @@ class DatapointBin(models.Model):
     average = models.FloatField()
     sources = ArrayField(models.CharField(), blank=True, null=True, default=list)
 
+    class Meta:
+        abstract = True
+
 
 class DatapointHourlyBin(DatapointBin):
     year = models.IntegerField()
@@ -116,17 +116,29 @@ class DatapointHourlyBin(DatapointBin):
     day = models.IntegerField()
     hour = models.IntegerField()
 
+    class Meta:
+        abstract = True
+
 
 class DatapointDailyBin(DatapointBin):
     year = models.IntegerField()
     month = models.IntegerField()
     day = models.IntegerField()
 
+    class Meta:
+        abstract = True
+
 
 class DatapointMonthlyBin(DatapointBin):
     year = models.IntegerField()
     month = models.IntegerField()
 
+    class Meta:
+        abstract = True
+
 
 class DatapointYearlyBin(DatapointBin):
     year = models.IntegerField()
+
+    class Meta:
+        abstract = True

@@ -26,8 +26,6 @@ def post_sensor(sensor):
     if response.status_code != 201:
         print(response.status_code)
         print(response.text)
-    else:
-        print('Success!')
 
 
 streams_df = pd.read_csv('data/streams.csv')
@@ -75,8 +73,6 @@ def post_parameter(parameter):
     if response.status_code != 201:
         print(response.status_code)
         print(response.text)
-    else:
-        print('Success!')
 
 
 categories_df = pd.read_csv('data/categories.csv')
@@ -93,8 +89,7 @@ def post_categories(category):
     if response.status_code != 201:
         print(response.status_code)
         print(response.text)
-    else:
-        print('Success!')
+
 
 
 datapoints_df = pd.read_csv('data/datapoints.csv')
@@ -123,9 +118,10 @@ def post_datapoints(datapoint):
         print(datapoint['data'])
 
 
-# parameters_df.apply(post_parameter, axis=1)
+# parameters_df.progress_apply(post_parameter, axis=1)
 # categories_df.progress_apply(post_categories, axis=1)
-# sensors_df.apply(post_sensor, axis=1)
-# streams_df.apply(post_stream, axis=1)
-datapoints_df[datapoints_df['sensor_name']!='Reinhart'].progress_apply(post_datapoints, axis=1)
+# sensors_df.progress_apply(post_sensor, axis=1)
+# streams_df.progress_apply(post_stream, axis=1)
+datapoints_df[datapoints_df['sensor_name']=='Reinhart'].head(1).progress_apply(post_datapoints, axis=1)
+# datapoints_df[datapoints_df['sensor_name']=='Reinhart'].progress_apply(post_datapoints, axis=1)
 
