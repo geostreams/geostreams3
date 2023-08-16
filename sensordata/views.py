@@ -79,7 +79,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
     queryset = Datapoint.objects.all()
     serializer_class = DatapointSerializer
 
-    def post(self, request):
+    def create(self, request, *args, **kwargs):
         """Create new datapoint."""
         data = self.request.data
         datapoints = []
