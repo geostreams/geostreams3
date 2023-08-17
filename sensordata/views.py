@@ -111,6 +111,24 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         sensor_id = request.GET.get('sensor_id')
         return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'hourly')
 
+    @action(detail=False, methods=['GET'])
+    def get_daily_average_datapoints_by_parameter(self, request):
+        """Get daily average datapoints by parameter."""
+        sensor_id = request.GET.get('sensor_id')
+        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'daily')
+
+    @action(detail=False, methods=['GET'])
+    def get_monthly_average_datapoints_by_parameter(self, request):
+        """Get monthly average datapoints by parameter."""
+        sensor_id = request.GET.get('sensor_id')
+        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'monthly')
+
+    @action(detail=False, methods=['GET'])
+    def get_yearly_average_datapoints_by_parameter(self, request):
+        """Get yearly average datapoints by parameter."""
+        sensor_id = request.GET.get('sensor_id')
+        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'yearly')
+
     @staticmethod
     def get_time_period_binned_datapoint(sensor_id, time_period):
         if time_period == 'hourly':
@@ -133,21 +151,73 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                     WHERE
                         streams.sensor_id = {sensor_id};
                     """
-            query = query.format(sensor_id=sensor_id)
+        elif time_period == 'daily':
+            query = """
+                    SELECT
+                        parameters.name AS label,
+                        average,
+                        count,
+                        bucket AS date,
+                        EXTRACT(YEAR FROM bucket) AS year,
+                        EXTRACT(MONTH FROM bucket) AS month,
+                        EXTRACT(DAY FROM bucket) AS day
+                    FROM
+                        daily_sensor_data
+                    RIGHT JOIN
+                        parameters ON daily_sensor_data.parameter_id = parameters.id
+                    LEFT JOIN
+                        streams ON daily_sensor_data.stream_id = streams.id
+                    WHERE
+                        streams.sensor_id = {sensor_id};
+                    """
+        elif time_period == 'monthly':
+            query = """
+                    SELECT
+                    parameters.name AS label,
+                    average,
+                    count,
+                    bucket AS date,
+                    EXTRACT(YEAR FROM bucket) AS year,
+                    EXTRACT(MONTH FROM bucket) AS month
+                    FROM monthly_sensor_data
+                    RIGHT JOIN
+                    parameters ON monthly_sensor_data.parameter_id = parameters.id
+                    LEFT JOIN
+                    streams ON monthly_sensor_data.stream_id = streams.id
+                    WHERE
+                    streams.sensor_id = {sensor_id};
+                    """
+        elif time_period == 'yearly':
+            query = """
+                    SELECT
+                    parameters.name AS label,
+                    average,
+                    count,
+                    bucket AS date,
+                    EXTRACT(YEAR FROM bucket) AS year
+                    FROM yearly_sensor_data
+                    RIGHT JOIN
+                    parameters ON yearly_sensor_data.parameter_id = parameters.id
+                    LEFT JOIN
+                    streams ON yearly_sensor_data.stream_id = streams.id
+                    WHERE
+                    streams.sensor_id = {sensor_id};
+                    """
 
-            with connection.cursor() as cursor:
-                cursor.execute(query)
-                columns = [desc[0] for desc in cursor.description]
-                results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        query = query.format(sensor_id=sensor_id)
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            columns = [desc[0] for desc in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-            response = {}
-            for datapoint in results:
-                label = datapoint['label']
-                if label not in response:
-                    response[label] = []
-                del datapoint['label']  # Remove 'label' key
-                response[label].append(datapoint)
-            return Response(response, status=status.HTTP_200_OK)
+        response = {}
+        for datapoint in results:
+            label = datapoint['label']
+            if label not in response:
+                response[label] = []
+            del datapoint['label']  # Remove 'label' key
+            response[label].append(datapoint)
+        return Response(response, status=status.HTTP_200_OK)
 
 #     @action(detail=False, methods=['GET'])
 #     def get_hourly_average_datapoints_by_parameter(self, request):
