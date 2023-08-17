@@ -122,6 +122,6 @@ def post_datapoints(datapoint):
 # categories_df.progress_apply(post_categories, axis=1)
 # sensors_df.progress_apply(post_sensor, axis=1)
 # streams_df.progress_apply(post_stream, axis=1)
-datapoints_df[datapoints_df['sensor_name']=='Reinhart'].head(1).progress_apply(post_datapoints, axis=1)
+datapoints_df[datapoints_df['sensor_name']=='Reinhart'].progress_apply(post_datapoints, axis=1)
 # datapoints_df[datapoints_df['sensor_name']=='Reinhart'].progress_apply(post_datapoints, axis=1)
 
