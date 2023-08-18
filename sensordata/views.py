@@ -109,28 +109,35 @@ class DatapointsViewSet(viewsets.ModelViewSet):
     def get_hourly_average_datapoints_by_parameter(self, request):
         """Get hourly average datapoints by parameter."""
         sensor_id = request.GET.get('sensor_id')
-        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'hourly')
+        parameter = request.GET.getlist('parameter')
+        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'hourly', parameter)
 
     @action(detail=False, methods=['GET'])
     def get_daily_average_datapoints_by_parameter(self, request):
         """Get daily average datapoints by parameter."""
         sensor_id = request.GET.get('sensor_id')
-        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'daily')
+        parameter = request.GET.getlist('parameter')
+        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'daily', parameter)
 
     @action(detail=False, methods=['GET'])
     def get_monthly_average_datapoints_by_parameter(self, request):
         """Get monthly average datapoints by parameter."""
         sensor_id = request.GET.get('sensor_id')
-        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'monthly')
+        parameter = request.GET.getlist('parameter')
+        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'monthly', parameter)
 
     @action(detail=False, methods=['GET'])
     def get_yearly_average_datapoints_by_parameter(self, request):
         """Get yearly average datapoints by parameter."""
         sensor_id = request.GET.get('sensor_id')
-        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'yearly')
+        parameter = request.GET.getlist('parameter')
+        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'yearly', parameter)
 
     @staticmethod
-    def get_time_period_binned_datapoint(sensor_id, time_period):
+    def get_time_period_binned_datapoint(sensor_id, time_period, parameter=None):
+        # TODO: Check sensor_id is valid, and also if parameter is valid
+        if sensor_id.isdigit() is False:
+            return Response({"message": "Sensor ID must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
         if time_period == 'hourly':
             query = """
                     SELECT
@@ -149,7 +156,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                     LEFT JOIN
                         streams ON hourly_sensor_data.stream_id = streams.id
                     WHERE
-                        streams.sensor_id = {sensor_id};
+                        streams.sensor_id = {sensor_id}
                     """
         elif time_period == 'daily':
             query = """
@@ -168,7 +175,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                     LEFT JOIN
                         streams ON daily_sensor_data.stream_id = streams.id
                     WHERE
-                        streams.sensor_id = {sensor_id};
+                        streams.sensor_id = {sensor_id}
                     """
         elif time_period == 'monthly':
             query = """
@@ -185,7 +192,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                     LEFT JOIN
                     streams ON monthly_sensor_data.stream_id = streams.id
                     WHERE
-                    streams.sensor_id = {sensor_id};
+                    streams.sensor_id = {sensor_id}
                     """
         elif time_period == 'yearly':
             query = """
@@ -201,8 +208,17 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                     LEFT JOIN
                     streams ON yearly_sensor_data.stream_id = streams.id
                     WHERE
-                    streams.sensor_id = {sensor_id};
+                    streams.sensor_id = {sensor_id}
                     """
+
+        if len(parameter):
+            # Check if list of parameters is valid
+            if len(parameter) != len(Parameter.objects.filter(name__in=parameter)):
+                return Response({"message": "Parameter does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            parameter_list = ','.join(["'" + param + "'" for param in parameter])
+            query += "AND parameters.name IN ({parameter_list});".format(parameter_list=parameter_list)
+        else:
+            query += ";"
 
         query = query.format(sensor_id=sensor_id)
         with connection.cursor() as cursor:

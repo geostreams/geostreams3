@@ -94,6 +94,7 @@ class Datapoint(TimescaleModel):
     end_time = models.DateTimeField(blank=True, null=True)
     parameter = models.ForeignKey(Parameter, models.DO_NOTHING,null=True)
     value = models.FloatField(blank=True, null=True)
+    # TODO properties = models.JSONField()
 
     class Meta:
         db_table = 'datapoints'
