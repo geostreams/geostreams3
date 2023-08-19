@@ -110,31 +110,39 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         """Get hourly average datapoints by parameter."""
         sensor_id = request.GET.get('sensor_id')
         parameter = request.GET.getlist('parameter')
-        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'hourly', parameter)
+        start_time = request.GET.get('start_time')
+        end_time = request.GET.get('end_time')
+        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'hourly', parameter, start_time, end_time)
 
     @action(detail=False, methods=['GET'])
     def get_daily_average_datapoints_by_parameter(self, request):
         """Get daily average datapoints by parameter."""
         sensor_id = request.GET.get('sensor_id')
         parameter = request.GET.getlist('parameter')
-        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'daily', parameter)
+        start_time = request.GET.get('start_time')
+        end_time = request.GET.get('end_time')
+        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'daily', parameter, start_time, end_time)
 
     @action(detail=False, methods=['GET'])
     def get_monthly_average_datapoints_by_parameter(self, request):
         """Get monthly average datapoints by parameter."""
         sensor_id = request.GET.get('sensor_id')
         parameter = request.GET.getlist('parameter')
-        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'monthly', parameter)
+        start_time = request.GET.get('start_time')
+        end_time = request.GET.get('end_time')
+        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'monthly', parameter, start_time, end_time)
 
     @action(detail=False, methods=['GET'])
     def get_yearly_average_datapoints_by_parameter(self, request):
         """Get yearly average datapoints by parameter."""
         sensor_id = request.GET.get('sensor_id')
         parameter = request.GET.getlist('parameter')
-        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'yearly', parameter)
+        start_time = request.GET.get('start_time')
+        end_time = request.GET.get('end_time')
+        return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, 'yearly', parameter, start_time, end_time)
 
     @staticmethod
-    def get_time_period_binned_datapoint(sensor_id, time_period, parameter=None):
+    def get_time_period_binned_datapoint(sensor_id, time_period, parameter=None, start_time=None, end_time=None):
         # TODO: Check sensor_id is valid, and also if parameter is valid
         if sensor_id.isdigit() is False:
             return Response({"message": "Sensor ID must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
@@ -216,10 +224,15 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             if len(parameter) != len(Parameter.objects.filter(name__in=parameter)):
                 return Response({"message": "Parameter does not exist"}, status=status.HTTP_400_BAD_REQUEST)
             parameter_list = ','.join(["'" + param + "'" for param in parameter])
-            query += "AND parameters.name IN ({parameter_list});".format(parameter_list=parameter_list)
-        else:
-            query += ";"
+            query += "AND parameters.name IN ({parameter_list}) ".format(parameter_list=parameter_list)
 
+        if start_time:
+            query += "AND bucket >= '{start_time}'::timestamp ".format(start_time=start_time)
+        if end_time:
+            query += "AND bucket <= '{end_time}'::timestamp ".format(end_time=end_time)
+
+        query += ';'
+        print(query)
         query = query.format(sensor_id=sensor_id)
         with connection.cursor() as cursor:
             cursor.execute(query)
@@ -235,131 +248,3 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             response[label].append(datapoint)
         return Response(response, status=status.HTTP_200_OK)
 
-#     @action(detail=False, methods=['GET'])
-#     def get_hourly_average_datapoints_by_parameter(self, request):
-#         """Get hourly average datapoints by parameter."""
-#         sensor_id = request.GET.get('sensor_id')
-#         parameter = request.GET.getlist('parameter')
-#         if not parameter:
-#             parameter = request.GET.get('parameter', None)
-#         return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, parameter, '1 hour',
-#                                                                   DatapointHourlyBinSerializer)
-#
-#     @action(detail=False, methods=['GET'])
-#     def get_daily_average_datapoints_by_parameter(self, request):
-#         """Get daily average datapoints by parameter."""
-#         sensor_id = request.GET.get('sensor_id')
-#         parameter = request.GET.getlist('parameter')
-#         if not parameter:
-#             parameter = request.GET.get('parameter', None)
-#         return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, parameter, '1 day',
-#                                                                   DatapointDailyBinSerializer)
-#
-#     @action(detail=False, methods=['GET'])
-#     def get_monthly_average_datapoints_by_parameter(self, request):
-#         """Get monthly average datapoints by parameter."""
-#         parameter = request.GET.getlist('parameter')
-#         if not parameter:
-#             parameter = request.GET.get('parameter', None)
-#         sensor_id = request.GET.get('sensor_id')
-#         return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, parameter, '1 month',
-#                                                                   DatapointMonthlyBinSerializer)
-#
-#     @action(detail=False, methods=['GET'])
-#     def get_yearly_average_datapoints_by_parameter(self, request):
-#         """Get yearly average datapoints by parameter."""
-#         sensor_id = request.GET.get('sensor_id')
-#         parameter = request.GET.getlist('parameter')
-#         if not parameter:
-#             parameter = request.GET.get('parameter', None)
-#         return DatapointsViewSet.get_time_period_binned_datapoint(sensor_id, parameter, '1 year',
-#                                                                   DatapointYearlyBinSerializer)
-#
-#
-# def get_time_period_binned_datapoint(sensor_id, parameter, time_period, time_period_serializer):
-#     """Helper function to get datapoints binned by a timeperiod"""
-#     if sensor_id is None:
-#         return Response({"message": "Sensor ID is needed"}, status=status.HTTP_400_BAD_REQUEST)
-#     try:
-#         sensor = Sensor.objects.get(id=sensor_id)
-#     except Sensor.DoesNotExist:
-#         return Response({"message": "Sensor does not exist"}, status=status.HTTP_404_NOT_FOUND)
-#     parameters = sensor.parameters
-#     properties = []
-#     if parameter is not None:
-#         if len(parameter) == 1:
-#             parameter = parameter[0]
-#             if parameter not in parameters:
-#                 return Response({"message": "Sensor does not have parameter"}, status=status.HTTP_400_BAD_REQUEST)
-#             filter_param = param_to_data_key(parameter)
-#             query = Datapoint.timescale.time_bucket('time', time_period) \
-#                 .filter(stream__sensor__id=sensor_id) \
-#                 .annotate(average=Avg(Cast(filter_param, output_field=FloatField()))) \
-#                 .annotate(count=Count(filter_param)) \
-#                 .annotate(date=F('bucket')) \
-#                 .annotate(year=ExtractYear('bucket')) \
-#                 .annotate(label=Concat(
-#                 Cast(ExtractYear('bucket'), output_field=CharField()),
-#                 Value('-'),
-#                 Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2)
-#             )) \
-#                 .annotate(parameter=Value(parameter, output_field=CharField()))
-#             query = DatapointsViewSet.query_add_ons(time_period, query)
-#             properties.append({parameter: time_period_serializer(query, many=True).data})
-#         elif type(parameter) is list:
-#             queries = []
-#             properties = []
-#             for parameter in parameter:
-#                 if parameter not in parameters:
-#                     return Response({"message": "Parameter " + str(parameter) + " does not exist"},
-#                                     status=status.HTTP_400_BAD_REQUEST)
-#                 filter_param = param_to_data_key(parameter)
-#                 query = Datapoint.timescale.time_bucket('time', time_period) \
-#                     .filter(stream__sensor__id=sensor_id) \
-#                     .annotate(average=Avg(Cast(filter_param, output_field=FloatField()))) \
-#                     .annotate(count=Count(filter_param)) \
-#                     .annotate(date=F('bucket')) \
-#                     .annotate(year=ExtractYear('bucket')) \
-#                     .annotate(label=Concat(
-#                     Cast(ExtractYear('bucket'), output_field=CharField()),
-#                     Value('-'),
-#                     Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2)
-#                 )) \
-#                     .annotate(parameter=Value(parameter, output_field=CharField()))
-#                 query = DatapointsViewSet.query_add_ons(time_period, query)
-#                 properties.append({parameter: time_period_serializer(query, many=True).data})
-#     else:
-#         queries = []
-#         properties = []
-#         for parameter in parameters:
-#             filter_param = param_to_data_key(parameter)
-#             query = Datapoint.timescale.time_bucket('time', time_period) \
-#                 .filter(stream__sensor__id=sensor_id) \
-#                 .annotate(average=Avg(Cast(filter_param, output_field=FloatField()))) \
-#                 .annotate(count=Count(filter_param)) \
-#                 .annotate(date=F('bucket')) \
-#                 .annotate(year=ExtractYear('bucket')) \
-#                 .annotate(parameter=Value(parameter, output_field=CharField())) \
-#                 .annotate(label=Concat(
-#                 Cast(ExtractYear('bucket'), output_field=CharField()),
-#                 Value('-'),
-#                 Right(Concat(Value('00'), Cast(ExtractMonth('bucket'), output_field=CharField())), 2)
-#             ))
-#
-#             query = DatapointsViewSet.query_add_ons(time_period, query)
-#             properties.append({parameter: time_period_serializer(query, many=True).data})
-#
-#     response = {"sensor_name": sensor.name,
-#                 "properties": properties}
-#     return Response(response, status=status.HTTP_200_OK)
-#
-#
-# def query_add_ons(time_period, query):
-#     """Helper function to add extra annotations to the query"""
-#     if time_period != '1 year':
-#         query = query.annotate(month=ExtractMonth('bucket'))
-#     if time_period != '1 year' and time_period != '1 month':
-#         query = query.annotate(day=ExtractDay('bucket'))
-#     if time_period == '1 hour':
-#         query = query.annotate(hour=ExtractHour('bucket'))
-#     return query
