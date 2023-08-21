@@ -100,10 +100,13 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         datapoints_data = (json.loads(data["data"]) if type(data["data"]) is str else data["data"])
 
         for key, value in datapoints_data.items():
-            datapoint = datapoint_data.copy()
-            datapoint["parameter"] = Parameter.objects.get(name=key.strip()).id
-            datapoint["value"] = value
-            datapoints.append(datapoint)
+            try:
+                datapoint = datapoint_data.copy()
+                datapoint["parameter"] = Parameter.objects.get(name=key.strip()).id
+                datapoint["value"] = value
+                datapoints.append(datapoint)
+            except Parameter.DoesNotExist:
+                continue
 
         datapoint_serializer = DatapointSerializer(data=datapoints, many=True)
         if datapoint_serializer.is_valid():
