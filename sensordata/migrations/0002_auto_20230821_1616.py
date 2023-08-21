@@ -2,28 +2,21 @@
 
 from django.db import migrations
 import os
-import psycopg2
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 
 def create_aggregate_views(apps, schema_editor):
-    filename = os.path.join('sensordata','sql', 'create_continuous_aggregates.sql')
+    filename = os.path.join('sensordata', 'sql', 'create_continuous_aggregates.sql')
     sql = open(filename, 'r').read()
-    connection = psycopg2.connect("dbname='postgres' user='postgres' host='localhost' password='geostreams' port='5432'")
 
-    with connection.cursor() as cursor:
+    with schema_editor.connection.cursor() as cursor:
         cursor.execute(sql)
-        connection.commit()
 
 
 def delete_aggregate_views(apps, schema_editor):
-    filename = os.path.join('sensordata','sql', 'delete_continuous_aggregates.sql')
+    filename = os.path.join('sensordata', 'sql', 'delete_continuous_aggregates.sql')
     sql = open(filename, 'r').read()
-    connection = psycopg2.connect("dbname='postgres' user='postgres' host='localhost' password='geostreams' port='5432'")
-    with connection.cursor() as cursor:
+    with schema_editor.connection.cursor() as cursor:
         cursor.execute(sql)
-        connection.commit()
-
 
 class Migration(migrations.Migration):
     dependencies = [
@@ -31,5 +24,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(create_aggregate_views, reverse_code= delete_aggregate_views),
+        migrations.RunPython(create_aggregate_views, reverse_code=delete_aggregate_views),
     ]

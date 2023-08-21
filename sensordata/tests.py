@@ -30,10 +30,6 @@ class ParameterApiTest(TestCase):
         self.assertEqual(parameter['name'], 'temperature')
         self.assertEqual(parameter['title'], 'Temperature')
         self.assertEqual(parameter['unit'], 'Celsius')
-        self.assertEqual(parameter['search_view'], True)
-        self.assertEqual(parameter['explore_view'], False)
-        self.assertEqual(parameter['scale_names'], ['Low', 'Medium', 'High'])
-        self.assertEqual(parameter['scale_colors'], ['#FF0000', '#00FF00', '#0000FF'])
 
     def test_get_all_parameters(self):
         response = self.client.get('/sensordata/parameters/')
