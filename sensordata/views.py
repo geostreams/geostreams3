@@ -106,6 +106,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 datapoint["value"] = value
                 datapoints.append(datapoint)
             except Parameter.DoesNotExist:
+                print("Parameter does not exist-", key.strip())
                 continue
 
         datapoint_serializer = DatapointSerializer(data=datapoints, many=True)
