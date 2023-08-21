@@ -14,25 +14,34 @@ from .models import Sensor, Stream, Parameter, Datapoint, Category
 from .serializers import SensorSerializer, ParameterSerializer, StreamSerializer, \
     CategorySerializer,DatapointSerializer
 
-# Helper functions
-def param_to_data_key(param):
-    return 'data__%s' % param
-
 
 class ParametersViewSet(viewsets.ModelViewSet):
     queryset = Parameter.objects.all()
     serializer_class = ParameterSerializer
 
+
     @action(detail=False, methods=['DELETE'])
-    def delete_by_name(self, request):
-        name = request.data.get('name')
-        try:
-            parameter = Parameter.objects.get(name=name)
-            serializer = ParameterSerializer(parameter)
-            parameter.delete()
-            return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
-        except Parameter.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+    def delete(self, request, *args, **kwargs):
+        """Delete a parameter."""
+        parameter_name = request.GET.get('name')
+        param_id = kwargs.get('pk')
+        if parameter_name:
+            try:
+                parameter = Parameter.objects.get(name=parameter_name)
+                parameter.delete()
+                return Response({"message": "Parameter deleted successfully"}, status=status.HTTP_200_OK)
+            except Parameter.DoesNotExist:
+                return Response({"message": "Parameter does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        elif param_id:
+            try:
+                parameter = Parameter.objects.get(id=param_id)
+                parameter.delete()
+                return Response({"message": "Parameter deleted successfully"}, status=status.HTTP_200_OK)
+            except Parameter.DoesNotExist:
+                return Response({"message": "Parameter does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"message": "Parameter name or id must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):

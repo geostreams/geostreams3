@@ -1,5 +1,5 @@
 from datetime import datetime
-from django.db import models
+from django.db import models, migrations, connection
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.gis.db import models as geomodels
 from timescale.db.models.models import TimescaleModel
@@ -92,10 +92,24 @@ class Datapoint(TimescaleModel):
     geog = geomodels.GeometryField(dim=3, blank=False, null=False)  # if missing, use sensor geog
     time = TimescaleDateTimeField(interval='7 days')
     end_time = models.DateTimeField(blank=True, null=True)
-    parameter = models.ForeignKey(Parameter, models.DO_NOTHING,null=True)
+    parameter = models.ForeignKey(Parameter, models.DO_NOTHING, null=True)
     value = models.FloatField(blank=True, null=True)
+
     # TODO properties = models.JSONField()
 
     class Meta:
         db_table = 'datapoints'
 
+
+def load_sql_file(apps):
+    app_path = apps.get_app_config('sensordata').path
+    filename = app_path + '/sql/' + 'create_continuous_aggregates.sql'
+    sql_statements = open(filename, 'r').read()
+    with connection.cursor() as cursor:
+        cursor.execute(sql_statements)
+
+
+class Migration(migrations.Migration):
+    operations = [
+        migrations.RunPython(load_sql_file),
+    ]
