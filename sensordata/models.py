@@ -99,17 +99,3 @@ class Datapoint(TimescaleModel):
 
     class Meta:
         db_table = 'datapoints'
-
-
-def load_sql_file(apps):
-    app_path = apps.get_app_config('sensordata').path
-    filename = app_path + '/sql/' + 'create_continuous_aggregates.sql'
-    sql_statements = open(filename, 'r').read()
-    with connection.cursor() as cursor:
-        cursor.execute(sql_statements)
-
-
-class Migration(migrations.Migration):
-    operations = [
-        migrations.RunPython(load_sql_file),
-    ]
