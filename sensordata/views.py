@@ -245,7 +245,6 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             query += "AND bucket <= '{end_time}'::timestamp ".format(end_time=end_time)
 
         query += ';'
-        print(query)
         query = query.format(sensor_id=sensor_id)
         with connection.cursor() as cursor:
             cursor.execute(query)
