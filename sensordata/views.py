@@ -53,7 +53,6 @@ class CategoriesViewSet(viewsets.ModelViewSet):
 class SensorsViewSet(viewsets.ModelViewSet):
     queryset = Sensor.objects.all()
     serializer_class = SensorSerializer
-
     # permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
@@ -64,6 +63,19 @@ class SensorsViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(name=name_filter)
 
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if self.request.query_params.get('name', None):
+            serializer = SensorSerializer(queryset[0])
+            return Response({'sensor': serializer.data})
+        serializer = SensorSerializer(queryset, many=True)
+        return Response({'sensors': serializer.data})
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response({'sensor': serializer.data})
 
 
 class StreamsViewSet(viewsets.ModelViewSet):

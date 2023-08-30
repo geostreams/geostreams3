@@ -21,9 +21,31 @@ class ParameterSerializer(serializers.ModelSerializer):
 
 
 class SensorSerializer(serializers.ModelSerializer):
+    geotype = serializers.SerializerMethodField()
+    geometry = serializers.SerializerMethodField()
+
     class Meta:
         model = Sensor
-        fields = '__all__'
+        fields = [
+            'id',
+            'name',
+            'created',
+            'geotype',
+            'geometry',
+            'properties',
+            'min_start_time',
+            'max_end_time',
+            'parameters'
+        ]
+
+    def get_geotype(self, obj):
+        return "Feature"
+
+    def get_geometry(self, obj):
+        return {
+            "type": "Point",
+            "coordinates": [obj.geog.x, obj.geog.y, obj.geog.z]
+        }
 
 
 class StreamSerializer(serializers.ModelSerializer):
@@ -36,5 +58,3 @@ class DatapointSerializer(serializers.ModelSerializer):
     class Meta:
         model = Datapoint
         fields = '__all__'
-
-
