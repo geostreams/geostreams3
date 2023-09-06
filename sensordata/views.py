@@ -19,6 +19,22 @@ class ParametersViewSet(viewsets.ModelViewSet):
     queryset = Parameter.objects.all()
     serializer_class = ParameterSerializer
 
+    def get_queryset(self):
+        queryset = Parameter.objects.all()
+        name_filter = self.request.query_params.get('name', None)
+
+        if name_filter:
+            queryset = queryset.filter(name=name_filter)
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if self.request.query_params.get('name', None):
+            serializer = ParameterSerializer(queryset[0])
+            return Response({'parameter': serializer.data})
+        serializer = ParameterSerializer(queryset, many=True)
+        return Response({'parameters': serializer.data})
 
     @action(detail=False, methods=['DELETE'])
     def delete(self, request, *args, **kwargs):
@@ -41,7 +57,6 @@ class ParametersViewSet(viewsets.ModelViewSet):
                 return Response({"message": "Parameter does not exist"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"message": "Parameter name or id must be provided"}, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):

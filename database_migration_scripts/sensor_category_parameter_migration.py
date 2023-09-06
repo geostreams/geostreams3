@@ -24,8 +24,8 @@ datapoints_df = pd.read_csv('data/datapoints.csv')
 
 def post_datapoints(datapoint):
     try:
-        url = root_url + 'sensordata/datapoints/'
-        stream_id = get(root_url + 'sensordata/streams/?name=' + datapoint['sensor_name']).json()[0]['id']
+        url = root_url + 'api/datapoints/'
+        stream_id = get(root_url + 'api/streams/?name=' + datapoint['sensor_name']).json()[0]['id']
         dp_data = {
             'geog': datapoint['geog'],
             'time': datapoint['start_time'],
@@ -64,7 +64,7 @@ def post_streams():
         return x.strip("{}").split(',')
 
     def get_id(name):
-        sensor = get(root_url + 'sensordata/sensors/?name=' + name).json()
+        sensor = get(root_url + 'api/sensors/?name=' + name).json()
         if len(sensor) == 0:
             return None
         return sensor[0]['id']
@@ -92,6 +92,10 @@ def post_categories():
     categories_df = categories_df[['name', 'detail_type']]
     categories_df.to_sql('categories', conn, if_exists='append', index=False)
     print('Categories posted to database.')
+
+def post_parameter_categories():
+    parameter_categories_df = pd.read_csv('data/parameter_categories.csv')
+    parameter_categories_df["parameter_id"] = parameter_categories_df["parameter_name"].apply(lambda x: get(root_url + 'api/streams/?name=' + x).json()["parameter"['id'])
 
 
 # post_sensors()
