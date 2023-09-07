@@ -38,6 +38,8 @@ class SensorSerializer(serializers.ModelSerializer):
             'parameters'
         ]
 
+
+    # TODO: Need to change this to be more dynamic, for now just hardcode
     def get_geotype(self, obj):
         return "Feature"
 

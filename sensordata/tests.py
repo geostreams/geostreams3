@@ -341,32 +341,32 @@ class DatapointsViewSetTestCase(TestCase):
             self.client.post('/api/datapoints/', data=datapoint, format='json')
 
     def test_get_hourly_average_datapoints_by_parameter(self):
-        sensor_id = self.client.get('/api/sensors/').data[0]['id']
-        parameter = self.client.get('/api/parameters/').data[0]['name']
+        sensor_id = self.client.get('/api/sensors/').data["sensors"][0]['id']
+        parameter = self.client.get('/api/parameters/').data['parameters'][0]['name']
         response = self.client.get('/api/cache/hour/', data={'sensor_id': sensor_id, 'parameter': parameter})
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIsInstance(data, dict)
 
     def test_get_daily_average_datapoints_by_parameter(self):
-        sensor_id = self.client.get('/api/sensors/').data[0]['id']
-        parameter = self.client.get('/api/parameters/').data[0]['name']
+        sensor_id = self.client.get('/api/sensors/').data["sensors"][0]['id']
+        parameter = self.client.get('/api/parameters/').data['parameters'][0]['name']
         response = self.client.get('/api/cache/day/', data={'sensor_id': sensor_id, 'parameter': parameter})
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIsInstance(data, dict)
 
     def test_get_monthly_average_datapoints_by_parameter(self):
-        sensor_id = self.client.get('/api/sensors/').data[0]['id']
-        parameter = self.client.get('/api/parameters/').data[0]['name']
+        sensor_id = self.client.get('/api/sensors/').data["sensors"][0]['id']
+        parameter = self.client.get('/api/parameters/').data['parameters'][0]['name']
         response = self.client.get('/api/cache/month/', data={'sensor_id': sensor_id, 'parameter': parameter})
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIsInstance(data, dict)
 
     def test_get_yearly_average_datapoints_by_parameter(self):
-        sensor_id = self.client.get('/api/sensors/').data[0]['id']
-        parameter = self.client.get('/api/parameters/').data[0]['name']
+        sensor_id = self.client.get('/api/sensors/').data["sensors"][0]['id']
+        parameter = self.client.get('/api/parameters/').data['parameters'][0]['name']
         response = self.client.get('/api/cache/year/', data={'sensor_id': sensor_id, 'parameter': parameter})
         self.assertEqual(response.status_code, 200)
         data = response.json()

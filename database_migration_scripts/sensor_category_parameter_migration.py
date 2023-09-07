@@ -95,7 +95,7 @@ def post_categories():
 
 def post_parameter_categories():
     parameter_categories_df = pd.read_csv('data/parameter_categories.csv')
-    parameter_categories_df["parameter_id"] = parameter_categories_df["parameter_name"].apply(lambda x: get(root_url + 'api/streams/?name=' + x).json()["parameter"['id'])
+    parameter_categories_df["parameter_id"] = parameter_categories_df["parameter_name"].apply(lambda x: get(root_url + 'api/streams/?name=' + x).json()["parameter"['id']])
 
 
 # post_sensors()

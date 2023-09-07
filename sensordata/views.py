@@ -70,6 +70,31 @@ class SensorsViewSet(viewsets.ModelViewSet):
     serializer_class = SensorSerializer
     # permission_classes = [IsAuthenticated]
 
+    def create(self, request, *args, **kwargs):
+        """Create new sensor."""
+        data = self.request.data
+
+        name = request.data.get('name')
+        geog = request.data.get('geog')
+        parameters = request.data.get('parameters')
+        properties = request.data.get('properties')
+        min_start_time = request.data.get('min_start_time')
+        max_end_time = request.data.get('max_end_time')
+        print(geog)
+        #Create sensor
+        new_sensor = Sensor.objects.create(
+            name=name,
+            geog=geog,
+            parameters=parameters,
+            properties=properties,
+            min_start_time=min_start_time,
+            max_end_time=max_end_time
+        )
+        new_sensor.save()
+
+        serialized_sensor = SensorSerializer(new_sensor)
+        return Response(serialized_sensor.data, status=status.HTTP_201_CREATED)
+
     def get_queryset(self):
         queryset = Sensor.objects.all()
         name_filter = self.request.query_params.get('name', None)
