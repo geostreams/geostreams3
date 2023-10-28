@@ -6,3 +6,4 @@ geostreams/migrations/__pycache__/
 .idea/
 venv/
 .env
+*.csv
