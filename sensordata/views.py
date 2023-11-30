@@ -10,9 +10,9 @@ import json
 import psycopg2.extras
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Sensor, Stream, Parameter, Datapoint, Category
+from .models import Sensor, Stream, Parameter, Datapoint, Category, Visualization
 from .serializers import SensorSerializer, ParameterSerializer, StreamSerializer, \
-    CategorySerializer,DatapointSerializer
+    CategorySerializer,DatapointSerializer,VisualizationSerializer
 
 
 class ParametersViewSet(viewsets.ModelViewSet):
@@ -39,7 +39,7 @@ class ParametersViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['DELETE'])
     def delete(self, request, *args, **kwargs):
         """Delete a parameter."""
-        parameter_name = request.GET.get('name')
+        parameter_name = self.request.data.get('name')
         param_id = kwargs.get('pk')
         if parameter_name:
             try:
@@ -64,6 +64,33 @@ class CategoriesViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     # permission_classes = [IsAuthenticated]
 
+class VisualizationsViewSet(viewsets.ModelViewSet):
+    queryset = Visualization.objects.all()
+    serializer_class = VisualizationSerializer
+    # permission_classes = [IsAuthenticated]
+
+    # Delete visualization by name or id
+    @action(detail=False, methods=['DELETE'])
+    def delete(self, request, *args, **kwargs):
+        """Delete a visualization."""
+        visualization_name = self.request.data.get('name')
+        visualization_id = kwargs.get('pk')
+        if visualization_name:
+            try:
+                visualization = Visualization.objects.get(name=visualization_name)
+                visualization.delete()
+                return Response({"message": "Visualization deleted successfully"}, status=status.HTTP_200_OK)
+            except Visualization.DoesNotExist:
+                return Response({"message": "Visualization does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        elif visualization_id:
+            try:
+                visualization = Visualization.objects.get(id=visualization_id)
+                visualization.delete()
+                return Response({"message": "Visualization deleted successfully"}, status=status.HTTP_200_OK)
+            except Visualization.DoesNotExist:
+                return Response({"message": "Visualization does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"message": "Visualization name or id must be provided"}, status=status.HTTP_400_BAD_REQUEST)
 
 class SensorsViewSet(viewsets.ModelViewSet):
     queryset = Sensor.objects.all()
