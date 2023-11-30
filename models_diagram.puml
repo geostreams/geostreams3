@@ -1,0 +1,175 @@
+@startuml 
+class "admin.LogEntry <Administration>" as admin.LogEntry #f4d6f1 {
+    log entry
+    --
+    - id (AutoField)
+    + action_time (DateTimeField)
+    ~ user (ForeignKey)
+    ~ content_type (ForeignKey)
+    + object_id (TextField)
+    + object_repr (CharField)
+    + action_flag (PositiveSmallIntegerField)
+    + change_message (TextField)
+    --
+}
+admin.LogEntry -- auth.User
+admin.LogEntry -- contenttypes.ContentType
+
+
+class "auth.Permission <Authentication and Authorization>" as auth.Permission #e8f4d6 {
+    permission
+    --
+    - id (AutoField)
+    + name (CharField)
+    ~ content_type (ForeignKey)
+    + codename (CharField)
+    --
+}
+auth.Permission -- contenttypes.ContentType
+
+
+class "auth.Group <Authentication and Authorization>" as auth.Group #e8f4d6 {
+    group
+    --
+    - id (AutoField)
+    + name (CharField)
+    # permissions (ManyToManyField)
+    --
+}
+auth.Group *--* auth.Permission
+
+
+class "auth.User <Authentication and Authorization>" as auth.User #e8f4d6 {
+    user
+    --
+    - id (AutoField)
+    + password (CharField)
+    + last_login (DateTimeField)
+    + is_superuser (BooleanField)
+    + username (CharField)
+    + first_name (CharField)
+    + last_name (CharField)
+    + email (EmailField)
+    + is_staff (BooleanField)
+    + is_active (BooleanField)
+    + date_joined (DateTimeField)
+    # groups (ManyToManyField)
+    # user_permissions (ManyToManyField)
+    --
+}
+auth.User *--* auth.Group
+auth.User *--* auth.Permission
+
+
+class "contenttypes.ContentType <Content Types>" as contenttypes.ContentType #d6f4de {
+    content type
+    --
+    - id (AutoField)
+    + app_label (CharField)
+    + model (CharField)
+    --
+}
+
+
+class "sessions.Session <Sessions>" as sessions.Session #f4e1d6 {
+    session
+    --
+    + session_key (CharField)
+    + session_data (TextField)
+    + expire_date (DateTimeField)
+    --
+}
+
+
+class "sensordata.Category <Sensordata>" as sensordata.Category #ebf4d6 {
+    category
+    --
+    - id (AutoField)
+    + name (CharField)
+    + detail_type (CharField)
+    --
+}
+
+
+class "sensordata.Parameter <Sensordata>" as sensordata.Parameter #ebf4d6 {
+    parameter
+    --
+    - id (AutoField)
+    + name (CharField)
+    + title (CharField)
+    + unit (CharField)
+    --
+}
+
+
+class "sensordata.ParameterCategory <Sensordata>" as sensordata.ParameterCategory #ebf4d6 {
+    parameter category
+    --
+    - id (AutoField)
+    ~ parameter (ForeignKey)
+    ~ category (ForeignKey)
+    --
+}
+sensordata.ParameterCategory -- sensordata.Parameter
+sensordata.ParameterCategory -- sensordata.Category
+
+
+class "sensordata.Region <Sensordata>" as sensordata.Region #ebf4d6 {
+    region
+    --
+    - id (AutoField)
+    + geog (GeometryField)
+    + properties (JSONField)
+    --
+}
+
+
+class "sensordata.Sensor <Sensordata>" as sensordata.Sensor #ebf4d6 {
+    sensor
+    --
+    - id (AutoField)
+    + name (CharField)
+    + geog (GeometryField)
+    + created (DateTimeField)
+    + parameters (ArrayField)
+    + properties (JSONField)
+    + min_start_time (DateTimeField)
+    + max_end_time (DateTimeField)
+    --
+}
+
+
+class "sensordata.Stream <Sensordata>" as sensordata.Stream #ebf4d6 {
+    stream
+    --
+    - id (AutoField)
+    ~ sensor (ForeignKey)
+    + name (CharField)
+    + geog (GeometryField)
+    + created (DateTimeField)
+    + parameters (ArrayField)
+    + properties (JSONField)
+    + start_time (DateTimeField)
+    + end_time (DateTimeField)
+    --
+}
+sensordata.Stream -- sensordata.Sensor
+
+
+class "sensordata.Datapoint <Sensordata>" as sensordata.Datapoint #ebf4d6 {
+    datapoint
+    --
+    - id (AutoField)
+    ~ stream (ForeignKey)
+    + geog (GeometryField)
+    + time (TimescaleDateTimeField)
+    + end_time (DateTimeField)
+    ~ parameter (ForeignKey)
+    + value (FloatField)
+    --
+}
+sensordata.Datapoint -- sensordata.Stream
+sensordata.Datapoint -- sensordata.Parameter
+
+
+@enduml

@@ -39,9 +39,10 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "drf_yasg",
-    'corsheaders',
+    "corsheaders",
     "sensordata.apps.SensordataConfig",
-    "django_extensions"
+    "django_extensions",
+    "puml_generator"
 ]
 
 MIDDLEWARE = [
