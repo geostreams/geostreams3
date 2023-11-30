@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     'corsheaders',
     "sensordata.apps.SensordataConfig",
+    "django_extensions"
 ]
 
 MIDDLEWARE = [
