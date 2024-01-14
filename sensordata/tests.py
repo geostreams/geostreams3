@@ -3,10 +3,90 @@ import random
 from django.test import TestCase
 from rest_framework.test import APIClient
 
+class VisualizationApiTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_create_visualization(self):
+        data = {
+            'name': 'Line Chart',
+            'title': 'A line chart visualization',
+        }
+
+        response = self.client.post('/api/visualizations/', data=data, format='json')
+        self.assertEqual(response.status_code, 201)  # Expecting a successful creation status code
+        visualization_id = response.json().get('id')
+
+        # Verify the created visualization by fetching its details
+        get_response = self.client.get(f'/api/visualizations/{visualization_id}/')
+        self.assertEqual(get_response.status_code, 200)  # Expecting a successful retrieval status code
+        visualization = get_response.json()
+        self.assertEqual(visualization['name'], 'Line Chart')
+        self.assertEqual(visualization['title'], 'A line chart visualization')
+
+    def test_get_all_visualizations(self):
+        response = self.client.get('/api/visualizations/')
+        self.assertEqual(response.status_code, 200)  # Expecting a successful retrieval status code
+        visualizations = response.json()
+        self.assertIsInstance(visualizations, list)
+
+    def test_update_visualization(self):
+        # Create a visualization first
+        data = {
+            'name': 'Bar Chart',
+            'title': 'A bar chart visualization',
+        }
+
+        create_response = self.client.post('/api/visualizations/', data=data, format='json')
+        self.assertEqual(create_response.status_code, 201)
+
+        visualization_id = create_response.json().get('id')
+
+        # Update the visualization
+        updated_data = {
+            'name': 'Bar Chart Updated',
+            'title': 'An updated bar chart visualization',
+        }
+
+        update_response = self.client.put(f'/api/visualizations/{visualization_id}/', data=updated_data, format='json')
+        self.assertEqual(update_response.status_code, 200)  # Expecting a successful update status code
+
+        # Verify the updated visualization
+        get_response = self.client.get(f'/api/visualizations/{visualization_id}/')
+        self.assertEqual(get_response.status_code, 200)
+        visualization = get_response.json()
+        self.assertEqual(visualization['name'], 'Bar Chart Updated')
+        self.assertEqual(visualization['title'], 'An updated bar chart visualization')
+
+    def test_delete_visualization(self):
+        # Create a visualization first
+        data = {
+            'name': 'Pie Chart',
+            'title': 'A pie chart visualization',
+        }
+
+        create_response = self.client.post('/api/visualizations/', data=data, format='json')
+        self.assertEqual(create_response.status_code, 201)
+
+        visualization_id = create_response.json().get('id')
+
+        # Delete the visualization
+        delete_response = self.client.delete(f'/api/visualizations/{visualization_id}/')
+        self.assertEqual(delete_response.status_code, 204)  # Expecting a successful delete status code
+
+        # Verify the visualization is deleted
+        get_response = self.client.get(f'/api/visualizations/{visualization_id}/')
+        self.assertEqual(get_response.status_code, 404)  # Expecting a not found status code
+
 
 class ParameterApiTest(TestCase):
     def setUp(self):
         self.client = APIClient()
+        visualization_data = {
+            "name": "line_chart",
+            "title": "A line chart visualization"
+        }
+        self.client.post('/api/visualizations/', data=visualization_data, format='json')
 
     def test_create_parameter(self):
         data = {
@@ -16,7 +96,8 @@ class ParameterApiTest(TestCase):
             'search_view': True,
             'explore_view': False,
             'scale_names': ['Low', 'Medium', 'High'],
-            'scale_colors': ['#FF0000', '#00FF00', '#0000FF']
+            'scale_colors': ['#FF0000', '#00FF00', '#0000FF'],
+            'visualization': 'line_chart'
         }
 
         response = self.client.post('/api/parameters/', data=data, format='json')
@@ -46,7 +127,8 @@ class ParameterApiTest(TestCase):
             'search_view': False,
             'explore_view': True,
             'scale_names': ['Low', 'Medium', 'High'],
-            'scale_colors': ['#FF0000', '#00FF00', '#0000FF']
+            'scale_colors': ['#FF0000', '#00FF00', '#0000FF'],
+            'visualization': None
         }
 
         create_response = self.client.post('/api/parameters/', data=data, format='json')
@@ -56,13 +138,14 @@ class ParameterApiTest(TestCase):
 
         # Update the parameter
         updated_data = {
-            'name': 'pressure',
+            'name': 'air_pressure',
             'title': 'Pressure Level',
             'unit': 'Pa',
             'search_view': False,
             'explore_view': True,
             'scale_names': ['Low', 'Medium', 'High'],
-            'scale_colors': ['#FF0000', '#00FF00', '#0000FF']
+            'scale_colors': ['#FF0000', '#00FF00', '#0000FF'],
+            'visualization': 'line_chart'
         }
 
         update_response = self.client.put(f'/api/parameters/{parameter_id}/', data=updated_data, format='json')
@@ -84,7 +167,8 @@ class ParameterApiTest(TestCase):
             'search_view': True,
             'explore_view': True,
             'scale_names': ['Low', 'Medium', 'High'],
-            'scale_colors': ['#FF0000', '#00FF00', '#0000FF']
+            'scale_colors': ['#FF0000', '#00FF00', '#0000FF'],
+            'visualization': 'line_chart'
         }
 
         create_response = self.client.post('/api/parameters/', data=data, format='json')
@@ -195,17 +279,25 @@ class DatapointsViewSetTestCase(TestCase):
             "max_end_time": "2024-04-24T17:14:47.783Z"
         }
         sensor_data = self.client.post('/api/sensors/', data=sensor_data, format='json')
+        # Create visualization
+        visualization_data = {
+            "name": "line_chart",
+            "title": "A line chart visualization"
+        }
+        self.client.post('/api/visualizations/', data=visualization_data, format='json')
         # Create parameters
         parameter_data = [
             {
                 "name": "nitrogen",
                 "title": "nitrogen",
-                "unit": "%"
+                "unit": "%",
+                "visualization": "line_chart"
             },
             {
                 "name": "phosphorus",
                 "title": "phosphorus",
-                "unit": "%"
+                "unit": "%",
+                "visualization": "line_chart"
             }
         ]
         for parameter in parameter_data:

@@ -55,7 +55,7 @@ class Visualization(models.Model):
     Each parameter will be associated with one visualization for now
     """
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=50, blank=False, null=False)
+    name = models.CharField(unique=True,max_length=50, blank=False, null=False)
     title = models.CharField(max_length=50, blank=True, null=True)
 
 class Region(models.Model):
