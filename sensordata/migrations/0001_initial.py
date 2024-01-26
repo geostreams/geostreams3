@@ -12,101 +12,168 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Category',
+            name="Category",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('name', models.CharField(blank=True, max_length=50, null=True)),
-                ('detail_type', models.CharField(blank=True, max_length=50, null=True)),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                ("name", models.CharField(blank=True, max_length=50, null=True)),
+                ("detail_type", models.CharField(blank=True, max_length=50, null=True)),
             ],
             options={
-                'db_table': 'categories',
+                "db_table": "categories",
             },
         ),
         migrations.CreateModel(
-            name='Parameter',
+            name="Parameter",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=200, unique=True)),
-                ('title', models.CharField(blank=True, max_length=200, null=True)),
-                ('unit', models.CharField(blank=True, max_length=20, null=True)),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                ("name", models.CharField(max_length=200, unique=True)),
+                ("title", models.CharField(blank=True, max_length=200, null=True)),
+                ("unit", models.CharField(blank=True, max_length=20, null=True)),
             ],
             options={
-                'db_table': 'parameters',
+                "db_table": "parameters",
             },
         ),
         migrations.CreateModel(
-            name='Region',
+            name="Region",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('geog', django.contrib.gis.db.models.fields.GeometryField(dim=3, srid=4326)),
-                ('properties', models.JSONField()),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                (
+                    "geog",
+                    django.contrib.gis.db.models.fields.GeometryField(dim=3, srid=4326),
+                ),
+                ("properties", models.JSONField()),
             ],
             options={
-                'db_table': 'regions',
+                "db_table": "regions",
             },
         ),
         migrations.CreateModel(
-            name='Sensor',
+            name="Sensor",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('name', models.CharField(blank=True, max_length=255, null=True)),
-                ('geog', django.contrib.gis.db.models.fields.GeometryField(dim=3, srid=4326)),
-                ('created', models.DateTimeField(blank=True, default=datetime.datetime.now, null=True)),
-                ('parameters', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(), size=None)),
-                ('properties', models.JSONField()),
-                ('min_start_time', models.DateTimeField(blank=True, null=True)),
-                ('max_end_time', models.DateTimeField(blank=True, null=True)),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                ("name", models.CharField(blank=True, max_length=255, null=True)),
+                (
+                    "geog",
+                    django.contrib.gis.db.models.fields.GeometryField(dim=3, srid=4326),
+                ),
+                (
+                    "created",
+                    models.DateTimeField(
+                        blank=True, default=datetime.datetime.now, null=True
+                    ),
+                ),
+                (
+                    "parameters",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=models.CharField(), size=None
+                    ),
+                ),
+                ("properties", models.JSONField()),
+                ("min_start_time", models.DateTimeField(blank=True, null=True)),
+                ("max_end_time", models.DateTimeField(blank=True, null=True)),
             ],
             options={
-                'db_table': 'sensors',
+                "db_table": "sensors",
             },
         ),
         migrations.CreateModel(
-            name='Stream',
+            name="Stream",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('name', models.CharField(blank=True, max_length=255, null=True)),
-                ('geog', django.contrib.gis.db.models.fields.GeometryField(dim=3, srid=4326)),
-                ('created', models.DateTimeField(blank=True, default=datetime.datetime.now, null=True)),
-                ('parameters', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=200), size=None)),
-                ('properties', models.JSONField()),
-                ('start_time', models.DateTimeField(blank=True, null=True)),
-                ('end_time', models.DateTimeField(blank=True, null=True)),
-                ('sensor', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='sensordata.sensor')),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                ("name", models.CharField(blank=True, max_length=255, null=True)),
+                (
+                    "geog",
+                    django.contrib.gis.db.models.fields.GeometryField(dim=3, srid=4326),
+                ),
+                (
+                    "created",
+                    models.DateTimeField(
+                        blank=True, default=datetime.datetime.now, null=True
+                    ),
+                ),
+                (
+                    "parameters",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=models.CharField(max_length=200), size=None
+                    ),
+                ),
+                ("properties", models.JSONField()),
+                ("start_time", models.DateTimeField(blank=True, null=True)),
+                ("end_time", models.DateTimeField(blank=True, null=True)),
+                (
+                    "sensor",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        to="sensordata.sensor",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'streams',
+                "db_table": "streams",
             },
         ),
         migrations.CreateModel(
-            name='ParameterCategory',
+            name="ParameterCategory",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('category', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='sensordata.category')),
-                ('parameter', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='sensordata.parameter')),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                (
+                    "category",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        to="sensordata.category",
+                    ),
+                ),
+                (
+                    "parameter",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        to="sensordata.parameter",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'parameter_categories',
+                "db_table": "parameter_categories",
             },
         ),
         migrations.CreateModel(
-            name='Datapoint',
+            name="Datapoint",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('geog', django.contrib.gis.db.models.fields.GeometryField(dim=3, srid=4326)),
-                ('time', timescale.db.models.fields.TimescaleDateTimeField(interval='7 days')),
-                ('end_time', models.DateTimeField(blank=True, null=True)),
-                ('value', models.FloatField(blank=True, null=True)),
-                ('parameter', models.ForeignKey(null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='sensordata.parameter')),
-                ('stream', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='sensordata.stream')),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                (
+                    "geog",
+                    django.contrib.gis.db.models.fields.GeometryField(dim=3, srid=4326),
+                ),
+                (
+                    "time",
+                    timescale.db.models.fields.TimescaleDateTimeField(
+                        interval="7 days"
+                    ),
+                ),
+                ("end_time", models.DateTimeField(blank=True, null=True)),
+                ("value", models.FloatField(blank=True, null=True)),
+                (
+                    "parameter",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        to="sensordata.parameter",
+                    ),
+                ),
+                (
+                    "stream",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.DO_NOTHING,
+                        to="sensordata.stream",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'datapoints',
+                "db_table": "datapoints",
             },
         ),
     ]
