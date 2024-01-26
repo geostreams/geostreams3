@@ -266,6 +266,8 @@ class DatapointsViewSet(viewsets.ModelViewSet):
     @staticmethod
     def get_time_period_binned_datapoint(sensor_id, time_period, parameter=None, start_time=None, end_time=None):
         # TODO: Check sensor_id is valid, and also if parameter is valid
+        if sensor_id is None:
+            return Response({"message": "Sensor ID must be provided"}, status=status.HTTP_400_BAD_REQUEST)
         if sensor_id.isdigit() is False:
             return Response({"message": "Sensor ID must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
         if time_period == 'hourly':
