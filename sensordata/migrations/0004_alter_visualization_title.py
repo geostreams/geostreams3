@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('sensordata', '0003_visualization_parameter_visualization'),
+        ("sensordata", "0003_visualization_parameter_visualization"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='visualization',
-            name='title',
+            model_name="visualization",
+            name="title",
             field=models.CharField(blank=True, max_length=50, null=True),
         ),
     ]
