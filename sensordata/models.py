@@ -7,7 +7,7 @@ from timescale.db.models.fields import TimescaleDateTimeField
 
 
 class Category(models.Model):
-    """ Categories are used to represent the type of graphs to show in the detail page in Geodashboard v3
+    """ Categories are used to represent a group of parameters to show in the detail page in Geodashboard v3
    The name will be the title of the tab where the data associated with the category is displayed
    The detail_type is the type of graph in the UI, it could be (time, stacked-line, stacked-bar)"""
     id = models.AutoField(primary_key=True)
@@ -27,6 +27,7 @@ class Parameter(models.Model):
     name = models.CharField(unique=True, max_length=200)
     title = models.CharField(max_length=200, blank=True, null=True)
     unit = models.CharField(max_length=20, blank=True, null=True)
+    visualization = models.ForeignKey('Visualization', models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'parameters'
@@ -47,6 +48,15 @@ class ParameterCategory(models.Model):
     class Meta:
         db_table = 'parameter_categories'
 
+
+class Visualization(models.Model):
+    """
+    Visualizations are used to represent the various chart options available in the UI
+    Each parameter will be associated with one visualization for now
+    """
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(unique=True,max_length=50, blank=False, null=False)
+    title = models.CharField(max_length=50, blank=True, null=True)
 
 class Region(models.Model):
     id = models.AutoField(primary_key=True)

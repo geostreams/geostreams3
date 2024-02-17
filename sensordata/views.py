@@ -7,18 +7,18 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
 import json
-import psycopg2.extras
-from rest_framework.permissions import IsAuthenticated
+# from rest_framework.permissions import IsAuthenticated
 
-from .models import Sensor, Stream, Parameter, Datapoint, Category
+from .models import Sensor, Stream, Parameter, Datapoint, Category, Visualization
 from .serializers import SensorSerializer, ParameterSerializer, StreamSerializer, \
-    CategorySerializer,DatapointSerializer
+    CategorySerializer,DatapointSerializer,VisualizationSerializer
 
 
 class ParametersViewSet(viewsets.ModelViewSet):
     queryset = Parameter.objects.all()
     serializer_class = ParameterSerializer
 
+    # Overwrite get queryset to allow filtering by name
     def get_queryset(self):
         queryset = Parameter.objects.all()
         name_filter = self.request.query_params.get('name', None)
@@ -28,6 +28,7 @@ class ParametersViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    # Serialize listing of parameters
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         if self.request.query_params.get('name', None):
@@ -36,27 +37,64 @@ class ParametersViewSet(viewsets.ModelViewSet):
         serializer = ParameterSerializer(queryset, many=True)
         return Response({'parameters': serializer.data})
 
-    @action(detail=False, methods=['DELETE'])
-    def delete(self, request, *args, **kwargs):
-        """Delete a parameter."""
-        parameter_name = request.GET.get('name')
-        param_id = kwargs.get('pk')
-        if parameter_name:
+    # Overwrite create to allow adding visualization by name
+    def create(self, request, *args, **kwargs):
+        """Create a Parameter with a Visualization name instead of foreign key."""
+        visualization_name = request.data.get('visualization')
+        parameter_data = request.data.copy()
+
+        if visualization_name:
             try:
-                parameter = Parameter.objects.get(name=parameter_name)
-                parameter.delete()
-                return Response({"message": "Parameter deleted successfully"}, status=status.HTTP_200_OK)
-            except Parameter.DoesNotExist:
-                return Response({"message": "Parameter does not exist"}, status=status.HTTP_400_BAD_REQUEST)
-        elif param_id:
-            try:
-                parameter = Parameter.objects.get(id=param_id)
-                parameter.delete()
-                return Response({"message": "Parameter deleted successfully"}, status=status.HTTP_200_OK)
-            except Parameter.DoesNotExist:
-                return Response({"message": "Parameter does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+                visualization = Visualization.objects.get(name=visualization_name)
+                parameter_data['visualization'] = visualization.id
+            except Visualization.DoesNotExist:
+                return Response({"message": "Visualization does not exist"}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({"message": "Parameter name or id must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+            parameter_data['visualization'] = None
+
+        serializer = self.get_serializer(data=parameter_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    # Overwrite update to allow updating visualization by name
+    def update(self, request, *args, **kwargs):
+        """Update a Parameter with a Visualization name instead of foreign key."""
+        visualization_name = request.data.get('visualization')
+        parameter_data = request.data.copy()
+
+        if visualization_name:
+            try:
+                visualization = Visualization.objects.get(name=visualization_name)
+                parameter_data['visualization'] = visualization.id
+            except Visualization.DoesNotExist:
+                return Response({"message": "Visualization does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            parameter_data['visualization'] = None
+
+        partial = kwargs.pop('partial', True)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=parameter_data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['DELETE'])
+    def delete_by_name(self, request):
+        """Delete a parameter by its name."""
+        parameter_name = request.query_params.get('name')
+        if not parameter_name:
+            return Response({"message": "Parameter name must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            parameter = Parameter.objects.get(name=parameter_name)
+            parameter.delete()
+            return Response({"message": "Parameter deleted successfully"}, status=status.HTTP_200_OK)
+        except Parameter.DoesNotExist:
+            return Response({"message": "Parameter not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
@@ -64,6 +102,25 @@ class CategoriesViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     # permission_classes = [IsAuthenticated]
 
+class VisualizationsViewSet(viewsets.ModelViewSet):
+    queryset = Visualization.objects.all()
+    serializer_class = VisualizationSerializer
+    # permission_classes = [IsAuthenticated]
+
+    # Delete visualization by name
+    @action(detail=False, methods=['DELETE'])
+    def delete_by_name(self, request):
+        """Delete a visualization by its name."""
+        visualization_name = request.query_params.get('name')
+        if not visualization_name:
+            return Response({"message": "Visualization name must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            visualization = Visualization.objects.get(name=visualization_name)
+            visualization.delete()
+            return Response({"message": "Visualization deleted successfully"}, status=status.HTTP_200_OK)
+        except Visualization.DoesNotExist:
+            return Response({"message": "Visualization not found"}, status=status.HTTP_404_NOT_FOUND)
 
 class SensorsViewSet(viewsets.ModelViewSet):
     queryset = Sensor.objects.all()
@@ -209,6 +266,8 @@ class DatapointsViewSet(viewsets.ModelViewSet):
     @staticmethod
     def get_time_period_binned_datapoint(sensor_id, time_period, parameter=None, start_time=None, end_time=None):
         # TODO: Check sensor_id is valid, and also if parameter is valid
+        if sensor_id is None:
+            return Response({"message": "Sensor ID must be provided"}, status=status.HTTP_400_BAD_REQUEST)
         if sensor_id.isdigit() is False:
             return Response({"message": "Sensor ID must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
         if time_period == 'hourly':

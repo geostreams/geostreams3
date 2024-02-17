@@ -1,10 +1,15 @@
 from rest_framework import serializers
-from .models import Category, ParameterCategory, Parameter, Sensor, Stream, Datapoint
+from .models import Category, ParameterCategory, Parameter, Sensor, Stream, Datapoint,Visualization
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
+        fields = '__all__'
+
+class VisualizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Visualization
         fields = '__all__'
 
 
