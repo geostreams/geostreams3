@@ -125,6 +125,7 @@ class CategoriesViewSet(viewsets.ModelViewSet):
 class VisualizationsViewSet(viewsets.ModelViewSet):
     queryset = Visualization.objects.all()
     serializer_class = VisualizationSerializer
+
     # permission_classes = [IsAuthenticated]
 
     # Delete visualization by name
@@ -154,6 +155,7 @@ class VisualizationsViewSet(viewsets.ModelViewSet):
 class SensorsViewSet(viewsets.ModelViewSet):
     queryset = Sensor.objects.all()
     serializer_class = SensorSerializer
+
     # permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
@@ -264,6 +266,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         parameter = request.GET.getlist("parameter")
         start_time = request.GET.get("start_time")
         end_time = request.GET.get("end_time")
+        shortened = request.GET.get("shortened")
+        if shortened == "true":
+            return DatapointsViewSet.get_time_period_binned_small_datapoint(
+                sensor_id, "hourly", parameter, start_time, end_time
+            )
         return DatapointsViewSet.get_time_period_binned_datapoint(
             sensor_id, "hourly", parameter, start_time, end_time
         )
@@ -275,6 +282,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         parameter = request.GET.getlist("parameter")
         start_time = request.GET.get("start_time")
         end_time = request.GET.get("end_time")
+        shortened = request.GET.get("shortened")
+        if shortened == "true":
+            return DatapointsViewSet.get_time_period_binned_small_datapoint(
+                sensor_id, "daily", parameter, start_time, end_time
+            )
         return DatapointsViewSet.get_time_period_binned_datapoint(
             sensor_id, "daily", parameter, start_time, end_time
         )
@@ -286,6 +298,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         parameter = request.GET.getlist("parameter")
         start_time = request.GET.get("start_time")
         end_time = request.GET.get("end_time")
+        shortened = request.GET.get("shortened")
+        if shortened == "true":
+            return DatapointsViewSet.get_time_period_binned_small_datapoint(
+                sensor_id, "monthly", parameter, start_time, end_time
+            )
         return DatapointsViewSet.get_time_period_binned_datapoint(
             sensor_id, "monthly", parameter, start_time, end_time
         )
@@ -297,6 +314,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         parameter = request.GET.getlist("parameter")
         start_time = request.GET.get("start_time")
         end_time = request.GET.get("end_time")
+        shortened = request.GET.get("shortened")
+        if shortened == "true":
+            return DatapointsViewSet.get_time_period_binned_small_datapoint(
+                sensor_id, "yearly", parameter, start_time, end_time
+            )
         return DatapointsViewSet.get_time_period_binned_datapoint(
             sensor_id, "yearly", parameter, start_time, end_time
         )
@@ -422,4 +444,119 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 response[label] = []
             del datapoint["label"]  # Remove 'label' key
             response[label].append(datapoint)
+        print(response)
+        return Response(response, status=status.HTTP_200_OK)
+
+    @staticmethod
+    def get_time_period_binned_small_datapoint(
+        sensor_id, time_period, parameter=None, start_time=None, end_time=None
+    ):
+        # TODO: Check sensor_id is valid, and also if parameter is valid
+        if sensor_id is None:
+            return Response(
+                {"message": "Sensor ID must be provided"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if sensor_id.isdigit() is False:
+            return Response(
+                {"message": "Sensor ID must be an integer"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if time_period == "hourly":
+            query = """
+                    SELECT
+                        parameters.name AS label,
+                        average,
+                        count,
+                        bucket AS date
+                    FROM
+                        hourly_sensor_data
+                    RIGHT JOIN
+                        parameters ON hourly_sensor_data.parameter_id = parameters.id
+                    LEFT JOIN
+                        streams ON hourly_sensor_data.stream_id = streams.id
+                    WHERE
+                        streams.sensor_id = {sensor_id}
+                    """
+        elif time_period == "daily":
+            query = """
+                    SELECT
+                        parameters.name AS label,
+                        average,
+                        count,
+                        bucket AS date
+                    FROM
+                        daily_sensor_data
+                    RIGHT JOIN
+                        parameters ON daily_sensor_data.parameter_id = parameters.id
+                    LEFT JOIN
+                        streams ON daily_sensor_data.stream_id = streams.id
+                    WHERE
+                        streams.sensor_id = {sensor_id}
+                    """
+        elif time_period == "monthly":
+            query = """
+                    SELECT
+                    parameters.name AS label,
+                    average,
+                    count,
+                    bucket AS date
+                    FROM monthly_sensor_data
+                    RIGHT JOIN
+                    parameters ON monthly_sensor_data.parameter_id = parameters.id
+                    LEFT JOIN
+                    streams ON monthly_sensor_data.stream_id = streams.id
+                    WHERE
+                    streams.sensor_id = {sensor_id}
+                    """
+        elif time_period == "yearly":
+            query = """
+                    SELECT
+                    parameters.name AS label,
+                    average,
+                    count,
+                    bucket AS date
+                    FROM yearly_sensor_data
+                    RIGHT JOIN
+                    parameters ON yearly_sensor_data.parameter_id = parameters.id
+                    LEFT JOIN
+                    streams ON yearly_sensor_data.stream_id = streams.id
+                    WHERE
+                    streams.sensor_id = {sensor_id}
+                    """
+
+        if len(parameter):
+            # Check if list of parameters is valid
+            if len(parameter) != len(Parameter.objects.filter(name__in=parameter)):
+                return Response(
+                    {"message": "Parameter does not exist"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            parameter_list = ",".join(["'" + param + "'" for param in parameter])
+            query += "AND parameters.name IN ({parameter_list}) ".format(
+                parameter_list=parameter_list
+            )
+
+        if start_time:
+            query += "AND bucket >= '{start_time}'::timestamp ".format(
+                start_time=start_time
+            )
+        if end_time:
+            query += "AND bucket <= '{end_time}'::timestamp ".format(end_time=end_time)
+
+        query += ";"
+        query = query.format(sensor_id=sensor_id)
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            columns = [desc[0] for desc in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+        response = {}
+        for datapoint in results:
+            label = datapoint["label"]
+            if label not in response:
+                response[label] = []
+            del datapoint["label"]  # Remove 'label' key
+            response[label].append(datapoint)
+        print(response)
         return Response(response, status=status.HTTP_200_OK)
