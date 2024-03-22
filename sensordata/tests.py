@@ -198,6 +198,12 @@ class ParameterApiTest(TestCase):
             "title": "A line chart visualization",
         }
         self.client.post("/api/visualizations/", data=visualization_data, format="json")
+        # Create another visualization
+        visualization_data = {
+            "name": "bar_chart",
+            "title": "A bar chart visualization",
+        }
+        self.client.post("/api/visualizations/", data=visualization_data, format="json")
 
         # Create category
         category_data = {
@@ -230,6 +236,7 @@ class ParameterApiTest(TestCase):
         # Add additional verification for visualization and category if needed
 
     def test_get_all_parameters(self):
+        self.test_create_parameter()
         response = self.client.get("/api/parameters/")
         self.assertEqual(
             response.status_code, 200
@@ -244,10 +251,8 @@ class ParameterApiTest(TestCase):
         # Test filtering by name
         response = self.client.get("/api/parameters/?name=temperature")
         self.assertEqual(response.status_code, 200)
-        parameters = response.json()["parameters"]
-        self.assertTrue(
-            any(p["name"] == "temperature" for p in parameters)
-        )  # Ensure filtering works
+        parameter = response.json()["parameter"]
+        self.assertTrue(parameter["name"] == "temperature")  # Ensure filtering works
 
     def test_update_parameter(self):
         # Create a parameter first
@@ -259,7 +264,8 @@ class ParameterApiTest(TestCase):
             "explore_view": True,
             "scale_names": ["Low", "Medium", "High"],
             "scale_colors": ["#FF0000", "#00FF00", "#0000FF"],
-            "visualization": None,
+            "category": "environment",
+            "visualization": "line_chart",
         }
 
         create_response = self.client.post("/api/parameters/", data=data, format="json")
@@ -276,7 +282,7 @@ class ParameterApiTest(TestCase):
             "explore_view": True,
             "scale_names": ["Low", "Medium", "High"],
             "scale_colors": ["#FF0000", "#00FF00", "#0000FF"],
-            "visualization": "line_chart",
+            "visualization": "bar_chart",
         }
 
         update_response = self.client.put(
@@ -296,14 +302,13 @@ class ParameterApiTest(TestCase):
     def test_delete_parameter(self):
         # Create a parameter first
         data = {
-            "name": "weight",
-            "title": "Weight",
-            "unit": "kg",
+            "name": "temperature",
+            "title": "Temperature",
+            "unit": "Celsius",
             "search_view": True,
-            "explore_view": True,
-            "scale_names": ["Low", "Medium", "High"],
-            "scale_colors": ["#FF0000", "#00FF00", "#0000FF"],
+            "explore_view": False,
             "visualization": "line_chart",
+            "category": "environment",
         }
 
         create_response = self.client.post("/api/parameters/", data=data, format="json")

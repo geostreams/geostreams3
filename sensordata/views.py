@@ -56,8 +56,6 @@ class ParametersViewSet(viewsets.ModelViewSet):
             mapping_serialized = ParameterCategorySerializer(
                 ParameterCategory.objects.filter(parameter=queryset[0]), many=True
             )
-            for mapping in mapping_serialized.data:
-                print(mapping)
             category_serialized = CategorySerializer(
                 Category.objects.filter(
                     id__in=[
@@ -146,7 +144,9 @@ class ParametersViewSet(viewsets.ModelViewSet):
     # TODO: Need to modify update to possibly update the mapping as well
     def update(self, request, *args, **kwargs):
         """Update a Parameter, and optionally its Visualization and Category, by name"""
+        instance = self.get_object()
         visualization_name = request.data.get("visualization")
+        category_name = request.data.get("category")
         parameter_data = request.data.copy()
 
         if visualization_name:
@@ -159,8 +159,25 @@ class ParametersViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+        # Check if category is provided
+        if category_name:
+            try:
+                category = Category.objects.get(name=category_name)
+                # Check if parameter is already mapped to a category
+                if ParameterCategory.objects.filter(
+                    parameter=self.get_object()
+                ).exists():
+                    # Update the mapping
+                    ParameterCategory.objects.filter(
+                        parameter=self.get_object()
+                    ).update(category=category)
+            except Category.DoesNotExist:
+                return Response(
+                    {"message": "Category does not exist"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         partial = kwargs.pop("partial", True)
-        instance = self.get_object()
         serializer = self.get_serializer(instance, data=parameter_data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
@@ -168,28 +185,14 @@ class ParametersViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     # TODO: Need to modify delete to delete the mapping as well
-
-    # TODO: Need to modify delete_by_name to delete the mapping as well
-    @action(detail=False, methods=["DELETE"])
-    def delete_by_name(self, request):
-        """Delete a parameter by its name."""
-        parameter_name = request.query_params.get("name")
-        if not parameter_name:
-            return Response(
-                {"message": "Parameter name must be provided"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            parameter = Parameter.objects.get(name=parameter_name)
-            parameter.delete()
-            return Response(
-                {"message": "Parameter deleted successfully"}, status=status.HTTP_200_OK
-            )
-        except Parameter.DoesNotExist:
-            return Response(
-                {"message": "Parameter not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Check if parameter is mapped to a category
+        if ParameterCategory.objects.filter(parameter=instance).exists():
+            # Delete the mapping
+            ParameterCategory.objects.filter(parameter=instance).delete()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
@@ -242,7 +245,6 @@ class SensorsViewSet(viewsets.ModelViewSet):
         properties = request.data.get("properties")
         min_start_time = request.data.get("min_start_time")
         max_end_time = request.data.get("max_end_time")
-        print(geog)
         # Create sensor
         new_sensor = Sensor.objects.create(
             name=name,
@@ -268,6 +270,11 @@ class SensorsViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
+        if not queryset:
+            return Response(
+                {"message": "No sensors found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
         if self.request.query_params.get("name", None):
             serializer = SensorSerializer(queryset[0])
             return Response({"sensor": serializer.data})
@@ -524,7 +531,6 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 response[label] = []
             del datapoint["label"]  # Remove 'label' key
             response[label].append(datapoint)
-        print(response)
         return Response(response, status=status.HTTP_200_OK)
 
     @staticmethod
@@ -638,5 +644,4 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 response[label] = []
             del datapoint["label"]  # Remove 'label' key
             response[label].append(datapoint)
-        print(response)
         return Response(response, status=status.HTTP_200_OK)
