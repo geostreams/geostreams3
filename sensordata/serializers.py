@@ -23,9 +23,12 @@ class VisualizationSerializer(serializers.ModelSerializer):
 
 
 class ParameterCategorySerializer(serializers.ModelSerializer):
+    parameter_id = serializers.IntegerField(source="parameter.id", read_only=True)
+    category_id = serializers.IntegerField(source="category.id", read_only=True)
+
     class Meta:
         model = ParameterCategory
-        fields = "__all__"
+        fields = ("id", "parameter_id", "category_id")
 
 
 class ParameterSerializer(serializers.ModelSerializer):

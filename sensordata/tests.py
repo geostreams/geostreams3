@@ -98,126 +98,6 @@ class VisualizationApiTest(TestCase):
         )  # Expecting a not found status code
 
 
-class ParameterApiTest(TestCase):
-    def setUp(self):
-        self.client = APIClient()
-        visualization_data = {
-            "name": "line_chart",
-            "title": "A line chart visualization",
-        }
-        self.client.post("/api/visualizations/", data=visualization_data, format="json")
-
-    def test_create_parameter(self):
-        data = {
-            "name": "temperature",
-            "title": "Temperature",
-            "unit": "Celsius",
-            "search_view": True,
-            "explore_view": False,
-            "scale_names": ["Low", "Medium", "High"],
-            "scale_colors": ["#FF0000", "#00FF00", "#0000FF"],
-            "visualization": "line_chart",
-        }
-
-        response = self.client.post("/api/parameters/", data=data, format="json")
-        self.assertEqual(
-            response.status_code, 201
-        )  # Expecting a successful creation status code
-        parameter_id = response.json().get("id")
-
-        # Verify the created parameter by fetching its details
-        get_response = self.client.get(f"/api/parameters/{parameter_id}/")
-        self.assertEqual(
-            get_response.status_code, 200
-        )  # Expecting a successful retrieval status code
-        parameter = get_response.json()
-        self.assertEqual(parameter["name"], "temperature")
-        self.assertEqual(parameter["title"], "Temperature")
-        self.assertEqual(parameter["unit"], "Celsius")
-
-    def test_get_all_parameters(self):
-        response = self.client.get("/api/parameters/")
-        self.assertEqual(
-            response.status_code, 200
-        )  # Expecting a successful retrieval status code
-        parameters = response.json()
-        self.assertIsInstance(parameters["parameters"], list)
-
-    def test_update_parameter(self):
-        # Create a parameter first
-        data = {
-            "name": "pressure",
-            "title": "Pressure",
-            "unit": "Pascal",
-            "search_view": False,
-            "explore_view": True,
-            "scale_names": ["Low", "Medium", "High"],
-            "scale_colors": ["#FF0000", "#00FF00", "#0000FF"],
-            "visualization": None,
-        }
-
-        create_response = self.client.post("/api/parameters/", data=data, format="json")
-        self.assertEqual(create_response.status_code, 201)
-
-        parameter_id = create_response.json().get("id")
-
-        # Update the parameter
-        updated_data = {
-            "name": "air_pressure",
-            "title": "Pressure Level",
-            "unit": "Pa",
-            "search_view": False,
-            "explore_view": True,
-            "scale_names": ["Low", "Medium", "High"],
-            "scale_colors": ["#FF0000", "#00FF00", "#0000FF"],
-            "visualization": "line_chart",
-        }
-
-        update_response = self.client.put(
-            f"/api/parameters/{parameter_id}/", data=updated_data, format="json"
-        )
-        self.assertEqual(
-            update_response.status_code, 200
-        )  # Expecting a successful update status code
-
-        # Verify the updated parameter
-        get_response = self.client.get(f"/api/parameters/{parameter_id}/")
-        self.assertEqual(get_response.status_code, 200)
-        parameter = get_response.json()
-        self.assertEqual(parameter["title"], "Pressure Level")
-        self.assertEqual(parameter["unit"], "Pa")
-
-    def test_delete_parameter(self):
-        # Create a parameter first
-        data = {
-            "name": "weight",
-            "title": "Weight",
-            "unit": "kg",
-            "search_view": True,
-            "explore_view": True,
-            "scale_names": ["Low", "Medium", "High"],
-            "scale_colors": ["#FF0000", "#00FF00", "#0000FF"],
-            "visualization": "line_chart",
-        }
-
-        create_response = self.client.post("/api/parameters/", data=data, format="json")
-        self.assertEqual(create_response.status_code, 201)
-
-        parameter_id = create_response.json().get("id")
-
-        # Delete the parameter
-        delete_response = self.client.delete(f"/api/parameters/{parameter_id}/")
-        self.assertEqual(
-            delete_response.status_code, 204
-        )  # Expecting a successful delete status code
-
-        # Verify the parameter is deleted
-        get_response = self.client.get(f"/api/parameters/{parameter_id}/")
-        self.assertEqual(
-            get_response.status_code, 404
-        )  # Expecting a not found status code
-
-
 class CategoryApiTest(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -303,6 +183,142 @@ class CategoryApiTest(TestCase):
 
         # Verify the category is deleted
         get_response = self.client.get(f"/api/categories/{category_id}/")
+        self.assertEqual(
+            get_response.status_code, 404
+        )  # Expecting a not found status code
+
+
+class ParameterApiTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+        # Create visualization
+        visualization_data = {
+            "name": "line_chart",
+            "title": "A line chart visualization",
+        }
+        self.client.post("/api/visualizations/", data=visualization_data, format="json")
+
+        # Create category
+        category_data = {
+            "name": "environment",
+            "title": "Environmental Parameters",
+        }
+        self.client.post("/api/categories/", data=category_data, format="json")
+
+    def test_create_parameter(self):
+        data = {
+            "name": "temperature",
+            "title": "Temperature",
+            "unit": "Celsius",
+            "search_view": True,
+            "explore_view": False,
+            "visualization": "line_chart",
+            "category": "environment",
+        }
+
+        response = self.client.post("/api/parameters/", data=data, format="json")
+        self.assertEqual(response.status_code, 201)
+        parameter_id = response.json().get("id")
+
+        # Verify the created parameter by fetching its details
+        get_response = self.client.get(f"/api/parameters/{parameter_id}/")
+        self.assertEqual(get_response.status_code, 200)
+        parameter = get_response.json()
+        self.assertEqual(parameter["name"], "temperature")
+        self.assertEqual(parameter["unit"], "Celsius")
+        # Add additional verification for visualization and category if needed
+
+    def test_get_all_parameters(self):
+        response = self.client.get("/api/parameters/")
+        self.assertEqual(
+            response.status_code, 200
+        )  # Expecting a successful retrieval status code
+        parameters = response.json()
+        self.assertIsInstance(parameters["parameters"], list)
+
+    def test_get_all_parameters_with_filtering(self):
+        # Create a parameter to ensure there's at least one in the database
+        self.test_create_parameter()
+
+        # Test filtering by name
+        response = self.client.get("/api/parameters/?name=temperature")
+        self.assertEqual(response.status_code, 200)
+        parameters = response.json()["parameters"]
+        self.assertTrue(
+            any(p["name"] == "temperature" for p in parameters)
+        )  # Ensure filtering works
+
+    def test_update_parameter(self):
+        # Create a parameter first
+        data = {
+            "name": "pressure",
+            "title": "Pressure",
+            "unit": "Pascal",
+            "search_view": False,
+            "explore_view": True,
+            "scale_names": ["Low", "Medium", "High"],
+            "scale_colors": ["#FF0000", "#00FF00", "#0000FF"],
+            "visualization": None,
+        }
+
+        create_response = self.client.post("/api/parameters/", data=data, format="json")
+        self.assertEqual(create_response.status_code, 201)
+
+        parameter_id = create_response.json().get("id")
+
+        # Update the parameter
+        updated_data = {
+            "name": "air_pressure",
+            "title": "Pressure Level",
+            "unit": "Pa",
+            "search_view": False,
+            "explore_view": True,
+            "scale_names": ["Low", "Medium", "High"],
+            "scale_colors": ["#FF0000", "#00FF00", "#0000FF"],
+            "visualization": "line_chart",
+        }
+
+        update_response = self.client.put(
+            f"/api/parameters/{parameter_id}/", data=updated_data, format="json"
+        )
+        self.assertEqual(
+            update_response.status_code, 200
+        )  # Expecting a successful update status code
+
+        # Verify the updated parameter
+        get_response = self.client.get(f"/api/parameters/{parameter_id}/")
+        self.assertEqual(get_response.status_code, 200)
+        parameter = get_response.json()
+        self.assertEqual(parameter["title"], "Pressure Level")
+        self.assertEqual(parameter["unit"], "Pa")
+
+    def test_delete_parameter(self):
+        # Create a parameter first
+        data = {
+            "name": "weight",
+            "title": "Weight",
+            "unit": "kg",
+            "search_view": True,
+            "explore_view": True,
+            "scale_names": ["Low", "Medium", "High"],
+            "scale_colors": ["#FF0000", "#00FF00", "#0000FF"],
+            "visualization": "line_chart",
+        }
+
+        create_response = self.client.post("/api/parameters/", data=data, format="json")
+        self.assertEqual(create_response.status_code, 201)
+
+        parameter_id = create_response.json().get("id")
+
+        # Delete the parameter
+        delete_response = self.client.delete(f"/api/parameters/{parameter_id}/")
+        self.assertEqual(
+            delete_response.status_code, 204
+        )  # Expecting a successful delete status code
+
+        # Verify the parameter is deleted
+        get_response = self.client.get(f"/api/parameters/{parameter_id}/")
         self.assertEqual(
             get_response.status_code, 404
         )  # Expecting a not found status code

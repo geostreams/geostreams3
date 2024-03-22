@@ -50,7 +50,9 @@ class ParameterCategory(models.Model):
     or with different representations. For example, alkalinity can be in both
     a stacked-line graph and a time series graph or Alkalinity could show up as
     time series in two categories/tabs: Contaminants and Nutrients
-    """
+    This is used for allowing the same parameter to show up on more than one tab
+    or with different representations Alkalinity could show up as time series in
+    two categories/tabs: Contaminants and Nutrients"""
 
     id = models.AutoField(primary_key=True)
     parameter = models.ForeignKey(Parameter, models.DO_NOTHING)

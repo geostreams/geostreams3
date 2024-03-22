@@ -7,7 +7,15 @@ import json
 
 # from rest_framework.permissions import IsAuthenticated
 
-from .models import Sensor, Stream, Parameter, Datapoint, Category, Visualization
+from .models import (
+    Sensor,
+    Stream,
+    Parameter,
+    Datapoint,
+    Category,
+    Visualization,
+    ParameterCategory,
+)
 from .serializers import (
     SensorSerializer,
     ParameterSerializer,
@@ -15,6 +23,7 @@ from .serializers import (
     CategorySerializer,
     DatapointSerializer,
     VisualizationSerializer,
+    ParameterCategorySerializer,
 )
 
 
@@ -35,18 +44,61 @@ class ParametersViewSet(viewsets.ModelViewSet):
     # Serialize listing of parameters
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
+        # Check if queryset is empty
+        if not queryset:
+            return Response(
+                {"message": "No parameters found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Check if name query parameter is provided and return only that parameter and its mappings and categories
         if self.request.query_params.get("name", None):
-            serializer = ParameterSerializer(queryset[0])
-            return Response({"parameter": serializer.data})
-        serializer = ParameterSerializer(queryset, many=True)
-        return Response({"parameters": serializer.data})
+            param_serializer = ParameterSerializer(queryset[0])
+            mapping_serialized = ParameterCategorySerializer(
+                ParameterCategory.objects.filter(parameter=queryset[0]), many=True
+            )
+            for mapping in mapping_serialized.data:
+                print(mapping)
+            category_serialized = CategorySerializer(
+                Category.objects.filter(
+                    id__in=[
+                        param_category.category.id
+                        for param_category in ParameterCategory.objects.filter(
+                            parameter=queryset[0]
+                        )
+                    ]
+                ),
+                many=True,
+            )
+
+            return Response(
+                {
+                    "parameter": param_serializer.data,
+                    "mappings": mapping_serialized.data,
+                    "categories": category_serialized.data,
+                }
+            )
+
+        param_serializer = ParameterSerializer(queryset, many=True)
+        category_serialized = CategorySerializer(Category.objects.all(), many=True)
+        mapping_serialized = ParameterCategorySerializer(
+            ParameterCategory.objects.all(), many=True
+        )
+        return Response(
+            {
+                "parameters": param_serializer.data,
+                "categories": category_serialized.data,
+                "mappings": mapping_serialized.data,
+            }
+        )
 
     # Overwrite create to allow adding visualization by name
     def create(self, request, *args, **kwargs):
-        """Create a Parameter with a Visualization name instead of foreign key."""
+        """Create a Parameter with Visualization and Category names."""
         visualization_name = request.data.get("visualization")
+        category_name = request.data.get("category")
         parameter_data = request.data.copy()
 
+        # Check for Visualization existence
         if visualization_name:
             try:
                 visualization = Visualization.objects.get(name=visualization_name)
@@ -57,20 +109,43 @@ class ParametersViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
         else:
-            parameter_data["visualization"] = None
+            return Response(
+                {"message": "Visualization must be provided"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
+        # Check for Category existence
+        if category_name:
+            try:
+                category = Category.objects.get(name=category_name)
+            except Category.DoesNotExist:
+                return Response(
+                    {"message": "Category does not exist"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            return Response(
+                {"message": "Category must be provided"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Now that we have ensured both Visualization and Category
+        # exist, proceed with Parameter creation
         serializer = self.get_serializer(data=parameter_data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+        parameter = serializer.save()
+
+        # Since category_name is provided and exists, link Parameter and Category
+        ParameterCategory.objects.create(parameter=parameter, category=category)
 
         headers = self.get_success_headers(serializer.data)
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
 
-    # Overwrite update to allow updating visualization by name
+    # TODO: Need to modify update to possibly update the mapping as well
     def update(self, request, *args, **kwargs):
-        """Update a Parameter with a Visualization name instead of foreign key."""
+        """Update a Parameter, and optionally its Visualization and Category, by name"""
         visualization_name = request.data.get("visualization")
         parameter_data = request.data.copy()
 
@@ -83,8 +158,6 @@ class ParametersViewSet(viewsets.ModelViewSet):
                     {"message": "Visualization does not exist"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-        else:
-            parameter_data["visualization"] = None
 
         partial = kwargs.pop("partial", True)
         instance = self.get_object()
@@ -94,6 +167,9 @@ class ParametersViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
+    # TODO: Need to modify delete to delete the mapping as well
+
+    # TODO: Need to modify delete_by_name to delete the mapping as well
     @action(detail=False, methods=["DELETE"])
     def delete_by_name(self, request):
         """Delete a parameter by its name."""
@@ -450,7 +526,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             response[label].append(datapoint)
         print(response)
         return Response(response, status=status.HTTP_200_OK)
-      
+
     @staticmethod
     def get_time_period_binned_small_datapoint(
         sensor_id, time_period, parameter=None, start_time=None, end_time=None
@@ -564,4 +640,3 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             response[label].append(datapoint)
         print(response)
         return Response(response, status=status.HTTP_200_OK)
-      
