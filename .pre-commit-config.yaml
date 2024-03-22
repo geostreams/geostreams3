@@ -18,12 +18,12 @@ repos:
         - id: flake8
           exclude: ^migrations/
 
-# Hook to run local Django and tests.
--   repo: local
-    hooks:
-    -   id: django-tests
-        name: Django tests
-        entry: python manage.py test
-        language: system
-        pass_filenames: false
-        types: [python]
+# Hook to run local Django and tests. (Deprecated as hooks are run in isolated environments,checked in CI/CD pipeline.)
+#-   repo: local
+#    hooks:
+#    -   id: django-tests
+#        name: Django tests
+#        entry: python manage.py test
+#        language: system
+#        pass_filenames: false
+#        types: [python]
