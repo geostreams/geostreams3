@@ -333,6 +333,38 @@ class DatapointsViewSetTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         # Add any necessary setup code here (e.g., create Sensor and Datapoint instances)
+        # Create visualization
+        visualization_data = {
+            "name": "line_chart",
+            "title": "A line chart visualization",
+        }
+        self.client.post("/api/visualizations/", data=visualization_data, format="json")
+        # Create category
+        category_data = {
+            "name": "air_quality",
+            "title": "Air Quality",
+        }
+        self.client.post("/api/categories/", data=category_data, format="json")
+        # Create parameters
+        parameter_data = [
+            {
+                "name": "nitrogen",
+                "title": "nitrogen",
+                "unit": "%",
+                "visualization": "line_chart",
+                "category": "air_quality",
+            },
+            {
+                "name": "phosphorus",
+                "title": "phosphorus",
+                "unit": "%",
+                "visualization": "line_chart",
+                "category": "air_quality",
+            },
+        ]
+        for parameter in parameter_data:
+            self.client.post("/api/parameters/", data=parameter, format="json")
+
         # Create a sensor
         sensor_data = {
             "name": "Reifsteck",
@@ -344,29 +376,6 @@ class DatapointsViewSetTestCase(TestCase):
             "max_end_time": "2024-04-24T17:14:47.783Z",
         }
         sensor_data = self.client.post("/api/sensors/", data=sensor_data, format="json")
-        # Create visualization
-        visualization_data = {
-            "name": "line_chart",
-            "title": "A line chart visualization",
-        }
-        self.client.post("/api/visualizations/", data=visualization_data, format="json")
-        # Create parameters
-        parameter_data = [
-            {
-                "name": "nitrogen",
-                "title": "nitrogen",
-                "unit": "%",
-                "visualization": "line_chart",
-            },
-            {
-                "name": "phosphorus",
-                "title": "phosphorus",
-                "unit": "%",
-                "visualization": "line_chart",
-            },
-        ]
-        for parameter in parameter_data:
-            self.client.post("/api/parameters/", data=parameter, format="json")
         # Create a stream
         stream_data = [
             {
