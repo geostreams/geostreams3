@@ -271,6 +271,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             return DatapointsViewSet.get_time_period_binned_small_datapoint(
                 sensor_id, "hourly", parameter, start_time, end_time
             )
+
         return DatapointsViewSet.get_time_period_binned_datapoint(
             sensor_id, "hourly", parameter, start_time, end_time
         )
@@ -287,6 +288,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             return DatapointsViewSet.get_time_period_binned_small_datapoint(
                 sensor_id, "daily", parameter, start_time, end_time
             )
+
         return DatapointsViewSet.get_time_period_binned_datapoint(
             sensor_id, "daily", parameter, start_time, end_time
         )
@@ -303,6 +305,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             return DatapointsViewSet.get_time_period_binned_small_datapoint(
                 sensor_id, "monthly", parameter, start_time, end_time
             )
+
         return DatapointsViewSet.get_time_period_binned_datapoint(
             sensor_id, "monthly", parameter, start_time, end_time
         )
@@ -319,6 +322,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             return DatapointsViewSet.get_time_period_binned_small_datapoint(
                 sensor_id, "yearly", parameter, start_time, end_time
             )
+
         return DatapointsViewSet.get_time_period_binned_datapoint(
             sensor_id, "yearly", parameter, start_time, end_time
         )
@@ -446,7 +450,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             response[label].append(datapoint)
         print(response)
         return Response(response, status=status.HTTP_200_OK)
-
+      
     @staticmethod
     def get_time_period_binned_small_datapoint(
         sensor_id, time_period, parameter=None, start_time=None, end_time=None
@@ -560,3 +564,4 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             response[label].append(datapoint)
         print(response)
         return Response(response, status=status.HTTP_200_OK)
+      
