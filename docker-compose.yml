@@ -21,5 +21,3 @@ networks:
 
 volumes:
   postgres:
-
-

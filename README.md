@@ -1,7 +1,9 @@
 # Geostreams
 
-Geostreams API is a RESTful web service to manage data streams in time and space. It relies on 
-[PostgreSQL](https://www.postgresql.org/), [PostGIS](http://postgis.net/) and [timescale extension](https://www.timescale.com/). The web application is developed 
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+Geostreams API is a RESTful web service to manage data streams in time and space. It relies on
+[PostgreSQL](https://www.postgresql.org/), [PostGIS](http://postgis.net/) and [timescale extension](https://www.timescale.com/). The web application is developed
 using the [Django Rest Framework](http://www.django-rest-framework.org/)
 
 ## Developers
