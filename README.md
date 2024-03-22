@@ -1,5 +1,6 @@
 # Geostreams
 
+
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 Geostreams API is a RESTful web service to manage data streams in time and space. It relies on
