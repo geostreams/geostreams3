@@ -32,6 +32,9 @@ class ParameterCategorySerializer(serializers.ModelSerializer):
 
 
 class ParameterSerializer(serializers.ModelSerializer):
+    # Showing the name of the visualization instead of the id
+    visualization = serializers.CharField(source="visualization.name", read_only=True)
+
     class Meta:
         model = Parameter
         fields = "__all__"
