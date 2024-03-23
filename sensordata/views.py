@@ -50,7 +50,8 @@ class ParametersViewSet(viewsets.ModelViewSet):
                 {"message": "No parameters found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        # Check if name query parameter is provided and return only that parameter and its mappings and categories
+        # Check if name query parameter is provided and return only that parameter
+        # and its mappings and categories
         if self.request.query_params.get("name", None):
             param_serializer = ParameterSerializer(queryset[0])
             mapping_serialized = ParameterCategorySerializer(
@@ -347,16 +348,16 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         """Get hourly average datapoints by parameter."""
         sensor_id = request.GET.get("sensor_id")
         parameter = request.GET.getlist("parameter")
-        start_time = request.GET.get("start_time")
-        end_time = request.GET.get("end_time")
+        since = request.GET.get("since")
+        until = request.GET.get("until")
         shortened = request.GET.get("shortened")
         if shortened == "true":
             return DatapointsViewSet.get_time_period_binned_small_datapoint(
-                sensor_id, "hourly", parameter, start_time, end_time
+                sensor_id, "hourly", parameter, since, until
             )
 
         return DatapointsViewSet.get_time_period_binned_datapoint(
-            sensor_id, "hourly", parameter, start_time, end_time
+            sensor_id, "hourly", parameter, since, until
         )
 
     @action(detail=False, methods=["GET"])
@@ -364,16 +365,16 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         """Get daily average datapoints by parameter."""
         sensor_id = request.GET.get("sensor_id")
         parameter = request.GET.getlist("parameter")
-        start_time = request.GET.get("start_time")
-        end_time = request.GET.get("end_time")
+        since = request.GET.get("since")
+        until = request.GET.get("until")
         shortened = request.GET.get("shortened")
         if shortened == "true":
             return DatapointsViewSet.get_time_period_binned_small_datapoint(
-                sensor_id, "daily", parameter, start_time, end_time
+                sensor_id, "daily", parameter, since, until
             )
 
         return DatapointsViewSet.get_time_period_binned_datapoint(
-            sensor_id, "daily", parameter, start_time, end_time
+            sensor_id, "daily", parameter, since, until
         )
 
     @action(detail=False, methods=["GET"])
@@ -381,16 +382,16 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         """Get monthly average datapoints by parameter."""
         sensor_id = request.GET.get("sensor_id")
         parameter = request.GET.getlist("parameter")
-        start_time = request.GET.get("start_time")
-        end_time = request.GET.get("end_time")
+        since = request.GET.get("since")
+        until = request.GET.get("until")
         shortened = request.GET.get("shortened")
         if shortened == "true":
             return DatapointsViewSet.get_time_period_binned_small_datapoint(
-                sensor_id, "monthly", parameter, start_time, end_time
+                sensor_id, "monthly", parameter, since, until
             )
 
         return DatapointsViewSet.get_time_period_binned_datapoint(
-            sensor_id, "monthly", parameter, start_time, end_time
+            sensor_id, "monthly", parameter, since, until
         )
 
     @action(detail=False, methods=["GET"])
@@ -398,21 +399,21 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         """Get yearly average datapoints by parameter."""
         sensor_id = request.GET.get("sensor_id")
         parameter = request.GET.getlist("parameter")
-        start_time = request.GET.get("start_time")
-        end_time = request.GET.get("end_time")
+        since = request.GET.get("since")
+        until = request.GET.get("until")
         shortened = request.GET.get("shortened")
         if shortened == "true":
             return DatapointsViewSet.get_time_period_binned_small_datapoint(
-                sensor_id, "yearly", parameter, start_time, end_time
+                sensor_id, "yearly", parameter, since, until
             )
 
         return DatapointsViewSet.get_time_period_binned_datapoint(
-            sensor_id, "yearly", parameter, start_time, end_time
+            sensor_id, "yearly", parameter, since, until
         )
 
     @staticmethod
     def get_time_period_binned_datapoint(
-        sensor_id, time_period, parameter=None, start_time=None, end_time=None
+        sensor_id, time_period, parameter=None, since=None, until=None
     ):
         # TODO: Check sensor_id is valid, and also if parameter is valid
         if sensor_id is None:
@@ -510,12 +511,10 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 parameter_list=parameter_list
             )
 
-        if start_time:
-            query += "AND bucket >= '{start_time}'::timestamp ".format(
-                start_time=start_time
-            )
-        if end_time:
-            query += "AND bucket <= '{end_time}'::timestamp ".format(end_time=end_time)
+        if since:
+            query += "AND bucket >= '{since}'::timestamp ".format(since=since)
+        if until:
+            query += "AND bucket <= '{until}'::timestamp ".format(until=until)
 
         query += ";"
         query = query.format(sensor_id=sensor_id)
@@ -535,7 +534,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
 
     @staticmethod
     def get_time_period_binned_small_datapoint(
-        sensor_id, time_period, parameter=None, start_time=None, end_time=None
+        sensor_id, time_period, parameter=None, since=None, until=None
     ):
         # TODO: Check sensor_id is valid, and also if parameter is valid
         if sensor_id is None:
@@ -548,6 +547,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 {"message": "Sensor ID must be an integer"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        query = ""
         if time_period == "hourly":
             query = """
                     SELECT
@@ -623,12 +623,10 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 parameter_list=parameter_list
             )
 
-        if start_time:
-            query += "AND bucket >= '{start_time}'::timestamp ".format(
-                start_time=start_time
-            )
-        if end_time:
-            query += "AND bucket <= '{end_time}'::timestamp ".format(end_time=end_time)
+        if since:
+            query += "AND bucket >= '{since}'::timestamp ".format(since=since)
+        if until:
+            query += "AND bucket <= '{until}'::timestamp ".format(until=until)
 
         query += ";"
         query = query.format(sensor_id=sensor_id)
