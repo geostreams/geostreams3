@@ -153,7 +153,8 @@ class ParametersViewSet(viewsets.ModelViewSet):
         if visualization_name:
             try:
                 visualization = Visualization.objects.get(name=visualization_name)
-                parameter_data["visualization"] = visualization.id
+                parameter_data.pop("visualization")
+                instance.visualization = visualization
             except Visualization.DoesNotExist:
                 return Response(
                     {"message": "Visualization does not exist"},
