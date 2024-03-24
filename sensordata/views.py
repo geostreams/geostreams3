@@ -147,13 +147,15 @@ class ParametersViewSet(viewsets.ModelViewSet):
         """Update a Parameter, and optionally its Visualization and Category, by name"""
         instance = self.get_object()
         visualization_name = request.data.get("visualization")
+        print(visualization_name)
         category_name = request.data.get("category")
         parameter_data = request.data.copy()
 
         if visualization_name:
             try:
                 visualization = Visualization.objects.get(name=visualization_name)
-                parameter_data["visualization"] = visualization.id
+                parameter_data.pop("visualization")
+                instance.visualization = visualization
             except Visualization.DoesNotExist:
                 return Response(
                     {"message": "Visualization does not exist"},
