@@ -50,7 +50,8 @@ class ParametersViewSet(viewsets.ModelViewSet):
                 {"message": "No parameters found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        # Check if name query parameter is provided and return only that parameter and its mappings and categories
+        # Check if name query parameter is provided and return only that parameter
+        # and its mappings and categories
         if self.request.query_params.get("name", None):
             param_serializer = ParameterSerializer(queryset[0])
             mapping_serialized = ParameterCategorySerializer(
@@ -347,16 +348,16 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         """Get hourly average datapoints by parameter."""
         sensor_id = request.GET.get("sensor_id")
         parameter = request.GET.getlist("parameter")
-        start_time = request.GET.get("start_time")
-        end_time = request.GET.get("end_time")
+        since = request.GET.get("since")
+        until = request.GET.get("until")
         shortened = request.GET.get("shortened")
         if shortened == "true":
             return DatapointsViewSet.get_time_period_binned_small_datapoint(
-                sensor_id, "hourly", parameter, start_time, end_time
+                sensor_id, "hourly", parameter, since, until
             )
 
         return DatapointsViewSet.get_time_period_binned_datapoint(
-            sensor_id, "hourly", parameter, start_time, end_time
+            sensor_id, "hourly", parameter, since, until
         )
 
     @action(detail=False, methods=["GET"])
@@ -364,16 +365,16 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         """Get daily average datapoints by parameter."""
         sensor_id = request.GET.get("sensor_id")
         parameter = request.GET.getlist("parameter")
-        start_time = request.GET.get("start_time")
-        end_time = request.GET.get("end_time")
+        since = request.GET.get("since")
+        until = request.GET.get("until")
         shortened = request.GET.get("shortened")
         if shortened == "true":
             return DatapointsViewSet.get_time_period_binned_small_datapoint(
-                sensor_id, "daily", parameter, start_time, end_time
+                sensor_id, "daily", parameter, since, until
             )
 
         return DatapointsViewSet.get_time_period_binned_datapoint(
-            sensor_id, "daily", parameter, start_time, end_time
+            sensor_id, "daily", parameter, since, until
         )
 
     @action(detail=False, methods=["GET"])
@@ -381,16 +382,16 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         """Get monthly average datapoints by parameter."""
         sensor_id = request.GET.get("sensor_id")
         parameter = request.GET.getlist("parameter")
-        start_time = request.GET.get("start_time")
-        end_time = request.GET.get("end_time")
+        since = request.GET.get("since")
+        until = request.GET.get("until")
         shortened = request.GET.get("shortened")
         if shortened == "true":
             return DatapointsViewSet.get_time_period_binned_small_datapoint(
-                sensor_id, "monthly", parameter, start_time, end_time
+                sensor_id, "monthly", parameter, since, until
             )
 
         return DatapointsViewSet.get_time_period_binned_datapoint(
-            sensor_id, "monthly", parameter, start_time, end_time
+            sensor_id, "monthly", parameter, since, until
         )
 
     @action(detail=False, methods=["GET"])
@@ -398,21 +399,21 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         """Get yearly average datapoints by parameter."""
         sensor_id = request.GET.get("sensor_id")
         parameter = request.GET.getlist("parameter")
-        start_time = request.GET.get("start_time")
-        end_time = request.GET.get("end_time")
+        since = request.GET.get("since")
+        until = request.GET.get("until")
         shortened = request.GET.get("shortened")
         if shortened == "true":
             return DatapointsViewSet.get_time_period_binned_small_datapoint(
-                sensor_id, "yearly", parameter, start_time, end_time
+                sensor_id, "yearly", parameter, since, until
             )
 
         return DatapointsViewSet.get_time_period_binned_datapoint(
-            sensor_id, "yearly", parameter, start_time, end_time
+            sensor_id, "yearly", parameter, since, until
         )
 
     @staticmethod
     def get_time_period_binned_datapoint(
-        sensor_id, time_period, parameter=None, start_time=None, end_time=None
+        sensor_id, time_period, parameter=None, since=None, until=None
     ):
         # TODO: Check sensor_id is valid, and also if parameter is valid
         if sensor_id is None:
@@ -420,18 +421,23 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 {"message": "Sensor ID must be provided"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if sensor_id.isdigit() is False:
+
+        try:
+            sensor_id = int(sensor_id)
+        except ValueError:
             return Response(
                 {"message": "Sensor ID must be an integer"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
         if time_period == "hourly":
             query = """
                     SELECT
-                        parameters.name AS label,
+                        parameters.name AS parameter,
                         average,
                         count,
                         bucket AS date,
+                        DATE(bucket) AS label,
                         EXTRACT(YEAR FROM bucket) AS year,
                         EXTRACT(MONTH FROM bucket) AS month,
                         EXTRACT(DAY FROM bucket) AS day,
@@ -448,10 +454,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         elif time_period == "daily":
             query = """
                     SELECT
-                        parameters.name AS label,
+                        parameters.name AS parameter,
                         average,
                         count,
                         bucket AS date,
+                        DATE(bucket) AS label,
                         EXTRACT(YEAR FROM bucket) AS year,
                         EXTRACT(MONTH FROM bucket) AS month,
                         EXTRACT(DAY FROM bucket) AS day
@@ -467,10 +474,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         elif time_period == "monthly":
             query = """
                     SELECT
-                    parameters.name AS label,
+                    parameters.name AS parameter,
                     average,
                     count,
                     bucket AS date,
+                    DATE(bucket) AS label,
                     EXTRACT(YEAR FROM bucket) AS year,
                     EXTRACT(MONTH FROM bucket) AS month
                     FROM monthly_sensor_data
@@ -484,10 +492,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         elif time_period == "yearly":
             query = """
                     SELECT
-                    parameters.name AS label,
+                    parameters.name AS parameter,
                     average,
                     count,
                     bucket AS date,
+                    DATE(bucket) AS label,
                     EXTRACT(YEAR FROM bucket) AS year
                     FROM yearly_sensor_data
                     RIGHT JOIN
@@ -510,12 +519,10 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 parameter_list=parameter_list
             )
 
-        if start_time:
-            query += "AND bucket >= '{start_time}'::timestamp ".format(
-                start_time=start_time
-            )
-        if end_time:
-            query += "AND bucket <= '{end_time}'::timestamp ".format(end_time=end_time)
+        if since:
+            query += "AND bucket >= '{since}'::timestamp ".format(since=since)
+        if until:
+            query += "AND bucket <= '{until}'::timestamp ".format(until=until)
 
         query += ";"
         query = query.format(sensor_id=sensor_id)
@@ -524,18 +531,24 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             columns = [desc[0] for desc in cursor.description]
             results = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-        response = {}
+        data = {}
         for datapoint in results:
-            label = datapoint["label"]
-            if label not in response:
-                response[label] = []
-            del datapoint["label"]  # Remove 'label' key
-            response[label].append(datapoint)
+            label = datapoint["parameter"]
+            if label not in data:
+                data[label] = []
+            del datapoint["parameter"]  # Remove 'label' key
+            data[label].append(datapoint)
+
+        response = {
+            "sensor_name": Sensor.objects.get(id=sensor_id).name,
+            "properties": data,
+        }
+
         return Response(response, status=status.HTTP_200_OK)
 
     @staticmethod
     def get_time_period_binned_small_datapoint(
-        sensor_id, time_period, parameter=None, start_time=None, end_time=None
+        sensor_id, time_period, parameter=None, since=None, until=None
     ):
         # TODO: Check sensor_id is valid, and also if parameter is valid
         if sensor_id is None:
@@ -548,13 +561,15 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 {"message": "Sensor ID must be an integer"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        query = ""
         if time_period == "hourly":
             query = """
                     SELECT
-                        parameters.name AS label,
+                        parameters.name AS parameter,
                         average,
                         count,
-                        bucket AS date
+                        bucket AS date,
+                        DATE(bucket) AS label
                     FROM
                         hourly_sensor_data
                     RIGHT JOIN
@@ -567,10 +582,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         elif time_period == "daily":
             query = """
                     SELECT
-                        parameters.name AS label,
+                        parameters.name AS parameter,
                         average,
                         count,
-                        bucket AS date
+                        bucket AS date,
+                        DATE(bucket) AS label
                     FROM
                         daily_sensor_data
                     RIGHT JOIN
@@ -583,10 +599,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         elif time_period == "monthly":
             query = """
                     SELECT
-                    parameters.name AS label,
+                    parameters.name AS parameter,
                     average,
                     count,
-                    bucket AS date
+                    bucket AS date,
+                    DATE(bucket) AS label
                     FROM monthly_sensor_data
                     RIGHT JOIN
                     parameters ON monthly_sensor_data.parameter_id = parameters.id
@@ -598,10 +615,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         elif time_period == "yearly":
             query = """
                     SELECT
-                    parameters.name AS label,
+                    parameters.name AS parameter,
                     average,
                     count,
-                    bucket AS date
+                    bucket AS date,
+                    DATE(bucket) AS label
                     FROM yearly_sensor_data
                     RIGHT JOIN
                     parameters ON yearly_sensor_data.parameter_id = parameters.id
@@ -623,12 +641,10 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 parameter_list=parameter_list
             )
 
-        if start_time:
-            query += "AND bucket >= '{start_time}'::timestamp ".format(
-                start_time=start_time
-            )
-        if end_time:
-            query += "AND bucket <= '{end_time}'::timestamp ".format(end_time=end_time)
+        if since:
+            query += "AND bucket >= '{since}'::timestamp ".format(since=since)
+        if until:
+            query += "AND bucket <= '{until}'::timestamp ".format(until=until)
 
         query += ";"
         query = query.format(sensor_id=sensor_id)
@@ -639,9 +655,9 @@ class DatapointsViewSet(viewsets.ModelViewSet):
 
         response = {}
         for datapoint in results:
-            label = datapoint["label"]
+            label = datapoint["parameter"]
             if label not in response:
                 response[label] = []
-            del datapoint["label"]  # Remove 'label' key
+            del datapoint["parameter"]  # Remove 'label' key
             response[label].append(datapoint)
         return Response(response, status=status.HTTP_200_OK)
