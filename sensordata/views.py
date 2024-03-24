@@ -421,18 +421,23 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 {"message": "Sensor ID must be provided"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if sensor_id.isdigit() is False:
+
+        try:
+            sensor_id = int(sensor_id)
+        except ValueError:
             return Response(
                 {"message": "Sensor ID must be an integer"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
         if time_period == "hourly":
             query = """
                     SELECT
-                        parameters.name AS label,
+                        parameters.name AS parameter,
                         average,
                         count,
                         bucket AS date,
+                        DATE(bucket) AS label,
                         EXTRACT(YEAR FROM bucket) AS year,
                         EXTRACT(MONTH FROM bucket) AS month,
                         EXTRACT(DAY FROM bucket) AS day,
@@ -449,10 +454,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         elif time_period == "daily":
             query = """
                     SELECT
-                        parameters.name AS label,
+                        parameters.name AS parameter,
                         average,
                         count,
                         bucket AS date,
+                        DATE(bucket) AS label,
                         EXTRACT(YEAR FROM bucket) AS year,
                         EXTRACT(MONTH FROM bucket) AS month,
                         EXTRACT(DAY FROM bucket) AS day
@@ -468,10 +474,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         elif time_period == "monthly":
             query = """
                     SELECT
-                    parameters.name AS label,
+                    parameters.name AS parameter,
                     average,
                     count,
                     bucket AS date,
+                    DATE(bucket) AS label,
                     EXTRACT(YEAR FROM bucket) AS year,
                     EXTRACT(MONTH FROM bucket) AS month
                     FROM monthly_sensor_data
@@ -485,10 +492,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         elif time_period == "yearly":
             query = """
                     SELECT
-                    parameters.name AS label,
+                    parameters.name AS parameter,
                     average,
                     count,
                     bucket AS date,
+                    DATE(bucket) AS label,
                     EXTRACT(YEAR FROM bucket) AS year
                     FROM yearly_sensor_data
                     RIGHT JOIN
@@ -523,13 +531,19 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             columns = [desc[0] for desc in cursor.description]
             results = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-        response = {}
+        data = {}
         for datapoint in results:
-            label = datapoint["label"]
-            if label not in response:
-                response[label] = []
-            del datapoint["label"]  # Remove 'label' key
-            response[label].append(datapoint)
+            label = datapoint["parameter"]
+            if label not in data:
+                data[label] = []
+            del datapoint["parameter"]  # Remove 'label' key
+            data[label].append(datapoint)
+
+        response = {
+            "sensor_name": Sensor.objects.get(id=sensor_id).name,
+            "properties": data,
+        }
+
         return Response(response, status=status.HTTP_200_OK)
 
     @staticmethod
@@ -551,10 +565,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         if time_period == "hourly":
             query = """
                     SELECT
-                        parameters.name AS label,
+                        parameters.name AS parameter,
                         average,
                         count,
-                        bucket AS date
+                        bucket AS date,
+                        DATE(bucket) AS label
                     FROM
                         hourly_sensor_data
                     RIGHT JOIN
@@ -567,10 +582,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         elif time_period == "daily":
             query = """
                     SELECT
-                        parameters.name AS label,
+                        parameters.name AS parameter,
                         average,
                         count,
-                        bucket AS date
+                        bucket AS date,
+                        DATE(bucket) AS label
                     FROM
                         daily_sensor_data
                     RIGHT JOIN
@@ -583,10 +599,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         elif time_period == "monthly":
             query = """
                     SELECT
-                    parameters.name AS label,
+                    parameters.name AS parameter,
                     average,
                     count,
-                    bucket AS date
+                    bucket AS date,
+                    DATE(bucket) AS label
                     FROM monthly_sensor_data
                     RIGHT JOIN
                     parameters ON monthly_sensor_data.parameter_id = parameters.id
@@ -598,10 +615,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         elif time_period == "yearly":
             query = """
                     SELECT
-                    parameters.name AS label,
+                    parameters.name AS parameter,
                     average,
                     count,
-                    bucket AS date
+                    bucket AS date,
+                    DATE(bucket) AS label
                     FROM yearly_sensor_data
                     RIGHT JOIN
                     parameters ON yearly_sensor_data.parameter_id = parameters.id
@@ -637,9 +655,9 @@ class DatapointsViewSet(viewsets.ModelViewSet):
 
         response = {}
         for datapoint in results:
-            label = datapoint["label"]
+            label = datapoint["parameter"]
             if label not in response:
                 response[label] = []
-            del datapoint["label"]  # Remove 'label' key
+            del datapoint["parameter"]  # Remove 'label' key
             response[label].append(datapoint)
         return Response(response, status=status.HTTP_200_OK)
