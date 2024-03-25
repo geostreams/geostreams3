@@ -147,7 +147,6 @@ class ParametersViewSet(viewsets.ModelViewSet):
         """Update a Parameter, and optionally its Visualization and Category, by name"""
         instance = self.get_object()
         visualization_name = request.data.get("visualization")
-        print(visualization_name)
         category_name = request.data.get("category")
         parameter_data = request.data.copy()
 
