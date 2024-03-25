@@ -6,3 +6,5 @@ drf-yasg
 django-cors-headers
 black
 pre-commit
+python-dotenv
+```
