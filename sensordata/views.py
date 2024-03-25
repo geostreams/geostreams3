@@ -101,7 +101,6 @@ class ParametersViewSet(viewsets.ModelViewSet):
         if visualization_name:
             try:
                 visualization = Visualization.objects.get(name=visualization_name)
-                parameter_data["visualization"] = visualization.id
             except Visualization.DoesNotExist:
                 return Response(
                     {"message": "Visualization does not exist"},
@@ -132,7 +131,7 @@ class ParametersViewSet(viewsets.ModelViewSet):
         # exist, proceed with Parameter creation
         serializer = self.get_serializer(data=parameter_data)
         serializer.is_valid(raise_exception=True)
-        parameter = serializer.save()
+        parameter = serializer.save(visualization=visualization)
 
         # Since category_name is provided and exists, link Parameter and Category
         ParameterCategory.objects.create(parameter=parameter, category=category)
