@@ -14,8 +14,8 @@ class Category(models.Model):
     """
 
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=50, blank=True, null=True)
-    detail_type = models.CharField(max_length=50, blank=True, null=True)
+    name = models.CharField(max_length=50, blank=True, null=False)
+    description = models.CharField(max_length=500, blank=True, null=True)
 
     class Meta:
         db_table = "categories"
@@ -30,8 +30,8 @@ class Parameter(models.Model):
     stacked-bar graphs that could be used for other stacked graphs."""
 
     id = models.AutoField(primary_key=True)
-    name = models.CharField(unique=True, max_length=200)
-    title = models.CharField(max_length=200, blank=True, null=True)
+    name = models.CharField(unique=True, max_length=200, null=False)
+    title = models.CharField(max_length=200, blank=True, null=False)
     unit = models.CharField(max_length=20, blank=True, null=True)
     visualization = models.ForeignKey(
         "Visualization", models.DO_NOTHING, blank=True, null=True
