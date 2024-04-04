@@ -10,7 +10,6 @@ class Category(models.Model):
     """Categories are used to represent a group of parameters to show in
     the detail page in Geodashboard v3The name will be the title of the tab
     where the data associated with the category is displayed.
-    The detail_type is the type of graph in the UI, it could be (time, stacked-line, stacked-bar)
     """
 
     id = models.AutoField(primary_key=True)
