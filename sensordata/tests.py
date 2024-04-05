@@ -105,7 +105,7 @@ class CategoryApiTest(TestCase):
     def test_create_category(self):
         data = {
             "name": "Temperature",
-            "detail_type": "time",
+            "description": "Temperature data",
         }
 
         response = self.client.post("/api/categories/", data=data, format="json")
@@ -121,7 +121,7 @@ class CategoryApiTest(TestCase):
         )  # Expecting a successful retrieval status code
         category = get_response.json()
         self.assertEqual(category["name"], "Temperature")
-        self.assertEqual(category["detail_type"], "time")
+        self.assertEqual(category["description"], "Temperature data")
 
     def test_get_all_categories(self):
         response = self.client.get("/api/categories/")
@@ -135,7 +135,7 @@ class CategoryApiTest(TestCase):
         # Create a category first
         data = {
             "name": "Pressure",
-            "detail_type": "stacked-line",
+            "description": "stacked-line",
         }
 
         create_response = self.client.post("/api/categories/", data=data, format="json")
@@ -146,7 +146,7 @@ class CategoryApiTest(TestCase):
         # Update the category
         updated_data = {
             "name": "Pressure Level",
-            "detail_type": "stacked-bar",
+            "description": "Pressure data",
         }
 
         update_response = self.client.put(
@@ -161,14 +161,11 @@ class CategoryApiTest(TestCase):
         self.assertEqual(get_response.status_code, 200)
         category = get_response.json()
         self.assertEqual(category["name"], "Pressure Level")
-        self.assertEqual(category["detail_type"], "stacked-bar")
+        self.assertEqual(category["description"], "Pressure data")
 
     def test_delete_category(self):
         # Create a category first
-        data = {
-            "name": "Weight",
-            "detail_type": "time",
-        }
+        data = {"name": "Weight", "description": "Weight of different elements"}
 
         create_response = self.client.post("/api/categories/", data=data, format="json")
         self.assertEqual(create_response.status_code, 201)
