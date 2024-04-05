@@ -240,25 +240,13 @@ class SensorsViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """Create new sensor."""
-        name = request.data.get("name")
-        geog = request.data.get("geog")
-        parameters = request.data.get("parameters")
-        properties = request.data.get("properties")
-        min_start_time = request.data.get("min_start_time")
-        max_end_time = request.data.get("max_end_time")
-        # Create sensor
-        new_sensor = Sensor.objects.create(
-            name=name,
-            geog=geog,
-            parameters=parameters,
-            properties=properties,
-            min_start_time=min_start_time,
-            max_end_time=max_end_time,
-        )
-        new_sensor.save()
-
-        serialized_sensor = SensorSerializer(new_sensor)
-        return Response(serialized_sensor.data, status=status.HTTP_201_CREATED)
+        serializer = SensorSerializer(data=request.data)
+        if serializer.is_valid():
+            sensor = serializer.save()
+            response = {"message": f"Sensor {sensor.id} created successfully"}
+            return Response(response, status=status.HTTP_201_CREATED)
+        response = {"message": serializer.errors}
+        return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self):
         queryset = Sensor.objects.all()
@@ -282,10 +270,16 @@ class SensorsViewSet(viewsets.ModelViewSet):
         serializer = SensorSerializer(queryset, many=True)
         return Response({"sensors": serializer.data})
 
-    def retrieve(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response({"sensor": serializer.data})
+        try:
+            sensor_id = instance.id
+            instance.delete()
+            response = {"message": f"Sensor {sensor_id} deleted successfully"}
+            return Response(response, status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            response = {"message": e}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
 class StreamsViewSet(viewsets.ModelViewSet):

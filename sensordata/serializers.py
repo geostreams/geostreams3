@@ -1,4 +1,6 @@
+from django.contrib.gis.geos import GEOSGeometry
 from rest_framework import serializers
+import json
 from .models import (
     Category,
     ParameterCategory,
@@ -41,7 +43,6 @@ class ParameterSerializer(serializers.ModelSerializer):
 
 
 class SensorSerializer(serializers.ModelSerializer):
-    geotype = serializers.SerializerMethodField()
     geometry = serializers.SerializerMethodField()
 
     class Meta:
@@ -50,20 +51,30 @@ class SensorSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "created",
-            "geotype",
             "geometry",
             "properties",
-            "min_start_time",
-            "max_end_time",
             "parameters",
         ]
 
-    # TODO: Need to change this to be more dynamic, for now just hardcode
-    def get_geotype(self, obj):
-        return "Feature"
-
     def get_geometry(self, obj):
-        return {"type": "Point", "coordinates": [obj.geog.x, obj.geog.y, obj.geog.z]}
+        return json.loads(obj.geog.geojson) if obj.geog else None
+
+    def to_internal_value(self, data):
+        # Copy data to avoid mutating the input
+        mutable_data = data.copy()
+
+        # Extract and remove 'geometry' to handle it separately
+        geojson = mutable_data.pop("geometry", None)
+
+        # Let DRF process the rest of the fields
+        validated_data = super().to_internal_value(mutable_data)
+
+        if geojson:
+            # TODO: SRID should be configurable as a setting
+            geos_geom = GEOSGeometry(json.dumps(geojson), srid=4326)
+            validated_data["geog"] = geos_geom
+
+        return validated_data
 
 
 class StreamSerializer(serializers.ModelSerializer):

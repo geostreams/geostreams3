@@ -80,6 +80,7 @@ class Sensor(models.Model):
     geog = geomodels.GeometryField(dim=3, blank=False, null=False)
     created = models.DateTimeField(blank=True, null=True, default=datetime.now)
     properties = models.JSONField()
+    parameters = ArrayField(models.CharField(max_length=200))
 
     class Meta:
         db_table = "sensors"
