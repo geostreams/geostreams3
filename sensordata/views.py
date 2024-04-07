@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework import status
 import json
 
+from dateutil import parser
+
 # from rest_framework.permissions import IsAuthenticated
 
 from .models import (
@@ -297,6 +299,40 @@ class StreamsViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def create(self, request, *args, **kwargs):
+        """Create new stream."""
+        serializer = StreamSerializer(data=request.data)
+        if serializer.is_valid():
+            stream = serializer.save()
+            response = {"message": f"Stream {stream.id} created successfully"}
+            return Response(response, status=status.HTTP_201_CREATED)
+        response = {"message": serializer.errors}
+        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if not queryset:
+            return Response(
+                {"message": "No streams found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if self.request.query_params.get("name", None):
+            serializer = StreamSerializer(queryset[0])
+            return Response({"stream": serializer.data})
+        serializer = StreamSerializer(queryset, many=True)
+        return Response({"streams": serializer.data})
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            stream_id = instance.id
+            instance.delete()
+            response = {"message": f"Stream {stream_id} deleted successfully"}
+            return Response(response, status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            response = {"message": e}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
 
 class DatapointsViewSet(viewsets.ModelViewSet):
     """View all datapoints."""
@@ -311,7 +347,6 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         datapoint_data = {
             "geog": data["geog"],
             "time": data["time"],
-            "end_time": data["end_time"],
             "stream": Stream.objects.get(id=data["stream"]).id,
         }
         datapoints_data = (
@@ -325,12 +360,23 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 datapoint["value"] = value
                 datapoints.append(datapoint)
             except Parameter.DoesNotExist:
-                print("Parameter does not exist-", key.strip())
+                response = {"message": f"Parameter {key} does not exist"}
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
                 continue
 
         datapoint_serializer = DatapointSerializer(data=datapoints, many=True)
         if datapoint_serializer.is_valid():
-            datapoint_serializer.save()
+            datapoint = datapoint_serializer.save()
+            # Update start_time and end_time in stream
+            stream = Stream.objects.get(id=data["stream"])
+            if stream.start_time is None or stream.start_time > parser.parse(
+                data["time"]
+            ):
+                stream.start_time = data["time"]
+            if stream.end_time is None or stream.end_time < parser.parse(data["time"]):
+                stream.end_time = data["time"]
+            stream.save()
+            # Send success response
             response = {"message": "Datapoint created successfully"}
             return Response(response, status=status.HTTP_201_CREATED)
         else:

@@ -1,4 +1,5 @@
 from django.contrib.gis.geos import GEOSGeometry
+from django.db.models import Min, Max
 from rest_framework import serializers
 import json
 from .models import (
@@ -44,16 +45,68 @@ class ParameterSerializer(serializers.ModelSerializer):
 
 class SensorSerializer(serializers.ModelSerializer):
     geometry = serializers.SerializerMethodField()
+    min_start_time = serializers.SerializerMethodField()
+    max_end_time = serializers.SerializerMethodField()
 
     class Meta:
         model = Sensor
         fields = [
             "id",
             "name",
+            "geotype",
             "created",
             "geometry",
             "properties",
             "parameters",
+            "min_start_time",
+            "max_end_time",
+        ]
+
+    def get_geometry(self, obj):
+        return json.loads(obj.geog.geojson) if obj.geog else None
+
+    def get_min_start_time(self, obj):
+        # Get the earliest start_time from all streams associated with this sensor
+        return obj.streams.aggregate(min_start_time=Min("start_time"))["min_start_time"]
+
+    def get_max_end_time(self, obj):
+        # Get the latest end_time from all streams associated with this sensor
+        return obj.streams.aggregate(max_end_time=Max("end_time"))["max_end_time"]
+
+    def to_internal_value(self, data):
+        # Copy data to avoid mutating the input
+        mutable_data = data.copy()
+
+        # Extract and remove 'geometry' to handle it separately
+        geojson = mutable_data.pop("geometry", None)
+
+        # Let DRF process the rest of the fields
+        validated_data = super().to_internal_value(mutable_data)
+
+        if geojson:
+            # TODO: SRID should be configurable as a setting
+            geos_geom = GEOSGeometry(json.dumps(geojson), srid=4326)
+            validated_data["geog"] = geos_geom
+
+        return validated_data
+
+
+class StreamSerializer(serializers.ModelSerializer):
+    geometry = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Stream
+        fields = [
+            "id",
+            "sensor",
+            "name",
+            "geotype",
+            "created",
+            "parameters",
+            "properties",
+            "start_time",
+            "end_time",
+            "geometry",
         ]
 
     def get_geometry(self, obj):
@@ -75,12 +128,6 @@ class SensorSerializer(serializers.ModelSerializer):
             validated_data["geog"] = geos_geom
 
         return validated_data
-
-
-class StreamSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Stream
-        fields = "__all__"
 
 
 class DatapointSerializer(serializers.ModelSerializer):
