@@ -108,9 +108,11 @@ class Stream(models.Model):
 class Datapoint(TimescaleModel):
     id = models.AutoField(primary_key=True)
     stream = models.ForeignKey(Stream, models.DO_NOTHING)
-    geog = geomodels.GeometryField(
-        dim=3, blank=False, null=False
-    )  # if missing, use sensor geog
+    created = models.DateTimeField(blank=True, null=True, default=datetime.now)
+    type = models.CharField(max_length=50, blank=True, null=True)
+    # geog = geomodels.GeometryField(
+    #     dim=3, blank=False, null=False
+    # )  # if missing, use sensor geog
     # TODO: the interval should be adjusted in settings as it determines number of chunks
     #  high frequency data should have smaller interval to avoid large chunks
     #  and low frequency data should have larger interval to avoid too many chunks
