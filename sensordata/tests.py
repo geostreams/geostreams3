@@ -659,36 +659,33 @@ class DatapointsViewSetTestCase(TestCase):
 
         # Create a sensor
         sensor_data = {
-            "name": "Reifsteck",
+            "name": "NCSA Sensor 1",
+            "geotype": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
-            "created": "2023-07-24T17:14:47.783Z",
-            "parameters": ["nitrogen", "phosphorus"],
             "properties": {},
-            "min_start_time": "2023-04-24T17:14:47.783Z",
-            "max_end_time": "2024-04-24T17:14:47.783Z",
         }
         sensor_data = self.client.post("/api/sensors/", data=sensor_data, format="json")
         # Create a stream
         stream_data = [
             {
-                "name": "RS-2",
-                "geog": "POINT(35.6895 139.6917 0)",
-                "created": "2023-07-24T17:14:47.783Z",
-                "parameters": ["nitrogen", "phosphorus"],
-                "properties": {},
-                "min_start_time": "2023-04-24T17:14:47.783Z",
-                "max_end_time": "2024-04-24T17:14:47.783Z",
+                "name": "NCSA Stream 1",
+                "geotype": "Feature",
                 "sensor": sensor_data.data["id"],
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-88.290075, 40.0062722, 0.0],
+                },
+                "properties": {},
             },
             {
-                "name": "RS-2",
-                "geog": "SRID=4326;POINT (35.6895 139.6917 0)",
-                "created": "2023-07-24T17:14:47.783000Z",
-                "parameters": ["nitrogen", "phosphorus"],
-                "properties": {},
-                "start_time": None,
-                "end_time": None,
+                "name": "NCSA Stream 2",
+                "geotype": "Feature",
                 "sensor": sensor_data.data["id"],
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-88.213772, 39.889292, 0.0],
+                },
+                "properties": {},
             },
         ]
         stream_ids = []
@@ -698,63 +695,44 @@ class DatapointsViewSetTestCase(TestCase):
         # Create datapoints
         datapoint_data = [
             {
-                "geog": "SRID=4326;POINT (40.7128 -74.006 0)",
                 "time": "2023-06-01T09:00:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 1.23, "phosphorus": 0.45},
             },
             {
-                "geog": "SRID=4326;POINT (34.0522 -118.2437 0)",
                 "time": "2023-06-01T12:00:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 0.75, "phosphorus": 1.1},
             },
             {
-                "geog": "SRID=4326;POINT (51.5074 -0.1278 0)",
                 "time": "2023-06-01T16:00:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 0.91, "phosphorus": 0.82},
             },
             {
-                "geog": "SRID=4326;POINT (37.7749 -122.4194 0)",
                 "time": "2023-06-01T18:00:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 1.55, "phosphorus": 0.98},
             },
             {
-                "geog": "SRID=4326;POINT (52.52 13.405 0)",
                 "time": "2023-06-01T09:30:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 0.65, "phosphorus": 1.25},
             },
             {
-                "geog": "SRID=4326;POINT (35.6895 139.6917 0)",
                 "time": "2023-06-01T11:30:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 1.1, "phosphorus": 0.75},
             },
             {
-                "geog": "SRID=4326;POINT (-33.8651 151.2099 0)",
                 "time": "2023-06-01T13:30:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 0.95, "phosphorus": 0.82},
             },
             {
-                "geog": "SRID=4326;POINT (37.9838 23.7275 0)",
                 "time": "2023-06-01T15:30:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 1.35, "phosphorus": 0.93},
             },
             {
-                "geog": "SRID=4326;POINT (40.4168 -3.7038 0)",
                 "time": "2023-06-01T17:30:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 0.78, "phosphorus": 1.02},
             },
             {
                 "geog": "SRID=4326;POINT (51.5074 -0.1278 0)",
                 "time": "2023-05-01T16:00:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 0.31, "phosphorus": 0.22},
             },
         ]

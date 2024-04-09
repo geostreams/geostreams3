@@ -137,8 +137,9 @@ class StreamSerializer(serializers.ModelSerializer):
 
 
 class DatapointSerializer(serializers.ModelSerializer):
-    parameter = serializers.CharField(source="parameter.name")
+    stream = serializers.IntegerField(source="stream.id", write_only=True)
     stream_id = serializers.IntegerField(source="stream.id", read_only=True)
+    parameter = serializers.CharField(source="parameter.name", read_only=True)
     sensor_id = serializers.IntegerField(source="stream.sensor.id", read_only=True)
     sensor_name = serializers.CharField(source="stream.sensor.name", read_only=True)
 
@@ -147,6 +148,7 @@ class DatapointSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "created",
+            "stream",
             "stream_id",
             "sensor_id",
             "sensor_name",
@@ -155,3 +157,11 @@ class DatapointSerializer(serializers.ModelSerializer):
             "parameter",
             "value",
         ]
+
+    def create(self, validated_data):
+        stream = validated_data.pop("stream")
+        print(type(stream))
+        stream = Stream.objects.get(id=stream["id"])
+        datapoint = Datapoint.objects.create(stream=stream, **validated_data)
+        datapoint.save()
+        return datapoint

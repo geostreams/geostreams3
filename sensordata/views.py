@@ -339,15 +339,14 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         """Create new datapoint."""
         data = self.request.data
         datapoints = []
-        stream = Stream.objects.get(id=data["stream"])
         datapoint_data = {
-            "geog": data["geog"],
             "time": data["time"],
-            "stream": stream.id,
+            "stream": data["stream"],
         }
         datapoints_data = (
             json.loads(data["data"]) if type(data["data"]) is str else data["data"]
         )
+        stream = Stream.objects.get(id=data["stream"])
 
         for key, value in datapoints_data.items():
             try:
