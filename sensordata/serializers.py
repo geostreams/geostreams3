@@ -47,6 +47,7 @@ class SensorSerializer(serializers.ModelSerializer):
     geometry = serializers.SerializerMethodField()
     min_start_time = serializers.SerializerMethodField()
     max_end_time = serializers.SerializerMethodField()
+    parameters = serializers.SerializerMethodField()
 
     class Meta:
         model = Sensor
@@ -63,15 +64,20 @@ class SensorSerializer(serializers.ModelSerializer):
         ]
 
     def get_geometry(self, obj):
+        # Convert the GEOSGeometry object to a GeoJSON dict and stores it in the 'geometry' field
         return json.loads(obj.geog.geojson) if obj.geog else None
 
     def get_min_start_time(self, obj):
-        # Get the earliest start_time from all streams associated with this sensor
+        # Gets the earliest start_time from all streams associated with this sensor
         return obj.streams.aggregate(min_start_time=Min("start_time"))["min_start_time"]
 
     def get_max_end_time(self, obj):
-        # Get the latest end_time from all streams associated with this sensor
+        # Gets the latest end_time from all streams associated with this sensor
         return obj.streams.aggregate(max_end_time=Max("end_time"))["max_end_time"]
+
+    def get_parameters(self, obj):
+        # Gets all parameters from streams associated with this sensor
+        return list(obj.streams.values_list("parameters", flat=True).distinct())
 
     def to_internal_value(self, data):
         # Copy data to avoid mutating the input
@@ -131,6 +137,21 @@ class StreamSerializer(serializers.ModelSerializer):
 
 
 class DatapointSerializer(serializers.ModelSerializer):
+    parameter = serializers.CharField(source="parameter.name")
+    stream_id = serializers.IntegerField(source="stream.id", read_only=True)
+    sensor_id = serializers.IntegerField(source="stream.sensor.id", read_only=True)
+    sensor_name = serializers.CharField(source="stream.sensor.name", read_only=True)
+
     class Meta:
         model = Datapoint
-        fields = "__all__"
+        fields = [
+            "id",
+            "created",
+            "stream_id",
+            "sensor_id",
+            "sensor_name",
+            "type",
+            "time",
+            "parameter",
+            "value",
+        ]

@@ -81,7 +81,6 @@ class Sensor(models.Model):
     geog = geomodels.GeometryField(dim=3, blank=False, null=False)
     created = models.DateTimeField(blank=True, null=True, default=datetime.now)
     properties = models.JSONField()
-    parameters = ArrayField(models.CharField(max_length=200))
 
     class Meta:
         db_table = "sensors"
@@ -96,7 +95,7 @@ class Stream(models.Model):
     geotype = models.CharField(max_length=50, blank=False, null=True)
     geog = geomodels.GeometryField(dim=3, blank=False, null=False)
     created = models.DateTimeField(blank=True, null=True, default=datetime.now)
-    parameters = ArrayField(models.CharField(max_length=200))
+    parameters = ArrayField(models.CharField(max_length=200), blank=True, default=list)
     properties = models.JSONField()
     start_time = models.DateTimeField(blank=True, null=True, default=None)
     end_time = models.DateTimeField(blank=True, null=True, default=None)

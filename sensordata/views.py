@@ -138,10 +138,7 @@ class ParametersViewSet(viewsets.ModelViewSet):
         # Since category_name is provided and exists, link Parameter and Category
         ParameterCategory.objects.create(parameter=parameter, category=category)
 
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     # TODO: Need to modify update to possibly update the mapping as well
     def update(self, request, *args, **kwargs):
@@ -244,9 +241,8 @@ class SensorsViewSet(viewsets.ModelViewSet):
         """Create new sensor."""
         serializer = SensorSerializer(data=request.data)
         if serializer.is_valid():
-            sensor = serializer.save()
-            response = {"message": f"Sensor {sensor.id} created successfully"}
-            return Response(response, status=status.HTTP_201_CREATED)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         response = {"message": serializer.errors}
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
@@ -303,9 +299,8 @@ class StreamsViewSet(viewsets.ModelViewSet):
         """Create new stream."""
         serializer = StreamSerializer(data=request.data)
         if serializer.is_valid():
-            stream = serializer.save()
-            response = {"message": f"Stream {stream.id} created successfully"}
-            return Response(response, status=status.HTTP_201_CREATED)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         response = {"message": serializer.errors}
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
@@ -344,10 +339,11 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         """Create new datapoint."""
         data = self.request.data
         datapoints = []
+        stream = Stream.objects.get(id=data["stream"])
         datapoint_data = {
             "geog": data["geog"],
             "time": data["time"],
-            "stream": Stream.objects.get(id=data["stream"]).id,
+            "stream": stream.id,
         }
         datapoints_data = (
             json.loads(data["data"]) if type(data["data"]) is str else data["data"]
@@ -356,6 +352,15 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         for key, value in datapoints_data.items():
             try:
                 datapoint = datapoint_data.copy()
+                # Check if parameter in streams or in parameters
+                if key.strip() not in stream.parameters:
+                    if Parameter.objects.filter(name=key.strip()).exists():
+                        stream.parameters.append(key.strip())
+                        stream.save()
+                    else:
+                        response = {"message": f"Parameter {key} does not exist"}
+                        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
                 datapoint["parameter"] = Parameter.objects.get(name=key.strip()).id
                 datapoint["value"] = value
                 datapoints.append(datapoint)
