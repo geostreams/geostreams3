@@ -455,6 +455,12 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             sensor_id, "yearly", parameter, since, until
         )
 
+    @action(detail=False, methods=["GET"])
+    def refresh_cache(self, request):
+        time_period = request.GET.get("time_period", None)
+        print(time_period)
+        return DatapointsViewSet.refresh_time_bucket(time_period)
+
     @staticmethod
     def get_time_period_binned_datapoint(
         sensor_id, time_period, parameter=None, since=None, until=None
@@ -705,3 +711,55 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             del datapoint["parameter"]  # Remove 'label' key
             response[label].append(datapoint)
         return Response(response, status=status.HTTP_200_OK)
+
+    @staticmethod
+    def refresh_time_bucket(time_period):
+        """Refresh the time bucket for the given time period to reflect the latest data."""
+        # Get start_time and end_time for datapoints
+        try:
+            start_time = Datapoint.objects.earliest("time").time
+            end_time = Datapoint.objects.latest("time").time
+
+            query = ""
+            if time_period == "hourly":
+                query = """
+                        CALL
+                            refresh_continuous_aggregate('hourly_sensor_data', '{start_time}', '{end_time}')
+                        """.format(
+                    start_time=start_time, end_time=end_time
+                )
+            elif time_period == "daily":
+                query = """
+                        CALL
+                            refresh_continuous_aggregate('daily_sensor_data', '{start_time}', '{end_time}')
+                        """.format(
+                    start_time=start_time, end_time=end_time
+                )
+            elif time_period == "monthly":
+                query = """
+                        CALL
+                            refresh_continuous_aggregate('monthly_sensor_data', '{start_time}', '{end_time}')
+                        """.format(
+                    start_time=start_time, end_time=end_time
+                )
+            elif time_period == "yearly":
+                query = """
+                        CALL
+                            refresh_continuous_aggregate('yearly_sensor_data', '{start_time}', '{end_time}')
+                        """.format(
+                    start_time=start_time, end_time=end_time
+                )
+            else:
+                return Response(
+                    {"message": "Invalid time period provided"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+
+            return Response(
+                {"message": "Cache refreshed successfully"}, status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response({"message": e}, status=status.HTTP_400_BAD_REQUEST)
