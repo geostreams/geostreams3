@@ -1,4 +1,4 @@
-from datetime import datetime
+from django.utils import timezone
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.gis.db import models as geomodels
@@ -79,7 +79,7 @@ class Sensor(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     geotype = models.CharField(max_length=50, blank=False, null=True)
     geog = geomodels.GeometryField(dim=3, blank=False, null=False)
-    created = models.DateTimeField(blank=True, null=True, default=datetime.now)
+    created = models.DateTimeField(blank=True, null=True, default=timezone.now)
     properties = models.JSONField()
 
     class Meta:
@@ -94,7 +94,7 @@ class Stream(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     geotype = models.CharField(max_length=50, blank=False, null=True)
     geog = geomodels.GeometryField(dim=3, blank=False, null=False)
-    created = models.DateTimeField(blank=True, null=True, default=datetime.now)
+    created = models.DateTimeField(blank=True, null=True, default=timezone.now)
     parameters = ArrayField(models.CharField(max_length=200), blank=True, default=list)
     properties = models.JSONField()
     start_time = models.DateTimeField(blank=True, null=True, default=None)
@@ -107,7 +107,7 @@ class Stream(models.Model):
 class Datapoint(TimescaleModel):
     id = models.AutoField(primary_key=True)
     stream = models.ForeignKey(Stream, models.DO_NOTHING)
-    created = models.DateTimeField(blank=True, null=True, default=datetime.now)
+    created = models.DateTimeField(blank=True, null=True, default=timezone.now)
     type = models.CharField(max_length=50, blank=True, null=True)
     # geog = geomodels.GeometryField(
     #     dim=3, blank=False, null=False
@@ -116,7 +116,7 @@ class Datapoint(TimescaleModel):
     #  high frequency data should have smaller interval to avoid large chunks
     #  and low frequency data should have larger interval to avoid too many chunks
     time = TimescaleDateTimeField(interval="7 days")
-    parameter = models.ForeignKey(Parameter, models.DO_NOTHING, null=True)
+    parameter = models.ForeignKey(Parameter, models.DO_NOTHING, blank=False)
     value = models.FloatField(blank=True, null=True)
 
     # TODO properties = models.JSONField()

@@ -75,7 +75,6 @@ class SensorApiTest(TestCase):
         update_response = self.client.put(
             f"/api/sensors/{sensor_id}/", data=updated_data, format="json"
         )
-        print(update_response.json())
         self.assertEqual(update_response.status_code, 200)
 
         # Verify the updated sensor
@@ -167,7 +166,6 @@ class StreamApiTest(TestCase):
         }
 
         response = self.client.post("/api/streams/", data=data, format="json")
-        print(response.json())
         self.assertEqual(response.status_code, 201)
         stream_id = response.json().get("id")
 
