@@ -4,6 +4,299 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 
 
+class SensorApiTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_create_sensor(self):
+        data = {
+            "name": "NCSA Sensor 1",
+            "geotype": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
+            "properties": {},
+        }
+
+        response = self.client.post("/api/sensors/", data=data, format="json")
+        self.assertEqual(response.status_code, 201)
+        sensor_id = response.json().get("id")
+
+        # Verify the created sensor by fetching its details
+        get_response = self.client.get(f"/api/sensors/{sensor_id}/")
+        self.assertEqual(get_response.status_code, 200)
+        sensor = get_response.json()
+        self.assertEqual(sensor["name"], "NCSA Sensor 1")
+        self.assertEqual(sensor["geometry"]["type"], "Point")
+        self.assertEqual(
+            sensor["geometry"]["coordinates"], [-88.290075, 40.0062722, 0.0]
+        )
+        self.assertEqual(sensor["min_start_time"], None)
+
+    def test_get_all_sensors(self):
+        # No sensors check
+        response = self.client.get("/api/sensors/")
+        self.assertEqual(response.status_code, 404)
+        sensors = response.json()
+
+        # Create a sensor first
+        data = {
+            "name": "NCSA Sensor 1",
+            "geotype": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
+            "properties": {},
+        }
+
+        self.client.post("/api/sensors/", data=data, format="json")
+
+        response = self.client.get("/api/sensors/")
+        self.assertEqual(response.status_code, 200)
+        sensors = response.json()
+        self.assertIsInstance(sensors["sensors"], list)
+
+    def test_update_sensor(self):
+        # Create a sensor first
+        data = {
+            "name": "NCSA Sensor 2",
+            "geotype": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
+            "properties": {},
+        }
+        response = self.client.post("/api/sensors/", data=data, format="json")
+        self.assertEqual(response.status_code, 201)
+
+        sensor_id = response.json().get("id")
+
+        # Update the sensor
+        updated_data = {
+            "name": "NCSA Sensor 3 ",
+            "geometry": {"type": "Point", "coordinates": [-88.213772, 39.889292, 0.0]},
+            "properties": {},
+        }
+
+        update_response = self.client.put(
+            f"/api/sensors/{sensor_id}/", data=updated_data, format="json"
+        )
+        self.assertEqual(update_response.status_code, 200)
+
+        # Verify the updated sensor
+        get_response = self.client.get(f"/api/sensors/{sensor_id}/")
+        self.assertEqual(get_response.status_code, 200)
+        sensor = get_response.json()
+        self.assertEqual(sensor["name"], "NCSA Sensor 3")
+        self.assertEqual(sensor["geometry"]["type"], "Point")
+        self.assertEqual(
+            sensor["geometry"]["coordinates"], [-88.213772, 39.889292, 0.0]
+        )
+
+    # In built patch function, when you only want to update a few fields, use the patch method.
+    def test_patch_sensor(self):
+        # Create a sensor first
+        data = {
+            "name": "NCSA Sensor 2",
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
+            "properties": {},
+        }
+        response = self.client.post("/api/sensors/", data=data, format="json")
+        self.assertEqual(response.status_code, 201)
+
+        sensor_id = response.json().get("id")
+
+        # Update the sensor
+        updated_data = {
+            "geometry": {"type": "Point", "coordinates": [-88.213772, 39.889292, 0.0]},
+            "properties": {},
+        }
+
+        update_response = self.client.patch(
+            f"/api/sensors/{sensor_id}/", data=updated_data, format="json"
+        )
+        self.assertEqual(update_response.status_code, 200)
+
+        # Verify the updated sensor
+        get_response = self.client.get(f"/api/sensors/{sensor_id}/")
+        self.assertEqual(get_response.status_code, 200)
+        sensor = get_response.json()
+        self.assertEqual(
+            sensor["geometry"]["coordinates"], [-88.213772, 39.889292, 0.0]
+        )
+
+    def test_delete_sensor(self):
+        # Create a sensor first
+        data = {
+            "name": "NCSA Sensor 2",
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
+            "properties": {},
+        }
+
+        create_response = self.client.post("/api/sensors/", data=data, format="json")
+        self.assertEqual(create_response.status_code, 201)
+
+        sensor_id = create_response.json().get("id")
+
+        # Delete the sensor
+        delete_response = self.client.delete(f"/api/sensors/{sensor_id}/")
+        self.assertEqual(delete_response.status_code, 204)
+
+
+class StreamApiTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        # Create a sensor first
+        data = {
+            "name": "NCSA Sensor 1",
+            "geotype": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
+            "properties": {
+                "name": "NCSA Sensor 1",
+                "popupContent": "NCSA Sensor 1",
+                "region": "NCSA Sensor 1",
+                "type": {"id": "field", "title": "Field Data"},
+            },
+        }
+
+        response = self.client.post("/api/sensors/", data=data, format="json")
+        self.sensor_id = response.json().get("id")
+
+    def test_create_stream(self):
+        data = {
+            "name": "NCSA Stream 1",
+            "geotype": "Feature",
+            "sensor": self.sensor_id,
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
+            "properties": {},
+        }
+
+        response = self.client.post("/api/streams/", data=data, format="json")
+        self.assertEqual(response.status_code, 201)
+        stream_id = response.json().get("id")
+
+        # Verify the created stream by fetching its details
+        get_response = self.client.get(f"/api/streams/{stream_id}/")
+        self.assertEqual(get_response.status_code, 200)
+        stream = get_response.json()
+        self.assertEqual(stream["name"], "NCSA Stream 1")
+
+    def test_get_all_streams(self):
+        response = self.client.get("/api/streams/")
+        self.assertEqual(response.status_code, 404)
+
+        # Create a stream first
+        data = {
+            "name": "NCSA Stream 1",
+            "geotype": "Feature",
+            "sensor": self.sensor_id,
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
+            "properties": {},
+        }
+
+        self.client.post("/api/streams/", data=data, format="json")
+
+        response = self.client.get("/api/streams/")
+        self.assertEqual(response.status_code, 200)
+        streams = response.json()
+        self.assertIsInstance(streams["streams"], list)
+
+    def test_update_stream(self):
+        # Create a stream first
+        data = {
+            "name": "NCSA Stream 1",
+            "geotype": "Feature",
+            "sensor": self.sensor_id,
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
+            "properties": {},
+        }
+        response = self.client.post("/api/streams/", data=data, format="json")
+        self.assertEqual(response.status_code, 201)
+
+        stream_id = response.json().get("id")
+
+        # Update the stream
+        updated_data = {
+            "name": "NCSA Stream 2",
+            "geometry": {"type": "Point", "coordinates": [-88.213772, 39.889292, 0.0]},
+            "properties": {},
+            "sensor": self.sensor_id,
+        }
+
+        update_response = self.client.put(
+            f"/api/streams/{stream_id}/", data=updated_data, format="json"
+        )
+        self.assertEqual(update_response.status_code, 200)
+
+        # Verify the updated stream
+        get_response = self.client.get(f"/api/streams/{stream_id}/")
+        self.assertEqual(get_response.status_code, 200)
+        stream = get_response.json()
+        self.assertEqual(stream["name"], "NCSA Stream 2")
+        self.assertEqual(
+            stream["geometry"]["coordinates"], [-88.213772, 39.889292, 0.0]
+        )
+
+    def test_delete_stream(self):
+        # Create a stream first
+        data = {
+            "name": "NCSA Stream 1",
+            "geotype": "Feature",
+            "sensor": self.sensor_id,
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
+            "properties": {},
+        }
+
+        create_response = self.client.post("/api/streams/", data=data, format="json")
+        self.assertEqual(create_response.status_code, 201)
+
+        stream_id = create_response.json().get("id")
+
+        # Delete the stream
+        delete_response = self.client.delete(f"/api/streams/{stream_id}/")
+        self.assertEqual(delete_response.status_code, 204)
+
+    def test_patch_stream(self):
+        # Create another sensor
+        data = {
+            "name": "NCSA Sensor 2",
+            "geotype": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
+            "properties": {},
+        }
+
+        response = self.client.post("/api/sensors/", data=data, format="json")
+        second_sensor = response.json().get("id")
+
+        # Create a stream first
+        data = {
+            "name": "NCSA Stream 1",
+            "geotype": "Feature",
+            "sensor": self.sensor_id,
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
+            "properties": {},
+        }
+        response = self.client.post("/api/streams/", data=data, format="json")
+        self.assertEqual(response.status_code, 201)
+
+        stream_id = response.json().get("id")
+
+        # Update the stream
+        updated_data = {
+            "geometry": {"type": "Point", "coordinates": [-88.213772, 39.889292, 0.0]},
+            "properties": {},
+            "sensor": second_sensor,
+        }
+
+        update_response = self.client.patch(
+            f"/api/streams/{stream_id}/", data=updated_data, format="json"
+        )
+        self.assertEqual(update_response.status_code, 200)
+
+        # Verify the updated stream
+        get_response = self.client.get(f"/api/streams/{stream_id}/")
+        self.assertEqual(get_response.status_code, 200)
+        stream = get_response.json()
+        self.assertEqual(
+            stream["geometry"]["coordinates"], [-88.213772, 39.889292, 0.0]
+        )
+        self.assertEqual(stream["sensor"], second_sensor)
+
+
 class VisualizationApiTest(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -364,36 +657,33 @@ class DatapointsViewSetTestCase(TestCase):
 
         # Create a sensor
         sensor_data = {
-            "name": "Reifsteck",
-            "geog": "POINT(35.6895 139.6917 0)",
-            "created": "2023-07-24T17:14:47.783Z",
-            "parameters": ["nitrogen", "phosphorus"],
+            "name": "NCSA Sensor 1",
+            "geotype": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
-            "min_start_time": "2023-04-24T17:14:47.783Z",
-            "max_end_time": "2024-04-24T17:14:47.783Z",
         }
         sensor_data = self.client.post("/api/sensors/", data=sensor_data, format="json")
         # Create a stream
         stream_data = [
             {
-                "name": "RS-2",
-                "geog": "POINT(35.6895 139.6917 0)",
-                "created": "2023-07-24T17:14:47.783Z",
-                "parameters": ["nitrogen", "phosphorus"],
-                "properties": {},
-                "min_start_time": "2023-04-24T17:14:47.783Z",
-                "max_end_time": "2024-04-24T17:14:47.783Z",
+                "name": "NCSA Stream 1",
+                "geotype": "Feature",
                 "sensor": sensor_data.data["id"],
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-88.290075, 40.0062722, 0.0],
+                },
+                "properties": {},
             },
             {
-                "name": "RS-2",
-                "geog": "SRID=4326;POINT (35.6895 139.6917 0)",
-                "created": "2023-07-24T17:14:47.783000Z",
-                "parameters": ["nitrogen", "phosphorus"],
-                "properties": {},
-                "start_time": None,
-                "end_time": None,
+                "name": "NCSA Stream 2",
+                "geotype": "Feature",
                 "sensor": sensor_data.data["id"],
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-88.213772, 39.889292, 0.0],
+                },
+                "properties": {},
             },
         ]
         stream_ids = []
@@ -403,63 +693,44 @@ class DatapointsViewSetTestCase(TestCase):
         # Create datapoints
         datapoint_data = [
             {
-                "geog": "SRID=4326;POINT (40.7128 -74.006 0)",
                 "time": "2023-06-01T09:00:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 1.23, "phosphorus": 0.45},
             },
             {
-                "geog": "SRID=4326;POINT (34.0522 -118.2437 0)",
                 "time": "2023-06-01T12:00:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 0.75, "phosphorus": 1.1},
             },
             {
-                "geog": "SRID=4326;POINT (51.5074 -0.1278 0)",
                 "time": "2023-06-01T16:00:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 0.91, "phosphorus": 0.82},
             },
             {
-                "geog": "SRID=4326;POINT (37.7749 -122.4194 0)",
                 "time": "2023-06-01T18:00:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 1.55, "phosphorus": 0.98},
             },
             {
-                "geog": "SRID=4326;POINT (52.52 13.405 0)",
                 "time": "2023-06-01T09:30:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 0.65, "phosphorus": 1.25},
             },
             {
-                "geog": "SRID=4326;POINT (35.6895 139.6917 0)",
                 "time": "2023-06-01T11:30:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 1.1, "phosphorus": 0.75},
             },
             {
-                "geog": "SRID=4326;POINT (-33.8651 151.2099 0)",
                 "time": "2023-06-01T13:30:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 0.95, "phosphorus": 0.82},
             },
             {
-                "geog": "SRID=4326;POINT (37.9838 23.7275 0)",
                 "time": "2023-06-01T15:30:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 1.35, "phosphorus": 0.93},
             },
             {
-                "geog": "SRID=4326;POINT (40.4168 -3.7038 0)",
                 "time": "2023-06-01T17:30:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 0.78, "phosphorus": 1.02},
             },
             {
                 "geog": "SRID=4326;POINT (51.5074 -0.1278 0)",
                 "time": "2023-05-01T16:00:00Z",
-                "end_time": None,
                 "data": {"nitrogen": 0.31, "phosphorus": 0.22},
             },
         ]

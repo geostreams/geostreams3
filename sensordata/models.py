@@ -1,4 +1,4 @@
-from datetime import datetime
+from django.utils import timezone
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.gis.db import models as geomodels
@@ -77,12 +77,10 @@ class Region(models.Model):
 class Sensor(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255, blank=True, null=True)
+    geotype = models.CharField(max_length=50, blank=False, null=True)
     geog = geomodels.GeometryField(dim=3, blank=False, null=False)
-    created = models.DateTimeField(blank=True, null=True, default=datetime.now)
-    parameters = ArrayField(models.CharField())
+    created = models.DateTimeField(blank=True, null=True, default=timezone.now)
     properties = models.JSONField()
-    min_start_time = models.DateTimeField(blank=True, null=True)
-    max_end_time = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         db_table = "sensors"
@@ -90,14 +88,17 @@ class Sensor(models.Model):
 
 class Stream(models.Model):
     id = models.AutoField(primary_key=True)
-    sensor = models.ForeignKey(Sensor, models.DO_NOTHING)
+    sensor = models.ForeignKey(
+        Sensor, related_name="streams", on_delete=models.DO_NOTHING
+    )
     name = models.CharField(max_length=255, blank=True, null=True)
+    geotype = models.CharField(max_length=50, blank=False, null=True)
     geog = geomodels.GeometryField(dim=3, blank=False, null=False)
-    created = models.DateTimeField(blank=True, null=True, default=datetime.now)
-    parameters = ArrayField(models.CharField(max_length=200))
+    created = models.DateTimeField(blank=True, null=True, default=timezone.now)
+    parameters = ArrayField(models.CharField(max_length=200), blank=True, default=list)
     properties = models.JSONField()
-    start_time = models.DateTimeField(blank=True, null=True)
-    end_time = models.DateTimeField(blank=True, null=True)
+    start_time = models.DateTimeField(blank=True, null=True, default=None)
+    end_time = models.DateTimeField(blank=True, null=True, default=None)
 
     class Meta:
         db_table = "streams"
@@ -106,12 +107,16 @@ class Stream(models.Model):
 class Datapoint(TimescaleModel):
     id = models.AutoField(primary_key=True)
     stream = models.ForeignKey(Stream, models.DO_NOTHING)
-    geog = geomodels.GeometryField(
-        dim=3, blank=False, null=False
-    )  # if missing, use sensor geog
+    created = models.DateTimeField(blank=True, null=True, default=timezone.now)
+    type = models.CharField(max_length=50, blank=True, null=True)
+    # geog = geomodels.GeometryField(
+    #     dim=3, blank=False, null=False
+    # )  # if missing, use sensor geog
+    # TODO: the interval should be adjusted in settings as it determines number of chunks
+    #  high frequency data should have smaller interval to avoid large chunks
+    #  and low frequency data should have larger interval to avoid too many chunks
     time = TimescaleDateTimeField(interval="7 days")
-    end_time = models.DateTimeField(blank=True, null=True)
-    parameter = models.ForeignKey(Parameter, models.DO_NOTHING, null=True)
+    parameter = models.ForeignKey(Parameter, models.DO_NOTHING, blank=False)
     value = models.FloatField(blank=True, null=True)
 
     # TODO properties = models.JSONField()

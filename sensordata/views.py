@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework import status
 import json
 
+from dateutil import parser
+
 # from rest_framework.permissions import IsAuthenticated
 
 from .models import (
@@ -136,10 +138,7 @@ class ParametersViewSet(viewsets.ModelViewSet):
         # Since category_name is provided and exists, link Parameter and Category
         ParameterCategory.objects.create(parameter=parameter, category=category)
 
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     # TODO: Need to modify update to possibly update the mapping as well
     def update(self, request, *args, **kwargs):
@@ -240,25 +239,12 @@ class SensorsViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """Create new sensor."""
-        name = request.data.get("name")
-        geog = request.data.get("geog")
-        parameters = request.data.get("parameters")
-        properties = request.data.get("properties")
-        min_start_time = request.data.get("min_start_time")
-        max_end_time = request.data.get("max_end_time")
-        # Create sensor
-        new_sensor = Sensor.objects.create(
-            name=name,
-            geog=geog,
-            parameters=parameters,
-            properties=properties,
-            min_start_time=min_start_time,
-            max_end_time=max_end_time,
-        )
-        new_sensor.save()
-
-        serialized_sensor = SensorSerializer(new_sensor)
-        return Response(serialized_sensor.data, status=status.HTTP_201_CREATED)
+        serializer = SensorSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        response = {"message": serializer.errors}
+        return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self):
         queryset = Sensor.objects.all()
@@ -282,10 +268,16 @@ class SensorsViewSet(viewsets.ModelViewSet):
         serializer = SensorSerializer(queryset, many=True)
         return Response({"sensors": serializer.data})
 
-    def retrieve(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response({"sensor": serializer.data})
+        try:
+            sensor_id = instance.id
+            instance.delete()
+            response = {"message": f"Sensor {sensor_id} deleted successfully"}
+            return Response(response, status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            response = {"message": e}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
 class StreamsViewSet(viewsets.ModelViewSet):
@@ -303,6 +295,39 @@ class StreamsViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def create(self, request, *args, **kwargs):
+        """Create new stream."""
+        serializer = StreamSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        response = {"message": serializer.errors}
+        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if not queryset:
+            return Response(
+                {"message": "No streams found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if self.request.query_params.get("name", None):
+            serializer = StreamSerializer(queryset[0])
+            return Response({"stream": serializer.data})
+        serializer = StreamSerializer(queryset, many=True)
+        return Response({"streams": serializer.data})
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            stream_id = instance.id
+            instance.delete()
+            response = {"message": f"Stream {stream_id} deleted successfully"}
+            return Response(response, status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            response = {"message": e}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
 
 class DatapointsViewSet(viewsets.ModelViewSet):
     """View all datapoints."""
@@ -315,28 +340,47 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         data = self.request.data
         datapoints = []
         datapoint_data = {
-            "geog": data["geog"],
             "time": data["time"],
-            "end_time": data["end_time"],
-            "stream": Stream.objects.get(id=data["stream"]).id,
+            "stream": data["stream"],
         }
         datapoints_data = (
             json.loads(data["data"]) if type(data["data"]) is str else data["data"]
         )
+        stream = Stream.objects.get(id=data["stream"])
 
         for key, value in datapoints_data.items():
             try:
                 datapoint = datapoint_data.copy()
+                # Check if parameter in streams or in parameters
+                if key.strip() not in stream.parameters:
+                    if Parameter.objects.filter(name=key.strip()).exists():
+                        stream.parameters.append(key.strip())
+                        stream.save()
+                    else:
+                        response = {"message": f"Parameter {key} does not exist"}
+                        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
                 datapoint["parameter"] = Parameter.objects.get(name=key.strip()).id
                 datapoint["value"] = value
                 datapoints.append(datapoint)
             except Parameter.DoesNotExist:
-                print("Parameter does not exist-", key.strip())
+                response = {"message": f"Parameter {key} does not exist"}
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
                 continue
 
         datapoint_serializer = DatapointSerializer(data=datapoints, many=True)
         if datapoint_serializer.is_valid():
-            datapoint_serializer.save()
+            datapoint = datapoint_serializer.save()
+            # Update start_time and end_time in stream
+            stream = Stream.objects.get(id=data["stream"])
+            if stream.start_time is None or stream.start_time > parser.parse(
+                data["time"]
+            ):
+                stream.start_time = data["time"]
+            if stream.end_time is None or stream.end_time < parser.parse(data["time"]):
+                stream.end_time = data["time"]
+            stream.save()
+            # Send success response
             response = {"message": "Datapoint created successfully"}
             return Response(response, status=status.HTTP_201_CREATED)
         else:
