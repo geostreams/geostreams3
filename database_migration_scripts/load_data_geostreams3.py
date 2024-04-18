@@ -56,7 +56,6 @@ def post_categories():
 
 def post_parameters():
     parameters = pd.read_csv("data/parameters.csv")
-    parameters = parameters[-1:]
 
     def post_parameter(row):
         data = {
@@ -76,19 +75,14 @@ def post_parameters():
 
 def post_sensors():
     sensors = json.loads(open("data/sensors.json").read())
-    sensors_df = pd.read_csv("data/sensors.csv")
 
     def post_sensor(sensor):
-        sensor_row = sensors_df.iloc[
-            sensors_df[sensors_df["gid"] == sensor["id"]].index[0]
-        ]
         data = {
             "name": sensor["name"],
-            "geog": sensor_row["geog"],
+            "geometry": sensor["geometry"],
+            "geotype": sensor["geoType"],
             "parameters": sensor["parameters"],
             "properties": sensor["properties"],
-            "min_start_time": sensor["min_start_time"],
-            "max_end_time": sensor["max_end_time"],
         }
 
         response = requests.post(geostreams_url + "api/sensors/", json=data)
@@ -99,8 +93,57 @@ def post_sensors():
         post_sensor(sensor)
 
 
+def post_streams():
+    streams = json.loads(open("data/streams.json").read())
+
+    def post_stream(stream):
+        sensor = requests.get(
+            geostreams_url + "api/sensors/?name=" + stream["name"]
+        ).json()["sensor"]
+
+        data = {
+            "name": stream["name"],
+            "geotype": stream["geoType"],
+            "sensor": sensor["id"],
+            "geometry": stream["geometry"],
+            "properties": {},
+        }
+        response = requests.post(geostreams_url + "api/streams/", json=data)
+        if response.status_code != 201:
+            print(stream["name"])
+
+    for stream in tqdm(streams["streams"]):
+        post_stream(stream)
+
+
+def post_datapoints():
+    datapoints = pd.read_csv("data/datapoints.csv")
+    streams = datapoints["stream_name"].unique()
+
+    def post_datapoint(datapoint, stream_id):
+        data = {
+            "time": datapoint["time"],
+            "data": datapoint["data"],
+            "stream": stream_id,
+        }
+        response = requests.post(geostreams_url + "api/datapoints/", json=data)
+        if response.status_code != 201:
+            print(response.status_code)
+            print(response.text)
+
+    for stream in tqdm(streams):
+        stream_id = requests.get(geostreams_url + "api/streams/?name=" + stream).json()[
+            "stream"
+        ]["id"]
+        datapoints[datapoints["stream_name"] == stream].progress_apply(
+            post_datapoint, stream_id=stream_id, axis=1
+        )
+
+
 if __name__ == "__main__":
-    post_visualizations()
-    post_categories()
-    post_parameters()
-    post_sensors()
+    # post_visualizations()
+    # post_categories()
+    # post_parameters()
+    # post_sensors()
+    # post_streams()
+    post_datapoints()

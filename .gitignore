@@ -8,3 +8,5 @@ venv/
 .env
 *.csv
 database_migration_scripts/data/
+database_migration_scripts/data/csv/*
+database_migration_scripts/data/*.sql
