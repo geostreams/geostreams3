@@ -18,6 +18,8 @@ docker-compose up -d
 
 ### Django development server
 
+You will need GDAL for the project. You can install it using `brew install gdal`.
+
 To run the Django development server, you need to install the requirements and run the migrations.
 
 ```bash
