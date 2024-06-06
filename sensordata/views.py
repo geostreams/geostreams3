@@ -338,6 +338,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """Create new datapoint."""
         data = self.request.data
+        is_many = isinstance(data, list)
         datapoints = []
         datapoint_data = {
             "time": data["time"],
@@ -386,6 +387,18 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         else:
             response = {"message": datapoint_serializer.errors}
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=["GET"])
+    def get_values(self, request):
+        """Get hourly average datapoints by parameter."""
+        sensor_id = request.GET.get("sensor_id")
+        parameter = request.GET.getlist("parameter")
+        since = request.GET.get("since")
+        until = request.GET.get("until")
+
+        return DatapointsViewSet.get_datapoint_values(
+            sensor_id, parameter, since, until
+        )
 
     @action(detail=False, methods=["GET"])
     def get_hourly_average_datapoints_by_parameter(self, request):
@@ -460,6 +473,63 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         time_period = request.GET.get("time_period", None)
         print(time_period)
         return DatapointsViewSet.refresh_time_bucket(time_period)
+
+    @staticmethod
+    def get_datapoint_values(
+            sensor_id, parameter, since=None, until=None
+    ):
+        # TODO: Check sensor_id is valid, and also if parameter is valid
+        if sensor_id is None:
+            return Response(
+                {"message": "Sensor ID must be provided"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if parameter is None:
+            return Response(
+                {"message": "Parameter must be provided"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            sensor_id = int(sensor_id)
+        except ValueError:
+            return Response(
+                {"message": "Sensor ID must be an integer"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        query = """
+                    SELECT
+                        value
+                    FROM
+                        datapoints
+                    RIGHT JOIN
+                        parameters ON datapoints.parameter_id = parameters.id
+                    LEFT JOIN
+                        streams ON datapoints.stream_id = streams.id
+                    WHERE
+                        streams.sensor_id = {sensor_id} 
+                        AND
+                        parameters.name = {parameter} 
+                    """
+
+        if since:
+            query += "AND time >= '{since}'::timestamp ".format(since=since)
+        if until:
+            query += "AND time <= '{until}'::timestamp ".format(until=until)
+
+        query += ";"
+        query = query.format(sensor_id=sensor_id, parameter=parameter)
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            columns = [desc[0] for desc in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+        data = []
+        for datapoint in results:
+            data.append(datapoint["value"])
+
+        return Response(data, status=status.HTTP_200_OK)
 
     @staticmethod
     def get_time_period_binned_datapoint(
