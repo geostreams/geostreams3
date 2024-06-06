@@ -518,7 +518,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         if until:
             query += "AND time <= '{until}'::timestamp ".format(until=until)
 
-        query += ";"
+        query += " order by time asc;"
         query = query.format(sensor_id=sensor_id, parameter=parameter)
         with connection.cursor() as cursor:
             cursor.execute(query)
