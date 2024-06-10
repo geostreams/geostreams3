@@ -335,23 +335,25 @@ class DatapointsViewSet(viewsets.ModelViewSet):
     queryset = Datapoint.objects.all()
     serializer_class = DatapointSerializer
 
-    def create(self, request, *args, **kwargs):
-        """Create new datapoint."""
-        data = self.request.data
-        is_many = isinstance(data, list)
+    def _parse_datapoint_parameters(self, datapoint):
+        """
+        Take a single JSON post of datapoint data (with multiple parameters) and split it into multiple datapoints
+        with one parameter each, and return the list of datapoints.
+        """
         datapoints = []
-        datapoint_data = {
-            "time": data["time"],
-            "stream": data["stream"],
+        datapoint_template = {
+            "time": datapoint["time"],
+            "stream": datapoint["stream"],
         }
         datapoints_data = (
-            json.loads(data["data"]) if type(data["data"]) is str else data["data"]
+            json.loads(datapoint["data"]) if type(datapoint["data"]) is str else datapoint["data"]
         )
-        stream = Stream.objects.get(id=data["stream"])
+        stream = Stream.objects.get(id=datapoint["stream"])
 
+        # this is splitting the parameters
         for key, value in datapoints_data.items():
             try:
-                datapoint = datapoint_data.copy()
+                datapoint = datapoint_template.copy()
                 # Check if parameter in streams or in parameters
                 if key.strip() not in stream.parameters:
                     if Parameter.objects.filter(name=key.strip()).exists():
@@ -368,21 +370,50 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 response = {"message": f"Parameter {key} does not exist"}
                 return Response(response, status=status.HTTP_400_BAD_REQUEST)
                 continue
+        return datapoints
 
-        datapoint_serializer = DatapointSerializer(data=datapoints, many=True)
+
+    def create(self, request, *args, **kwargs):
+        """Create new datapoint."""
+        data = self.request.data
+
+        # Convert JSON to datapoint array
+        is_many = isinstance(data, list)
+        new_datapoints = []
+        if not is_many:
+            new_datapoints += self._parse_datapoint_parameters(data)
+        else:
+            for dp in data:
+                new_datapoints += self._parse_datapoint_parameters(dp)
+
+        # Determine earliest/latest time per stream
+        stream_times = {}
+        for dp in new_datapoints:
+            stream = dp["stream"]
+            time = parser.parse(dp["time"]),
+            if stream not in stream_times:
+                stream_times[stream] = {
+                    "earliest": time
+                    "latest": time
+                }
+            else:
+                if stream_times[stream]["earliest"] > time:
+                    stream_times[stream]["earliest"] = time
+                if stream_times[stream]["latest"] < time:
+                    stream_times[stream]["latest"] = time
+
+        datapoint_serializer = DatapointSerializer(data=new_datapoints, many=True)
         if datapoint_serializer.is_valid():
-            datapoint = datapoint_serializer.save()
-            # Update start_time and end_time in stream
-            stream = Stream.objects.get(id=data["stream"])
-            if stream.start_time is None or stream.start_time > parser.parse(
-                data["time"]
-            ):
-                stream.start_time = data["time"]
-            if stream.end_time is None or stream.end_time < parser.parse(data["time"]):
-                stream.end_time = data["time"]
-            stream.save()
-            # Send success response
-            response = {"message": "Datapoint created successfully"}
+            datapoint_serializer.save()
+            # Update start_time and end_time in streams
+            for stream_id in stream_times:
+                stream = Stream.objects.get(id=stream_id)
+                if stream.start_time is None or stream.start_time > stream_times[stream_id]["earliest"]:
+                    stream.start_time = stream_times[stream_id]["earliest"]
+                if stream.end_time is None or stream.end_time < stream_times[stream_id]["latest"]:
+                    stream.end_time = stream_times[stream_id]["latest"]
+                stream.save()
+            response = {"message": "Datapoint(s) created successfully"}
             return Response(response, status=status.HTTP_201_CREATED)
         else:
             response = {"message": datapoint_serializer.errors}
