@@ -15,6 +15,8 @@ from pathlib import Path
 # Load environment variables
 import os
 from dotenv import load_dotenv
+from datetime import timedelta
+from rest_framework.settings import api_settings
 
 load_dotenv()
 
@@ -46,6 +48,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_yasg",
     "corsheaders",
+    "knox",
     "sensordata.apps.SensordataConfig",
 ]
 
@@ -107,8 +110,18 @@ CORS_ALLOWED_ORIGINS = [
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
     "DEFAULT_PARSER_CLASSES": ("rest_framework.parsers.JSONParser",),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("knox.auth.TokenAuthentication",),
 }
 
+REST_KNOX = {
+    "AUTH_TOKEN_CHARACTER_LENGTH": 64,
+    "SECURE_HASH_ALGORITHM": "cryptography.hazmat.primitives.hashes.SHA256",
+    "TOKEN_TTL": timedelta(hours=10),  # Default is 10 hours
+    "USER_SERIALIZER": "knox.serializers.UserSerializer",
+    "TOKEN_LIMIT_PER_USER": None,  # Default is None
+    "AUTO_REFRESH": False,
+    "EXPIRY_DATETIME_FORMAT": api_settings.DATETIME_FORMAT,
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
