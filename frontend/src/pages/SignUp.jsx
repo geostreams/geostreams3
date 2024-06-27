@@ -33,6 +33,7 @@ function SignUp() {
         setError('');
 
         try {
+            // TODO: Remove hardcoded URL
             const response = await axios.post('http://localhost:9007/auth/createuser/', {
                 username: formData.username,
                 password: formData.password,
@@ -41,6 +42,22 @@ function SignUp() {
             navigate('/'); // Redirect to home page on successful sign-up
         } catch (err) {
             if (err.response) {
+                // Check the resonse body JSON for the error message
+                if (err.response.data.username) {
+                    setError(`Username: ${err.response.data.username[0]}`)
+                    return;
+                }
+
+                if (err.response.data.email) {
+                    setError(`Email: ${err.response.data.email[0]}`)
+                    return;
+                }
+
+                if (err.response.data.password) {
+                    setError(`Password: ${err.response.data.password[0]}`)
+                    return;
+                }
+
                 setError(err.response.data.detail || 'Failed to register.');
             } else if (err.request) {
                 setError('No response from server.');
