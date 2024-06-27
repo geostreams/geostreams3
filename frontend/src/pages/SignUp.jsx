@@ -1,15 +1,53 @@
 import React, { useState } from 'react';
-import { TextField, Button, Typography, Container, Box } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { TextField, Button, Typography, Container, Box, Alert } from '@mui/material';
+import axios from 'axios';
 
 function SignUp() {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [email, setEmail] = useState('');
+    const [formData, setFormData] = useState({
+        username: '',
+        password: '',
+        confirmPassword: '',
+        email: '',
+    });
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
-    const handleSubmit = (event) => {
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value,
+        });
+    };
+
+    // Handle form submission
+    // Checks if passwords match, then sends a POST request to the server
+    // If successful, redirects to the home page else displays an error
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        console.log('Register', username, email, password);
-        // Implement your registration logic here
+        if (formData.password !== formData.confirmPassword) {
+            setError('Passwords do not match.');
+            return;
+        }
+
+        setError('');
+
+        try {
+            const response = await axios.post('http://localhost:9007/auth/createuser/', {
+                username: formData.username,
+                password: formData.password,
+                email: formData.email
+            });
+            navigate('/'); // Redirect to home page on successful sign-up
+        } catch (err) {
+            if (err.response) {
+                setError(err.response.data.detail || 'Failed to register.');
+            } else if (err.request) {
+                setError('No response from server.');
+            } else {
+                setError('Error: ' + err.message);
+            }
+        }
     };
 
     return (
@@ -35,9 +73,8 @@ function SignUp() {
                         label="Username"
                         name="username"
                         autoComplete="username"
-                        autoFocus
-                        value={username}
-                        onChange={e => setUsername(e.target.value)}
+                        value={formData.username}
+                        onChange={handleChange}
                     />
                     <TextField
                         variant="outlined"
@@ -48,8 +85,8 @@ function SignUp() {
                         label="Email Address"
                         name="email"
                         autoComplete="email"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
+                        value={formData.email}
+                        onChange={handleChange}
                     />
                     <TextField
                         variant="outlined"
@@ -60,9 +97,22 @@ function SignUp() {
                         label="Password"
                         type="password"
                         id="password"
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
+                        autoComplete="new-password"
+                        value={formData.password}
+                        onChange={handleChange}
+                    />
+                    <TextField
+                        variant="outlined"
+                        margin="normal"
+                        required
+                        fullWidth
+                        name="confirmPassword"
+                        label="Confirm Password"
+                        type="password"
+                        id="confirmPassword"
+                        autoComplete="new-password"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
                     />
                     <Button
                         type="submit"
@@ -72,6 +122,11 @@ function SignUp() {
                     >
                         Sign Up
                     </Button>
+                    {error && (
+                        <Alert severity="error" sx={{ mt: 2 }}>
+                            {error}
+                        </Alert>
+                    )}
                 </Box>
             </Box>
         </Container>

@@ -100,7 +100,7 @@ DATABASES = {
 
 # CORS
 
-CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_ALL_ORIGINS = True  # TODO: For development only, change for productions
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
