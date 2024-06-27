@@ -6,9 +6,11 @@ from rest_framework import serializers
 
 class UserSerializer(serializers.ModelSerializer):
     # This is the serializer for the User model
+    email = serializers.EmailField(required=True)
+
     class Meta:
         model = User
-        fields = ("id", "username", "password")
+        fields = ("id", "username", "email", "password")
         extra_kwargs = {"password": {"write_only": True, "min_length": 8}}
 
     def create(self, validated_data):
