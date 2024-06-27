@@ -20,4 +20,4 @@ networks:
   geostreams:
 
 volumes:
-  postgres:
+  smartfarm_postgres:

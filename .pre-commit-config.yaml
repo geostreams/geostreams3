@@ -18,6 +18,7 @@ repos:
         - id: flake8
           exclude: ^migrations/
 
+
 # Hook to run local Django and tests. (Deprecated as hooks are run in isolated environments,checked in CI/CD pipeline.)
 #-   repo: local
 #    hooks:
