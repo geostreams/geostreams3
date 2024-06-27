@@ -18,6 +18,13 @@ repos:
         - id: flake8
           exclude: ^migrations/
 
+# eslint to check for style violations and errors in the code for frontend
+-  repo: local
+   hooks:
+   - id: eslint
+     name: eslint
+     entry: bash -c "cd frontend && npx eslint --fix src"
+     language: system
 
 # Hook to run local Django and tests. (Deprecated as hooks are run in isolated environments,checked in CI/CD pipeline.)
 #-   repo: local
