@@ -18,9 +18,10 @@ docker-compose up -d
 
 ### Django development server
 
-To run the Django development server, you need to install the requirements and run the migrations.
+To run the Django development server, change to the backend directory and you need to install the requirements and run the migrations.
 
 ```bash
+cd backend
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
