@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../hooks/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import {
@@ -17,6 +17,7 @@ const Login = () => {
     });
     const [error, setError] = useState(""); // Error message
     const auth = useAuth();
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -36,6 +37,12 @@ const Login = () => {
             [e.target.name]: e.target.value,
         });
     };
+
+    useEffect(() => {
+        if (auth.token) {
+            navigate("/profile");
+        }
+    }, [auth.token, navigate]);
 
     return (
         <Container component="main" maxWidth="xs">
