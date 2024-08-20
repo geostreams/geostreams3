@@ -49,7 +49,7 @@ function SignUp() {
                     email: formData.email,
                 },
             );
-            navigate("/"); // Redirect to home page on successful sign-up
+            navigate("/login"); // Redirect to home page on successful sign-up
         } catch (err) {
             if (err.response) {
                 // Check the resonse body JSON for the error message
