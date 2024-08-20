@@ -7,7 +7,7 @@ function Navbar({ isAuthenticated, user }) {
     <AppBar position="static">
       <Toolbar>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          My App
+          Geostreams
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "row", gap: 1 }}>
           <Button color="inherit" component={RouterLink} to="/">
