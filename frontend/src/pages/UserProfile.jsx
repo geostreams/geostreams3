@@ -1,37 +1,27 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../hooks/AuthProvider";
 import axios from "axios";
-import { Typography, Container, Box, Paper } from "@mui/material";
+import { Typography, Container, Box, Paper, Button } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 
 function UserProfile() {
-    const { token } = useAuth();
-    const [userProfile, setUserProfile] = useState({});
-    const getUserInfo = async () => {
-        try {
-            const config = {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            };
-            const response = await axios.get(
-                "http://localhost:9007/auth/userprofile/",
-                config,
-            );
-            setUserProfile({
-                username: response.data.username,
-                email: response.data.email,
-            });
-        } catch (err) {
-            console.error("Profile error:", err);
-        }
-    };
-    useEffect(() => {
-        getUserInfo();
-    }, []);
+    const { userProfile, token } = useAuth();
+    const [copySuccess, setCopySuccess] = useState("");
 
-    if (!userProfile.username) {
-        // Center the loading spinner
+    // Copy token to clipboard function
+    const copyToClipboard = () => {
+        navigator.clipboard
+            .writeText(`Token ${token}`)
+            .then(() => {
+                setCopySuccess("Token copied to clipboard!");
+            })
+            .catch((err) => {
+                setCopySuccess("Failed to copy token.");
+                console.error("Copy error:", err);
+            });
+    };
+
+    if (!userProfile) {
         return (
             <Container
                 sx={{
@@ -66,7 +56,23 @@ function UserProfile() {
                     <Typography variant="subtitle1" sx={{ mt: 2 }}>
                         Email: {userProfile.email}
                     </Typography>
-                    {/* Additional user info can be displayed here */}
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        sx={{ mt: 4 }}
+                        onClick={copyToClipboard}
+                    >
+                        Copy API Token to Clipboard
+                    </Button>
+                    {copySuccess && (
+                        <Typography
+                            variant="body2"
+                            color="success.main"
+                            sx={{ mt: 2 }}
+                        >
+                            {copySuccess}
+                        </Typography>
+                    )}
                 </Box>
             </Paper>
         </Container>
