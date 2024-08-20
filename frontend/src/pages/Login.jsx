@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useAuth } from "../hooks/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import {
   TextField,
@@ -10,34 +11,24 @@ import {
 } from "@mui/material";
 import axios from "axios";
 
-function Login() {
+const Login = () => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
   const [error, setError] = useState(""); // Error message
-  const navigate = useNavigate();
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    setError(""); // Reset error message
-    // TODO: Remove hardcoded URL
-    axios
-      .post("http://localhost:9007/auth/login/", formData)
-      .then((response) => {
-        console.log("Login successful:", response.data);
-        // TODO: Redirect to home page
-        navigate("/");
-      })
-      .catch((err) => {
-        console.error("Login error:", err);
-        if (err.response) {
-          setError(err.response.data.detail || "Invalid username or password");
-        } else if (err.request) {
-          setError("No response from server");
-        } else {
-          setError("Login failed: " + err.message);
-        }
-      });
+  const auth = useAuth();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (formData.username !== "" && formData.password !== "") {
+      const response = await auth.loginAction(formData);
+      if (response) {
+        setError(response);
+      }
+    } else {
+      setError("Please fill out all fields.");
+    }
   };
 
   const handleChange = (e) => {
@@ -104,6 +95,6 @@ function Login() {
       </Box>
     </Container>
   );
-}
+};
 
 export default Login;
