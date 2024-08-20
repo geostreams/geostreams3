@@ -9,7 +9,6 @@ import {
   Box,
   Alert,
 } from "@mui/material";
-import axios from "axios";
 
 const Login = () => {
   const [formData, setFormData] = useState({
