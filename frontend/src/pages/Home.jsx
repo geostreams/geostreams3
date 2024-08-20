@@ -4,28 +4,28 @@ import yaml from "js-yaml";
 import axios from "axios";
 
 function Home() {
-  const [content, setContent] = useState({ title: "", description: "" });
+    const [content, setContent] = useState({ title: "", description: "" });
 
-  useEffect(() => {
-    axios
-      .get("/description.yaml")
-      .then((response) => {
-        const data = yaml.load(response.data);
-        setContent(data);
-      })
-      .catch((error) =>
-        console.error("Error loading the YAML content:", error),
-      );
-  }, []);
+    useEffect(() => {
+        axios
+            .get("/description.yaml")
+            .then((response) => {
+                const data = yaml.load(response.data);
+                setContent(data);
+            })
+            .catch((error) =>
+                console.error("Error loading the YAML content:", error),
+            );
+    }, []);
 
-  return (
-    <Container component="main" maxWidth="md">
-      <Typography variant="h3" component="h1" gutterBottom>
-        {content.title}
-      </Typography>
-      <Typography variant="body1">{content.description}</Typography>
-    </Container>
-  );
+    return (
+        <Container component="main" maxWidth="md">
+            <Typography variant="h3" component="h1" gutterBottom>
+                {content.title}
+            </Typography>
+            <Typography variant="body1">{content.description}</Typography>
+        </Container>
+    );
 }
 
 export default Home;
