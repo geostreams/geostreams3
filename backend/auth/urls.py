@@ -1,14 +1,8 @@
 from django.urls import path
-
-from knox import views as knox_views
-
-from .views import CreateUserView, LoginView, ManageUserView
-
-app_name = "core"
+from .views import KeycloakLoginView, KeycloakSignupView, ProtectedView
 
 urlpatterns = [
-    path("createuser/", CreateUserView.as_view(), name="create"),
-    path("userprofile/", ManageUserView.as_view(), name="profile"),
-    path("login/", LoginView.as_view(), name="knox_login"),
-    path("logout/", knox_views.LogoutView.as_view(), name="knox_logout"),
+    path("login/", KeycloakLoginView.as_view(), name="keycloak_login"),
+    path("signup/", KeycloakSignupView.as_view(), name="keycloak_signup"),
+    path("protected/", ProtectedView.as_view(), name="protected_view"),
 ]

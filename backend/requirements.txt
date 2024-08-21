@@ -8,4 +8,4 @@ black
 pre-commit
 python-dotenv
 python-dateutil
-django-rest-knox
+python-keycloak

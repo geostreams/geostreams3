@@ -1,44 +1,42 @@
-from django.contrib.auth import login
+from keycloak import KeycloakOpenID
+from django.conf import settings
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 
-# rest_framework imports
-from rest_framework import generics, permissions
-
-# knox imports
-from knox.views import LoginView as KnoxLoginView
-
-# local imports
-from .serializers import UserSerializer, AuthSerializer
-
-
-# Create your views here.
-
-
-# Create User
-class CreateUserView(generics.CreateAPIView):
-    # This is the API for creating a new user
-    serializer_class = UserSerializer
+keycloak_openid = KeycloakOpenID(
+    server_url=settings.KEYCLOAK_SERVER_URL,
+    client_id=settings.KEYCLOAK_CLIENT_ID,
+    realm_name=settings.KEYCLOAK_REALM,
+    client_secret_key=settings.KEYCLOAK_CLIENT_SECRET,
+)
 
 
-# Need to override login method so that it is not dependent on token
-class LoginView(KnoxLoginView):
-    # This is the API for logging in a user
-    serializer_class = AuthSerializer
-    permission_classes = (permissions.AllowAny,)
+class KeycloakLoginView(APIView):
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
 
-    def post(self, request, format=None):
-        serializer = AuthSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data["user"]
-        login(request, user)
-        return super(LoginView, self).post(request, format=None)
+        try:
+            token = keycloak_openid.token(username, password)
+            return Response({"token": token}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ManageUserView(generics.RetrieveUpdateAPIView):
-    """Manage the authenticated user"""
+class KeycloakSignupView(APIView):
+    def post(self, request):
+        # Implement signup via Keycloak Admin API or directly through Keycloak UI
+        pass
 
-    serializer_class = UserSerializer
-    permission_classes = (permissions.IsAuthenticated,)
 
-    def get_object(self):
-        """Retrieve and return authenticated user"""
-        return self.request.user
+class ProtectedView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(
+            {
+                "message": "This is a protected view accessible only to authenticated users."
+            }
+        )
