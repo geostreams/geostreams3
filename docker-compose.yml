@@ -1,4 +1,3 @@
-version: "3.3"
 
 services:
 
@@ -15,9 +14,23 @@ services:
     - postgres:/home/postgres/pgdata/data
     restart: unless-stopped
 
-
+  # Keycloak identity provider
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.4
+    networks:
+    - geostreams
+    command:
+      - start-dev
+    ports:
+    - 8080:8080
+    environment:
+    - KEYCLOAK_ADMIN=admin
+    - KEYCLOAK_ADMIN_PASSWORD=admin
+    volumes:
+      - keycloak:/opt/jboss/keycloak/standalone/data
 networks:
   geostreams:
 
 volumes:
-  smartfarm_postgres:
+  postgres:
+  keycloak:
