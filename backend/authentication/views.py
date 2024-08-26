@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .models import APIKey
-from .authentication import APIKeyAuthentication
+from .authentication import KeycloakAuthentication
 
 keycloak_openid = KeycloakOpenID(
     server_url=settings.KEYCLOAK_SERVER_URL,
@@ -37,6 +37,7 @@ class GenerateAPIKeyView(APIView):
     """
 
     permission_classes = [IsAuthenticated]
+    authentication_classes = [KeycloakAuthentication]
 
     def post(self, request):
         api_key, created = APIKey.objects.get_or_create(user=request.user)
@@ -52,7 +53,6 @@ class GenerateAPIKeyView(APIView):
 # TODO - This is a proof of concept API, please remove
 class ProtectedView(APIView):
     permission_classes = [IsAuthenticated]
-    authentication_classes = [APIKeyAuthentication]
 
     def get(self, request):
         return Response(
