@@ -44,13 +44,13 @@ const AuthProvider = ({ children }) => {
                 data,
             );
             if (response.status === 200) {
-                setToken(response.data.token);
+                setToken(response.data.token.access_token);
 
                 // Store token in localStorage
                 localStorage.setItem(
                     "GeostreamsAuth",
                     JSON.stringify({
-                        token: response.data.token,
+                        token: response.data.token.access_token,
                     }),
                 );
 

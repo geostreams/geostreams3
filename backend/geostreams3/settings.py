@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "corsheaders",
     "sensordata.apps.SensordataConfig",
+    "authentication.apps.AuthConfig",
 ]
 
 MIDDLEWARE = [
@@ -108,7 +109,7 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
     "DEFAULT_PARSER_CLASSES": ("rest_framework.parsers.JSONParser",),
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "auth.authentication.KeycloakAuthentication",  # Example: Keycloak or another token-based auth
+        "authentication.authentication.KeycloakAuthentication",
     ),
 }
 

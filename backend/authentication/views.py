@@ -4,6 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from .models import APIKey
+from .authentication import APIKeyAuthentication
 
 keycloak_openid = KeycloakOpenID(
     server_url=settings.KEYCLOAK_SERVER_URL,
@@ -14,6 +16,10 @@ keycloak_openid = KeycloakOpenID(
 
 
 class KeycloakLoginView(APIView):
+    """
+    View for a login API using keycloak
+    """
+
     def post(self, request):
         username = request.data.get("username")
         password = request.data.get("password")
@@ -25,14 +31,28 @@ class KeycloakLoginView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class KeycloakSignupView(APIView):
+class GenerateAPIKeyView(APIView):
+    """
+    API to create API keys for logged in Users so they can use update APIS
+    """
+
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
-        # Implement signup via Keycloak Admin API or directly through Keycloak UI
-        pass
+        api_key, created = APIKey.objects.get_or_create(user=request.user)
+        if not created:
+            # Optionally handle the case where the user already has an API key
+            return Response(
+                {"key": api_key.key, "message": "Existing key returned"}, status=200
+            )
+
+        return Response({"key": api_key.key}, status=201)
 
 
+# TODO - This is a proof of concept API, please remove
 class ProtectedView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [APIKeyAuthentication]
 
     def get(self, request):
         return Response(
