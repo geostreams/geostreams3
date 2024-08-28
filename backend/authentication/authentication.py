@@ -3,6 +3,7 @@ from keycloak.exceptions import KeycloakError
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from .models import APIKey
+from django.contrib.auth.models import User
 from django.conf import settings
 
 
@@ -61,12 +62,24 @@ class KeycloakAuthentication(BaseAuthentication):
 class APIKeyAuthentication(BaseAuthentication):
     def authenticate(self, request):
         api_key = request.headers.get("Authorization")
-        if not api_key:
+        username = request.data.get("username")
+        if not api_key or not username:
             return None
 
         try:
-            key = APIKey.objects.get(key=api_key)
+            # Get the user object based on the provided username
+            user = User.objects.get(username=username)
+
+            # Get the APIKey object associated with this user
+            key = APIKey.objects.get(user=user)
+
+            # Check if the provided API key matches the stored (hashed) key
+            if not key.check_key(api_key):
+                raise AuthenticationFailed("Invalid API key")
+
+        except User.DoesNotExist:
+            raise AuthenticationFailed("No such user")
         except APIKey.DoesNotExist:
             raise AuthenticationFailed("Invalid API key")
 
-        return (key.user, None)
+        return key.user, None

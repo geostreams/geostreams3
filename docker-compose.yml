@@ -11,7 +11,7 @@ services:
     environment:
     - POSTGRES_PASSWORD=geostreams
     volumes:
-    - postgres:/home/postgres/pgdata/data
+    - smartfarm_postgres:/home/postgres/pgdata/data
     restart: unless-stopped
 
   # Keycloak identity provider
@@ -32,5 +32,5 @@ networks:
   geostreams:
 
 volumes:
-  postgres:
+  smartfarm_postgres:
   keycloak:

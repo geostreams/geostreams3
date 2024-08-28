@@ -1,10 +1,12 @@
 from keycloak import KeycloakOpenID
 from django.conf import settings
+from django.contrib.auth.hashers import make_password
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .models import APIKey
+import secrets
 from .authentication import KeycloakAuthentication
 
 keycloak_openid = KeycloakOpenID(
@@ -17,7 +19,7 @@ keycloak_openid = KeycloakOpenID(
 
 class KeycloakLoginView(APIView):
     """
-    View for a login API using keycloak
+    API to authenticate a user and return a token
     """
 
     def post(self, request):
@@ -31,23 +33,50 @@ class KeycloakLoginView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UserProfileView(APIView):
+    """
+    API to return user profile information
+    """
+
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [KeycloakAuthentication]
+
+    def get(self, request):
+        user_info = keycloak_openid.userinfo(request.auth)
+        return Response(
+            {
+                "username": user_info.get("preferred_username"),
+                "email": user_info.get("email"),
+                "first_name": user_info.get("given_name"),
+                "last_name": user_info.get("family_name"),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
 class GenerateAPIKeyView(APIView):
     """
-    API to create API keys for logged in Users so they can use update APIS
+    API to create a new API key for the user
     """
 
     permission_classes = [IsAuthenticated]
     authentication_classes = [KeycloakAuthentication]
 
     def post(self, request):
-        api_key, created = APIKey.objects.get_or_create(user=request.user)
-        if not created:
-            # Optionally handle the case where the user already has an API key
-            return Response(
-                {"key": api_key.key, "message": "Existing key returned"}, status=200
-            )
+        user = request.user
 
-        return Response({"key": api_key.key}, status=201)
+        # Delete the existing API key if it exists
+        APIKey.objects.filter(user=user).delete()
+
+        # Generate a new raw key and hash it before saving
+        raw_key = secrets.token_urlsafe(32)
+        hashed_key = make_password(raw_key)
+
+        # Save API key to the database
+        APIKey.objects.create(user=user, key=hashed_key)
+
+        # Return the unhashed key to the user
+        return Response({"key": raw_key}, status=201)
 
 
 # TODO - This is a proof of concept API, please remove
