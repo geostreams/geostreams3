@@ -62,7 +62,7 @@ class KeycloakAuthentication(BaseAuthentication):
 class APIKeyAuthentication(BaseAuthentication):
     def authenticate(self, request):
         api_key = request.headers.get("Authorization")
-        username = request.data.get("username")
+        username = request.query_params.get("username")
         if not api_key or not username:
             return None
 
