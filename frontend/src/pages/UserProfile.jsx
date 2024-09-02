@@ -5,20 +5,22 @@ import { Typography, Container, Box, Paper, Button } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 
 function UserProfile() {
-    const { userProfile, token } = useAuth();
+    const { userProfile, getAPIKey } = useAuth();
     const [copySuccess, setCopySuccess] = useState("");
 
     // Copy token to clipboard function
     const copyToClipboard = () => {
-        navigator.clipboard
-            .writeText(`Token ${token}`)
-            .then(() => {
-                setCopySuccess("Token copied to clipboard!");
-            })
-            .catch((err) => {
-                setCopySuccess("Failed to copy token.");
-                console.error("Copy error:", err);
-            });
+        getAPIKey().then((token) => {
+            navigator.clipboard
+                .writeText(`Token ${token}`)
+                .then(() => {
+                    setCopySuccess("Token copied to clipboard!");
+                })
+                .catch((err) => {
+                    setCopySuccess("Failed to copy token.");
+                    console.error("Copy error:", err);
+                });
+        });
     };
 
     if (!userProfile) {

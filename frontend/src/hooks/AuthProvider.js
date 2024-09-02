@@ -13,8 +13,15 @@ const AuthProvider = ({ children }) => {
     const checkAuth = () => {
         const auth = localStorage.getItem("GeostreamsAuth");
         if (auth) {
-            const parsedAuth = JSON.parse(auth);
-            setToken(parsedAuth.token);
+            try {
+                const parsedAuth = JSON.parse(auth);
+                if (parsedAuth.token) {
+                    setToken(parsedAuth.token);
+                }
+            } catch (error) {
+                console.error("Failed to parse auth token:", error);
+                logoutAction();
+            }
         }
     };
 
@@ -29,7 +36,8 @@ const AuthProvider = ({ children }) => {
                 try {
                     await getUserProfile(); // Fetch user profile if token exists
                 } catch (error) {
-                    console.error("Failed to fetch user profile", error);
+                    console.error("Failed to fetch user profile:", error);
+                    await logoutAction(); // Ensure logout on failure
                 }
             }
         };
@@ -44,13 +52,14 @@ const AuthProvider = ({ children }) => {
                 data,
             );
             if (response.status === 200) {
-                setToken(response.data.token.access_token);
+                const token = response.data.token.access_token;
+                setToken(token);
 
                 // Store token in localStorage
                 localStorage.setItem(
                     "GeostreamsAuth",
                     JSON.stringify({
-                        token: response.data.token.access_token,
+                        token: token,
                     }),
                 );
 
@@ -64,26 +73,12 @@ const AuthProvider = ({ children }) => {
             if (err.response && err.response.status === 400) {
                 return `Error: ${err.response.data.non_field_errors[0]}`;
             }
+            await logoutAction(); // Ensure logout on failure
         }
     };
 
     // Logout function
     const logoutAction = async () => {
-        try {
-            const config = {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            };
-            await axios.post(
-                "http://localhost:9007/auth/logout/",
-                null,
-                config,
-            );
-        } catch (err) {
-            console.error("Logout error:", err);
-        }
-
         // Clear user profile and token state
         setUserProfile(null);
         setToken("");
@@ -98,7 +93,7 @@ const AuthProvider = ({ children }) => {
             try {
                 const config = {
                     headers: {
-                        Authorization: `Token ${token}`,
+                        Authorization: `Bearer ${token}`,
                     },
                 };
                 const response = await axios.get(
@@ -111,17 +106,34 @@ const AuthProvider = ({ children }) => {
                 });
             } catch (err) {
                 console.error("Profile error:", err);
-                // Login again if token is invalid
-                if (err.response && err.response.status === 401) {
-                    logoutAction();
-                }
+                await logoutAction(); // Ensure logout on failure
+            }
+        }
+    };
+
+    const getAPIKey = async () => {
+        if (token) {
+            try {
+                const config = {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                };
+                const response = await axios.post(
+                    "http://localhost:9007/auth/generate-api-key/",
+                    null,
+                    config,
+                );
+                return response.data.key;
+            } catch (err) {
+                console.error("API key error:", err);
             }
         }
     };
 
     return (
         <AuthContext.Provider
-            value={{ token, userProfile, loginAction, logoutAction }}
+            value={{ token, userProfile, loginAction, logoutAction, getAPIKey }}
         >
             {children}
         </AuthContext.Provider>
