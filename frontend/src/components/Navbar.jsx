@@ -75,19 +75,7 @@ function Navbar() {
                                     textTransform: "uppercase",
                                 }}
                             >
-                                Login
-                            </Button>
-                            <Button
-                                color="inherit"
-                                component={RouterLink}
-                                to="/signup"
-                                sx={{
-                                    color: "#fff",
-                                    fontSize: { xs: "0.8rem", sm: "1rem" },
-                                    textTransform: "uppercase",
-                                }}
-                            >
-                                Sign Up
+                                Login/Signup
                             </Button>
                         </>
                     ) : (

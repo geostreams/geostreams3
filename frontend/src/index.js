@@ -6,10 +6,10 @@ import reportWebVitals from "./reportWebVitals";
 import { AuthProvider } from "react-oidc-context";
 
 const oidcConfig = {
-    authority: "http://localhost:8080/realms/geostreams",
-    client_id: "geostreams",
-    redirect_uri: "http://localhost:3000/",
-    client_secret: "",
+    authority: process.env.REACT_APP_KEYCLOAK_AUTH_URL,
+    client_id: process.env.REACT_APP_KEYCLOAK_CLIENT_ID,
+    redirect_uri: process.env.REACT_APP_KEYCLOAK_REDIRECT_URI,
+    client_secret: process.env.REACT_APP_KEYCLOAK_CLIENT_SECRET,
 };
 
 const root = ReactDOM.createRoot(document.getElementById("root"));

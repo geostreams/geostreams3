@@ -29,6 +29,7 @@ function App() {
 
     if (auth.error) {
         console.log(auth.error);
+
         return <div>Oops... {auth.error.message}</div>;
     }
 

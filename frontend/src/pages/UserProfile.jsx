@@ -14,9 +14,7 @@ function UserProfile() {
     };
 
     const getAPIKey = async () => {
-        console.log("auth", auth);
         const token = auth.user?.access_token;
-        console.log("token", token);
         if (token) {
             try {
                 const config = {
@@ -32,6 +30,10 @@ function UserProfile() {
                 return response.data.key;
             } catch (err) {
                 console.error("API key error:", err);
+                //     Logout if token is invalid
+                if (err.response.status === 403) {
+                    auth.removeUser();
+                }
             }
         }
     };
@@ -40,7 +42,7 @@ function UserProfile() {
     const copyToClipboard = () => {
         getAPIKey().then((token) => {
             navigator.clipboard
-                .writeText(`Token ${token}`)
+                .writeText(`${token}`)
                 .then(() => {
                     setCopySuccess("Token copied to clipboard!");
                 })
