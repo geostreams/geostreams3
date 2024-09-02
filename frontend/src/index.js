@@ -9,6 +9,7 @@ const oidcConfig = {
     authority: "http://localhost:8080/realms/geostreams",
     client_id: "geostreams",
     redirect_uri: "http://localhost:3000/",
+    client_secret: "",
 };
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
