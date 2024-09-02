@@ -1,12 +1,40 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../hooks/AuthProvider";
+import { useAuth } from "react-oidc-context";
 import axios from "axios";
 import { Typography, Container, Box, Paper, Button } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 
 function UserProfile() {
-    const { userProfile, getAPIKey } = useAuth();
+    const auth = useAuth();
     const [copySuccess, setCopySuccess] = useState("");
+
+    const userProfile = {
+        username: auth.user?.profile.preferred_username,
+        email: auth.user?.profile.email,
+    };
+
+    const getAPIKey = async () => {
+        console.log("auth", auth);
+        const token = auth.user?.access_token;
+        console.log("token", token);
+        if (token) {
+            try {
+                const config = {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                };
+                const response = await axios.post(
+                    "http://localhost:9007/auth/generate-api-key/",
+                    null,
+                    config,
+                );
+                return response.data.key;
+            } catch (err) {
+                console.error("API key error:", err);
+            }
+        }
+    };
 
     // Copy token to clipboard function
     const copyToClipboard = () => {

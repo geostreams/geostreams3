@@ -9,11 +9,11 @@ import {
     MenuItem,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { useAuth } from "../hooks/AuthProvider";
+import { useAuth } from "react-oidc-context";
 
 function Navbar() {
-    const { userProfile, logoutAction } = useAuth();
-    const isAuthenticated = !!userProfile;
+    const auth = useAuth();
+    const isAuthenticated = auth.isAuthenticated;
 
     const [anchorEl, setAnchorEl] = useState(null);
 
@@ -26,8 +26,12 @@ function Navbar() {
     };
 
     const handleLogout = () => {
-        logoutAction();
+        auth.removeUser();
         handleMenuClose();
+    };
+
+    const handleLogin = () => {
+        auth.signinRedirect();
     };
 
     return (
@@ -64,7 +68,7 @@ function Navbar() {
                             <Button
                                 color="inherit"
                                 component={RouterLink}
-                                to="/login"
+                                onClick={handleLogin}
                                 sx={{
                                     color: "#fff",
                                     fontSize: { xs: "0.8rem", sm: "1rem" },
@@ -100,7 +104,7 @@ function Navbar() {
                                     fontWeight: "bold",
                                 }}
                             >
-                                Hello, {userProfile.username}
+                                Hello, {auth.user?.profile.given_name}
                             </Button>
                             <Menu
                                 id="user-menu"
@@ -142,4 +146,5 @@ function Navbar() {
     );
 }
 
+// const Navbar = () => <></>
 export default Navbar;

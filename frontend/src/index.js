@@ -3,12 +3,22 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
+import { AuthProvider } from "react-oidc-context";
+
+const oidcConfig = {
+    authority: "http://localhost:8080/realms/geostreams",
+    client_id: "geostreams",
+    redirect_uri: "http://localhost:3000/",
+};
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-    <React.StrictMode>
+    // Removed React.StrictMode cos it breaks the react-oidc-context auth flow on a refresh
+    // <React.StrictMode>
+    <AuthProvider {...oidcConfig}>
         <App />
-    </React.StrictMode>,
+    </AuthProvider>,
+    // </React.StrictMode>,
 );
 
 // If you want to start measuring performance in your app, pass a function
