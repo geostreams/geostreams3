@@ -10,7 +10,8 @@ function UserProfile() {
 
     const userProfile = {
         username: auth.user?.profile.preferred_username,
-        email: auth.user?.profile.email,
+        name: auth.user?.profile.name,
+        emailVerified: auth.user?.profile.email_verified,
     };
 
     const getAPIKey = async () => {
@@ -83,10 +84,10 @@ function UserProfile() {
                         User Profile
                     </Typography>
                     <Typography variant="subtitle1" sx={{ mt: 2 }}>
-                        Username: {userProfile.username}
+                        Username/Email: {userProfile.username}
                     </Typography>
                     <Typography variant="subtitle1" sx={{ mt: 2 }}>
-                        Email: {userProfile.email}
+                        Name: {userProfile.name}
                     </Typography>
                     <Button
                         variant="contained"
