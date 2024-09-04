@@ -10,9 +10,12 @@ import {
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
+import { useNavigate } from "react-router-dom";
 
 function Navbar() {
     const auth = useAuth();
+    const navigate = useNavigate();
+
     const isAuthenticated = auth.isAuthenticated;
 
     const [anchorEl, setAnchorEl] = useState(null);
@@ -25,9 +28,13 @@ function Navbar() {
         setAnchorEl(null);
     };
 
-    const handleLogout = () => {
-        auth.removeUser();
-        handleMenuClose();
+    const handleLogout = async () => {
+        try {
+            auth.removeUser();
+            await auth.signoutRedirect(); // Redirects to the identity provider's logout
+        } catch (error) {
+            console.error("Error during logout:", error);
+        }
     };
 
     const handleLogin = () => {
@@ -100,11 +107,11 @@ function Navbar() {
                                 open={Boolean(anchorEl)}
                                 onClose={handleMenuClose}
                                 sx={{
-                                    mt: "45px",
                                     "& .MuiPaper-root": {
                                         backgroundColor: "#f5f5f5",
                                         boxShadow: "0 3px 5px rgba(0,0,0,0.3)",
                                         minWidth: "150px",
+                                        marginLeft: "1em",
                                     },
                                     "& .MuiMenuItem-root": {
                                         color: "#333",
