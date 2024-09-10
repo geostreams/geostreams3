@@ -1,12 +1,37 @@
 import random
 
 from django.test import TestCase
+from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
+
+
+def get_authenticated_client(user=None):
+    """
+    Helper function to return an authenticated client with an API key in the header
+
+    Args:
+        user (User): User object to authenticate
+    """
+
+    client = APIClient()
+    if user is None:
+        user = get_user_model().objects.create_user(
+            username="testuser", password="testpassword"
+        )
+    client.force_authenticate(user=user)
+
+    # Request the API key using the authenticated user
+    response = client.post("/auth/generate-api-key/")
+    api_key = response.json().get("key")
+
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {api_key}")
+
+    return client
 
 
 class SensorApiTest(TestCase):
     def setUp(self):
-        self.client = APIClient()
+        self.client = get_authenticated_client()
 
     def test_create_sensor(self):
         data = {
@@ -139,7 +164,7 @@ class SensorApiTest(TestCase):
 
 class StreamApiTest(TestCase):
     def setUp(self):
-        self.client = APIClient()
+        self.client = get_authenticated_client()
         # Create a sensor first
         data = {
             "name": "NCSA Sensor 1",
@@ -299,7 +324,7 @@ class StreamApiTest(TestCase):
 
 class VisualizationApiTest(TestCase):
     def setUp(self):
-        self.client = APIClient()
+        self.client = get_authenticated_client()
 
     def test_create_visualization(self):
         data = {
@@ -393,7 +418,7 @@ class VisualizationApiTest(TestCase):
 
 class CategoryApiTest(TestCase):
     def setUp(self):
-        self.client = APIClient()
+        self.client = get_authenticated_client()
 
     def test_create_category(self):
         data = {
@@ -480,7 +505,7 @@ class CategoryApiTest(TestCase):
 
 class ParameterApiTest(TestCase):
     def setUp(self):
-        self.client = APIClient()
+        self.client = get_authenticated_client()
 
         # Create visualization
         visualization_data = {
@@ -621,7 +646,7 @@ class ParameterApiTest(TestCase):
 
 class DatapointsViewSetTestCase(TestCase):
     def setUp(self):
-        self.client = APIClient()
+        self.client = get_authenticated_client()
         # Add any necessary setup code here (e.g., create Sensor and Datapoint instances)
         # Create visualization
         visualization_data = {
