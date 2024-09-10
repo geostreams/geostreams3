@@ -1,4 +1,5 @@
 from keycloak import KeycloakOpenID
+import jwt
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from rest_framework.views import APIView
@@ -70,13 +71,21 @@ class GenerateAPIKeyView(APIView):
 
         # Generate a new raw key and hash it before saving
         raw_key = secrets.token_urlsafe(32)
+
+        # Include the user's username in a JWT token with the raw key
+        token = jwt.encode(
+            {"username": user.username, "api_key": raw_key},
+            settings.SECRET_KEY,
+            algorithm="HS256",
+        )
+
         hashed_key = make_password(raw_key)
 
         # Save API key to the database
         APIKey.objects.create(user=user, key=hashed_key)
 
         # Return the unhashed key to the user
-        return Response({"key": raw_key}, status=201)
+        return Response({"key": token}, status=201)
 
 
 # TODO - This is a proof of concept API, please remove

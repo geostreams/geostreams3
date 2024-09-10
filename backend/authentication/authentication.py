@@ -1,5 +1,6 @@
 from keycloak import KeycloakOpenID
 from keycloak.exceptions import KeycloakError
+import jwt
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from .models import APIKey
@@ -61,10 +62,21 @@ class KeycloakAuthentication(BaseAuthentication):
 
 class APIKeyAuthentication(BaseAuthentication):
     def authenticate(self, request):
-        api_key = request.headers.get("Authorization")
-        username = request.query_params.get("username")
-        if not api_key or not username:
+        jwt_token = request.headers.get("Authorization")
+        if not jwt_token:
             return None
+
+        # Decode the JWT token
+        try:
+            payload = jwt.decode(jwt_token, settings.SECRET_KEY, algorithms=["HS256"])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed("Token has expired")
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed("Invalid token")
+
+        # Extract the API key and username from the payload
+        username = payload.get("username")
+        api_key = payload.get("api_key")
 
         try:
             # Get the user object based on the provided username
