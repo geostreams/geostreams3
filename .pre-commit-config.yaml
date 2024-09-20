@@ -25,6 +25,7 @@ repos:
      name: eslint
      entry: bash -c "cd frontend && npx eslint --fix src"
      language: system
+     files: frontend/src
 
 - repo: local
   hooks:
@@ -32,6 +33,7 @@ repos:
     name: prettier
     entry: bash -c "cd frontend && npx prettier --write src"
     language: system
+    files: frontend/src
 
 # Hook to run local Django and tests. (Deprecated as hooks are run in isolated environments,checked in CI/CD pipeline.)
 #-   repo: local

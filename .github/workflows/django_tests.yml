@@ -1,4 +1,4 @@
-name: Django CI with TimescaleDB
+name: Geostreams3 Tests
 
 on:
   push:
