@@ -391,13 +391,13 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         stream_times = {}
         for dp in new_datapoints:
             stream = dp["stream"]
-            time = (parser.parse(dp["time"]),)
+            time = dp["time"]
             if stream not in stream_times:
                 stream_times[stream] = {"earliest": time, "latest": time}
             else:
-                if stream_times[stream]["earliest"] > time:
+                if stream_times[stream]["earliest"] > parser.parse(dp["time"]):
                     stream_times[stream]["earliest"] = time
-                if stream_times[stream]["latest"] < time:
+                if stream_times[stream]["latest"] < parser.parse(dp["time"]):
                     stream_times[stream]["latest"] = time
 
         datapoint_serializer = DatapointSerializer(data=new_datapoints, many=True)
@@ -406,14 +406,12 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             # Update start_time and end_time in streams
             for stream_id in stream_times:
                 stream = Stream.objects.get(id=stream_id)
-                if (
-                    stream.start_time is None
-                    or stream.start_time > stream_times[stream_id]["earliest"]
+                if stream.start_time is None or stream.start_time > parser.parse(
+                    stream_times[stream_id]["earliest"]
                 ):
                     stream.start_time = stream_times[stream_id]["earliest"]
-                if (
-                    stream.end_time is None
-                    or stream.end_time < stream_times[stream_id]["latest"]
+                if stream.end_time is None or stream.end_time < parser.parse(
+                    stream_times[stream_id]["latest"]
                 ):
                     stream.end_time = stream_times[stream_id]["latest"]
                 stream.save()
