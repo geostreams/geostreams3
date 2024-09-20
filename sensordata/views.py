@@ -335,22 +335,27 @@ class DatapointsViewSet(viewsets.ModelViewSet):
     queryset = Datapoint.objects.all()
     serializer_class = DatapointSerializer
 
-    def create(self, request, *args, **kwargs):
-        """Create new datapoint."""
-        data = self.request.data
+    def _parse_datapoint_parameters(self, datapoint):
+        """
+        Take a single JSON post of datapoint data (with multiple parameters) and split it into
+        multiple datapoints with one parameter each, and return the list of datapoints.
+        """
         datapoints = []
-        datapoint_data = {
-            "time": data["time"],
-            "stream": data["stream"],
+        datapoint_template = {
+            "time": datapoint["time"],
+            "stream": datapoint["stream"],
         }
         datapoints_data = (
-            json.loads(data["data"]) if type(data["data"]) is str else data["data"]
+            json.loads(datapoint["data"])
+            if type(datapoint["data"]) is str
+            else datapoint["data"]
         )
-        stream = Stream.objects.get(id=data["stream"])
+        stream = Stream.objects.get(id=datapoint["stream"])
 
+        # this is splitting the parameters
         for key, value in datapoints_data.items():
             try:
-                datapoint = datapoint_data.copy()
+                datapoint = datapoint_template.copy()
                 # Check if parameter in streams or in parameters
                 if key.strip() not in stream.parameters:
                     if Parameter.objects.filter(name=key.strip()).exists():
@@ -367,25 +372,76 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 response = {"message": f"Parameter {key} does not exist"}
                 return Response(response, status=status.HTTP_400_BAD_REQUEST)
                 continue
+        return datapoints
 
-        datapoint_serializer = DatapointSerializer(data=datapoints, many=True)
+    def create(self, request, *args, **kwargs):
+        """Create new datapoint."""
+        data = self.request.data
+
+        # Convert JSON to datapoint array
+        is_many = isinstance(data, list)
+        new_datapoints = []
+        if not is_many:
+            new_datapoints += self._parse_datapoint_parameters(data)
+        else:
+            for dp in data:
+                new_datapoints += self._parse_datapoint_parameters(dp)
+
+        # Determine earliest/latest time per stream
+        stream_times = {}
+        for dp in new_datapoints:
+            stream = dp["stream"]
+            time = parser.parse(dp["time"])  # Parse once and reuse
+            if stream not in stream_times:
+                stream_times[stream] = {"earliest": time, "latest": time}
+            else:
+                stream_times[stream]["earliest"] = min(
+                    stream_times[stream]["earliest"], time
+                )
+                stream_times[stream]["latest"] = max(
+                    stream_times[stream]["latest"], time
+                )
+
+        datapoint_serializer = DatapointSerializer(data=new_datapoints, many=True)
         if datapoint_serializer.is_valid():
-            datapoint = datapoint_serializer.save()
-            # Update start_time and end_time in stream
-            stream = Stream.objects.get(id=data["stream"])
-            if stream.start_time is None or stream.start_time > parser.parse(
-                data["time"]
-            ):
-                stream.start_time = data["time"]
-            if stream.end_time is None or stream.end_time < parser.parse(data["time"]):
-                stream.end_time = data["time"]
-            stream.save()
-            # Send success response
-            response = {"message": "Datapoint created successfully"}
-            return Response(response, status=status.HTTP_201_CREATED)
+            datapoint_serializer.save()
+            # Update start_time and end_time in streams
+            # Fetch streams in bulk
+            stream_ids = stream_times.keys()
+            streams = Stream.objects.filter(id__in=stream_ids)
+
+            # Update start_time and end_time for each stream
+            for stream in streams:
+                stream_id = stream.id
+                earliest_time = stream_times[stream_id]["earliest"]
+                latest_time = stream_times[stream_id]["latest"]
+                if stream.start_time is None or stream.start_time > earliest_time:
+                    stream.start_time = earliest_time
+                if stream.end_time is None or stream.end_time < latest_time:
+                    stream.end_time = latest_time
+
+            # Save all streams in bulk
+            Stream.objects.bulk_update(streams, ["start_time", "end_time"])
+
+            return Response(
+                {"message": "Datapoint(s) created successfully"},
+                status=status.HTTP_201_CREATED,
+            )
         else:
             response = {"message": datapoint_serializer.errors}
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=["GET"])
+    def get_values(self, request):
+        """Get hourly average datapoints by parameter."""
+        sensor_id = request.GET.get("sensor_id")
+        parameter = request.GET.getlist("parameter")
+        since = request.GET.get("since")
+        until = request.GET.get("until")
+
+        return DatapointsViewSet.get_datapoint_values(
+            sensor_id, parameter, since, until
+        )
 
     @action(detail=False, methods=["GET"])
     def get_hourly_average_datapoints_by_parameter(self, request):
@@ -460,6 +516,61 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         time_period = request.GET.get("time_period", None)
         print(time_period)
         return DatapointsViewSet.refresh_time_bucket(time_period)
+
+    @staticmethod
+    def get_datapoint_values(sensor_id, parameter, since=None, until=None):
+        # TODO: Check sensor_id is valid, and also if parameter is valid
+        if sensor_id is None:
+            return Response(
+                {"message": "Sensor ID must be provided"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if parameter is None:
+            return Response(
+                {"message": "Parameter must be provided"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            sensor_id = int(sensor_id)
+        except ValueError:
+            return Response(
+                {"message": "Sensor ID must be an integer"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        query = """
+                    SELECT
+                        value
+                    FROM
+                        datapoints
+                    RIGHT JOIN
+                        parameters ON datapoints.parameter_id = parameters.id
+                    LEFT JOIN
+                        streams ON datapoints.stream_id = streams.id
+                    WHERE
+                        streams.sensor_id = {sensor_id}
+                        AND
+                        parameters.name = {parameter}
+                    """
+
+        if since:
+            query += "AND time >= '{since}'::timestamp ".format(since=since)
+        if until:
+            query += "AND time <= '{until}'::timestamp ".format(until=until)
+
+        query += " order by time asc;"
+        query = query.format(sensor_id=sensor_id, parameter=parameter)
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            columns = [desc[0] for desc in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+        data = []
+        for datapoint in results:
+            data.append(datapoint["value"])
+
+        return Response(data, status=status.HTTP_200_OK)
 
     @staticmethod
     def get_time_period_binned_datapoint(
