@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "corsheaders",
     "sensordata.apps.SensordataConfig",
+    "authentication.apps.AuthConfig",
 ]
 
 MIDDLEWARE = [
@@ -97,7 +98,7 @@ DATABASES = {
 
 # CORS
 
-CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_ALL_ORIGINS = True  # TODO: For development only, change for productions
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
@@ -107,6 +108,9 @@ CORS_ALLOWED_ORIGINS = [
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
     "DEFAULT_PARSER_CLASSES": ("rest_framework.parsers.JSONParser",),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "authentication.authentication.APIKeyAuthentication",
+    ),
 }
 
 
@@ -127,6 +131,12 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+# Keycloak settings
+KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL")
+KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM")
+KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID")
+KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET")
 
 
 # Internationalization

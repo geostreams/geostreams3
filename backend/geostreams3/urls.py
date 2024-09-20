@@ -46,4 +46,5 @@ urlpatterns = [
     ),
     path("api/", include("sensordata.urls")),
     path("admin/", admin.site.urls),
+    path("auth/", include("authentication.urls")),
 ]

@@ -3,11 +3,11 @@ from rest_framework.decorators import action
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, AllowAny
+
 import json
 
 from dateutil import parser
-
-# from rest_framework.permissions import IsAuthenticated
 
 from .models import (
     Sensor,
@@ -29,7 +29,18 @@ from .serializers import (
 )
 
 
-class ParametersViewSet(viewsets.ModelViewSet):
+# Base class for viewsets that enforces authentication for POST and DELETE requests
+class AuthEnforcedModelViewSet(viewsets.ModelViewSet):
+
+    def get_permissions(self):
+        if self.request.method in ["POST", "DELETE"]:
+            self.permission_classes = [IsAuthenticated]
+        else:
+            self.permission_classes = [AllowAny]
+        return super().get_permissions()
+
+
+class ParametersViewSet(AuthEnforcedModelViewSet):
     queryset = Parameter.objects.all()
     serializer_class = ParameterSerializer
 
@@ -140,7 +151,6 @@ class ParametersViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    # TODO: Need to modify update to possibly update the mapping as well
     def update(self, request, *args, **kwargs):
         """Update a Parameter, and optionally its Visualization and Category, by name"""
         instance = self.get_object()
@@ -184,8 +194,11 @@ class ParametersViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
-    # TODO: Need to modify delete to delete the mapping as well
     def destroy(self, request, *args, **kwargs):
+        # Check if user is authenticated
+        self.permission_classes = [IsAuthenticated]
+        self.check_permissions(request)
+
         instance = self.get_object()
         # Check if parameter is mapped to a category
         if ParameterCategory.objects.filter(parameter=instance).exists():
@@ -195,13 +208,13 @@ class ParametersViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class CategoriesViewSet(viewsets.ModelViewSet):
+class CategoriesViewSet(AuthEnforcedModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     # permission_classes = [IsAuthenticated]
 
 
-class VisualizationsViewSet(viewsets.ModelViewSet):
+class VisualizationsViewSet(AuthEnforcedModelViewSet):
     queryset = Visualization.objects.all()
     serializer_class = VisualizationSerializer
 
@@ -211,6 +224,7 @@ class VisualizationsViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["DELETE"])
     def delete_by_name(self, request):
         """Delete a visualization by its name."""
+
         visualization_name = request.query_params.get("name")
         if not visualization_name:
             return Response(
@@ -231,7 +245,7 @@ class VisualizationsViewSet(viewsets.ModelViewSet):
             )
 
 
-class SensorsViewSet(viewsets.ModelViewSet):
+class SensorsViewSet(AuthEnforcedModelViewSet):
     queryset = Sensor.objects.all()
     serializer_class = SensorSerializer
 
@@ -280,7 +294,7 @@ class SensorsViewSet(viewsets.ModelViewSet):
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
-class StreamsViewSet(viewsets.ModelViewSet):
+class StreamsViewSet(AuthEnforcedModelViewSet):
     queryset = Stream.objects.all()
     serializer_class = StreamSerializer
 
@@ -329,7 +343,7 @@ class StreamsViewSet(viewsets.ModelViewSet):
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
-class DatapointsViewSet(viewsets.ModelViewSet):
+class DatapointsViewSet(AuthEnforcedModelViewSet):
     """View all datapoints."""
 
     queryset = Datapoint.objects.all()
@@ -576,7 +590,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
     def get_time_period_binned_datapoint(
         sensor_id, time_period, parameter=None, since=None, until=None
     ):
-        # TODO: Check sensor_id is valid, and also if parameter is valid
+        # Check if sensor id is valid
         if sensor_id is None:
             return Response(
                 {"message": "Sensor ID must be provided"},
@@ -711,7 +725,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
     def get_time_period_binned_small_datapoint(
         sensor_id, time_period, parameter=None, since=None, until=None
     ):
-        # TODO: Check sensor_id is valid, and also if parameter is valid
+        # Check if sensor id is valid
         if sensor_id is None:
             return Response(
                 {"message": "Sensor ID must be provided"},
