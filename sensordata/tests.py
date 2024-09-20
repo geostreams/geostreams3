@@ -736,7 +736,10 @@ class DatapointsViewSetTestCase(TestCase):
         ]
         for datapoint in datapoint_data:
             datapoint["stream"] = random.choice(stream_ids)
-            self.client.post("/api/datapoints/", data=datapoint, format="json")
+        # Create a datapoint
+        self.client.post("/api/datapoints/", data=datapoint_data[0], format="json")
+        # Bulk create datapoints
+        self.client.post("/api/datapoints/", data=datapoint_data[1:], format="json")
 
     def test_get_hourly_average_datapoints_by_parameter(self):
         sensor_id = self.client.get("/api/sensors/").data["sensors"][0]["id"]

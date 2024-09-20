@@ -391,32 +391,42 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         stream_times = {}
         for dp in new_datapoints:
             stream = dp["stream"]
-            time = dp["time"]
+            time = parser.parse(dp["time"])  # Parse once and reuse
             if stream not in stream_times:
                 stream_times[stream] = {"earliest": time, "latest": time}
             else:
-                if stream_times[stream]["earliest"] > parser.parse(dp["time"]):
-                    stream_times[stream]["earliest"] = time
-                if stream_times[stream]["latest"] < parser.parse(dp["time"]):
-                    stream_times[stream]["latest"] = time
+                stream_times[stream]["earliest"] = min(
+                    stream_times[stream]["earliest"], time
+                )
+                stream_times[stream]["latest"] = max(
+                    stream_times[stream]["latest"], time
+                )
 
         datapoint_serializer = DatapointSerializer(data=new_datapoints, many=True)
         if datapoint_serializer.is_valid():
             datapoint_serializer.save()
             # Update start_time and end_time in streams
-            for stream_id in stream_times:
-                stream = Stream.objects.get(id=stream_id)
-                if stream.start_time is None or stream.start_time > parser.parse(
-                    stream_times[stream_id]["earliest"]
-                ):
-                    stream.start_time = stream_times[stream_id]["earliest"]
-                if stream.end_time is None or stream.end_time < parser.parse(
-                    stream_times[stream_id]["latest"]
-                ):
-                    stream.end_time = stream_times[stream_id]["latest"]
-                stream.save()
-            response = {"message": "Datapoint(s) created successfully"}
-            return Response(response, status=status.HTTP_201_CREATED)
+            # Fetch streams in bulk
+            stream_ids = stream_times.keys()
+            streams = Stream.objects.filter(id__in=stream_ids)
+
+            # Update start_time and end_time for each stream
+            for stream in streams:
+                stream_id = stream.id
+                earliest_time = stream_times[stream_id]["earliest"]
+                latest_time = stream_times[stream_id]["latest"]
+                if stream.start_time is None or stream.start_time > earliest_time:
+                    stream.start_time = earliest_time
+                if stream.end_time is None or stream.end_time < latest_time:
+                    stream.end_time = latest_time
+
+            # Save all streams in bulk
+            Stream.objects.bulk_update(streams, ["start_time", "end_time"])
+
+            return Response(
+                {"message": "Datapoint(s) created successfully"},
+                status=status.HTTP_201_CREATED,
+            )
         else:
             response = {"message": datapoint_serializer.errors}
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
