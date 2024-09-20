@@ -337,8 +337,8 @@ class DatapointsViewSet(viewsets.ModelViewSet):
 
     def _parse_datapoint_parameters(self, datapoint):
         """
-        Take a single JSON post of datapoint data (with multiple parameters) and split it into multiple datapoints
-        with one parameter each, and return the list of datapoints.
+        Take a single JSON post of datapoint data (with multiple parameters) and split it into
+        multiple datapoints with one parameter each, and return the list of datapoints.
         """
         datapoints = []
         datapoint_template = {
@@ -346,7 +346,9 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             "stream": datapoint["stream"],
         }
         datapoints_data = (
-            json.loads(datapoint["data"]) if type(datapoint["data"]) is str else datapoint["data"]
+            json.loads(datapoint["data"])
+            if type(datapoint["data"]) is str
+            else datapoint["data"]
         )
         stream = Stream.objects.get(id=datapoint["stream"])
 
@@ -372,7 +374,6 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                 continue
         return datapoints
 
-
     def create(self, request, *args, **kwargs):
         """Create new datapoint."""
         data = self.request.data
@@ -390,12 +391,9 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         stream_times = {}
         for dp in new_datapoints:
             stream = dp["stream"]
-            time = parser.parse(dp["time"]),
+            time = (parser.parse(dp["time"]),)
             if stream not in stream_times:
-                stream_times[stream] = {
-                    "earliest": time
-                    "latest": time
-                }
+                stream_times[stream] = {"earliest": time, "latest": time}
             else:
                 if stream_times[stream]["earliest"] > time:
                     stream_times[stream]["earliest"] = time
@@ -408,9 +406,15 @@ class DatapointsViewSet(viewsets.ModelViewSet):
             # Update start_time and end_time in streams
             for stream_id in stream_times:
                 stream = Stream.objects.get(id=stream_id)
-                if stream.start_time is None or stream.start_time > stream_times[stream_id]["earliest"]:
+                if (
+                    stream.start_time is None
+                    or stream.start_time > stream_times[stream_id]["earliest"]
+                ):
                     stream.start_time = stream_times[stream_id]["earliest"]
-                if stream.end_time is None or stream.end_time < stream_times[stream_id]["latest"]:
+                if (
+                    stream.end_time is None
+                    or stream.end_time < stream_times[stream_id]["latest"]
+                ):
                     stream.end_time = stream_times[stream_id]["latest"]
                 stream.save()
             response = {"message": "Datapoint(s) created successfully"}
@@ -506,9 +510,7 @@ class DatapointsViewSet(viewsets.ModelViewSet):
         return DatapointsViewSet.refresh_time_bucket(time_period)
 
     @staticmethod
-    def get_datapoint_values(
-            sensor_id, parameter, since=None, until=None
-    ):
+    def get_datapoint_values(sensor_id, parameter, since=None, until=None):
         # TODO: Check sensor_id is valid, and also if parameter is valid
         if sensor_id is None:
             return Response(
@@ -539,9 +541,9 @@ class DatapointsViewSet(viewsets.ModelViewSet):
                     LEFT JOIN
                         streams ON datapoints.stream_id = streams.id
                     WHERE
-                        streams.sensor_id = {sensor_id} 
+                        streams.sensor_id = {sensor_id}
                         AND
-                        parameters.name = {parameter} 
+                        parameters.name = {parameter}
                     """
 
         if since:
