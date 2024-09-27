@@ -29,9 +29,7 @@ This will start the PostgreSQL and Keycloak. Make sure Keycloak is running on po
 
 ### Keycloak Configuration
 
-1. Access the Keycloak admin console at `http://localhost:8080`.
-2. Import the `realm-settings.json` file to create the realm.
-3. Import the `geostreams.json` file to create the Geostreams client configuration in the imported realm.
+1. Access the Keycloak admin console at `http://localhost:8080` to configure the realm and client if necessary.
 
 ### Environment Setup
 
