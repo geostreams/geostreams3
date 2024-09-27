@@ -8,6 +8,7 @@ from .views import (
     StreamsViewSet,
     DatapointsViewSet,
     VisualizationsViewSet,
+    get_sensors_in_shape,
 )
 
 router = DefaultRouter()
@@ -53,4 +54,5 @@ urlpatterns = [
         DatapointsViewSet.as_view({"get": "refresh_cache"}),
         name="refresh_cache",
     ),
+    path("sensors_in_shape/", get_sensors_in_shape, name="get_sensors_in_shape"),
 ]
