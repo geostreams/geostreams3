@@ -805,3 +805,72 @@ class DatapointsViewSetTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIsInstance(data, dict)
+
+
+class SensorInShapeTestCase(TestCase):
+    def setUp(self):
+        self.client = get_authenticated_client()
+
+        # Create first sensor
+        sensor_data = {
+            "name": "NCSA Sensor 1",
+            "geotype": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
+            "properties": {},
+        }
+        self.client.post("/api/sensors/", data=sensor_data, format="json")
+
+        # Create second sensor
+        sensor_data = {
+            "name": "NCSA Sensor 2",
+            "geotype": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-88.154722, 39.883611, 0.0]},
+            "properties": {},
+        }
+
+        self.client.post("/api/sensors/", data=sensor_data, format="json")
+
+        # Create third sensor
+        sensor_data = {
+            "name": "NCSA Sensor 3",
+            "geotype": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-88.213772, 39.889292, 0.0]},
+            "properties": {},
+        }
+
+        self.client.post("/api/sensors/", data=sensor_data, format="json")
+
+    def test_get_sensors_in_polygon(self):
+        shape = "polygon"
+        coordinates = [
+            [-88.4584808, 40.0034239],
+            [-88.4646606, 39.4255858],
+            [-87.3275757, 39.4998022],
+            [-87.3577881, 40.4657559],
+            [-88.3850098, 40.4553072],
+        ]
+
+        response = self.client.post(
+            "/api/sensors_in_shape/",
+            data={"shape": shape, "coordinates": coordinates},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        sensors = response.json()["sensors"]
+        self.assertIsInstance(sensors, list)
+        self.assertEqual(len(sensors), 3)
+
+    def test_get_sensors_in_circle(self):
+        shape = "circle"
+        coordinates = [[-88.290075, 40.0062722]]
+        radius = 16
+
+        response = self.client.post(
+            "/api/sensors_in_shape/",
+            data={"shape": shape, "coordinates": coordinates, "radius": radius},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        sensors = response.json()["sensors"]
+        self.assertIsInstance(sensors, list)
+        self.assertEqual(len(sensors), 2)

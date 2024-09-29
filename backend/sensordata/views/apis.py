@@ -19,7 +19,7 @@ def get_sensors_in_shape(request):
     - shape: str - The shape of the area to get sensors from. Can be either 'circle' or 'polygon'.
     - coordinates: list of tuples - The coordinates of the shape if it is a polygon,
                    or the center of the circle. Format of each tuple: (longitude, latitude).
-    - radius: float - The radius of the circle (required if shape is 'circle').
+    - radius: float - The radius of the circle (required if shape is 'circle') in kilometers.
     """
     # Get the shape and coordinates from the request body
     shape = request.data.get("shape", None)
