@@ -18,7 +18,7 @@ def get_sensors_in_shape(request):
     Parameters (in the JSON body):
     - shape: str - The shape of the area to get sensors from. Can be either 'circle' or 'polygon'.
     - coordinates: list of tuples - The coordinates of the shape if it is a polygon,
-                   or the center of the circle.
+                   or the center of the circle. Format of each tuple: (longitude, latitude).
     - radius: float - The radius of the circle (required if shape is 'circle').
     """
     # Get the shape and coordinates from the request body
@@ -53,7 +53,7 @@ def get_sensors_in_shape(request):
 
             # Using GIS Query to get sensors in circle
             radius = D(km=float(radius))
-            lat, lon = coordinates[0]  # Expecting a single coordinate pair
+            lon, lat = coordinates[0]  # Expecting a single coordinate pair
             center = Point(lon, lat, srid=4326)  # Explicitly set SRID for WGS84
             sensors = Sensor.objects.filter(geog__distance_lte=(center, radius))
 
@@ -64,6 +64,10 @@ def get_sensors_in_shape(request):
                     {"message": "A polygon requires at least 3 coordinates."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+
+            # Ensure the last point is the same as the first point to close the polygon
+            if coordinates[0] != coordinates[-1]:
+                coordinates.append(coordinates[0])
 
             # Create a polygon from the coordinates
             polygon = Polygon(coordinates, srid=4326)
