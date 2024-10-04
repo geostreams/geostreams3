@@ -3,6 +3,9 @@ from rest_framework import status
 from ..models import Sensor
 from ..serializers import SensorSerializer
 from .auth_base import AuthEnforcedModelViewSet
+from rest_framework.decorators import action
+from django.contrib.gis.geos import Point, Polygon, GEOSGeometry
+from django.contrib.gis.measure import D
 
 
 class SensorsViewSet(AuthEnforcedModelViewSet):
@@ -52,3 +55,77 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
         except Exception as e:
             response = {"message": e}
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+    # Custom method to get sensors in shape
+    @action(detail=False, methods=["get"], url_path="sensors_in_shape")
+    def get_sensors_in_shape(self, request):
+        """
+        Get sensors in shape. The shape can be a circle or a polygon.
+
+        Query Parameters:
+        - shape: str - The shape of the area to get sensors from. Can be either 'circle' or 'polygon'.
+        - wkt: str - The Well-Known Text (WKT) representation of the shape, point if circle, polygon if polygon.
+        - buffer: float - (Optional) The buffer size in kilometers. For circles, this is the radius. For polygons,
+                         this is the width of the buffer around the polygon. Default is 0.
+        """
+        shape = request.GET.get("shape")
+        wkt = request.GET.get("wkt")
+        buffer = request.GET.get("buffer", "0")  # Default to "0" if not provided
+
+        try:
+            if not shape or not wkt:
+                return Response(
+                    {"message": "Please provide both shape and WKT."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            buffer_distance = D(km=float(buffer))
+            geometry = GEOSGeometry(wkt, srid=4326)
+
+            if shape == "circle":
+                if not isinstance(geometry, Point):
+                    return Response(
+                        {"message": "Invalid WKT for circle. Provide a POINT."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                if buffer_distance.km > 0:
+                    sensors = Sensor.objects.filter(
+                        geog__distance_lte=(geometry, buffer_distance)
+                    )
+                else:
+                    sensors = Sensor.objects.filter(geog=geometry)
+
+            elif shape == "polygon":
+                if not isinstance(geometry, Polygon):
+                    return Response(
+                        {"message": "Invalid WKT. Provide a POLYGON."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                if buffer_distance.km > 0:
+                    buffered_geometry = geometry.buffer(
+                        buffer_distance.m
+                    )  # buffer() uses meters
+                    sensors = Sensor.objects.filter(geog__intersects=buffered_geometry)
+                else:
+                    sensors = Sensor.objects.filter(geog__intersects=geometry)
+
+            else:
+                return Response(
+                    {
+                        "message": "Invalid shape. Please provide either 'circle' or 'polygon'."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        except ValueError as e:
+            return Response(
+                {"message": f"Invalid buffer value: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = SensorSerializer(sensors, many=True)
+        return Response({"sensors": serializer.data}, status=status.HTTP_200_OK)
