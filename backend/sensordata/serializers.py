@@ -77,7 +77,8 @@ class SensorSerializer(serializers.ModelSerializer):
 
     def get_parameters(self, obj):
         # Gets all parameters from streams associated with this sensor
-        return list(obj.streams.values_list("parameters", flat=True).distinct())
+        all_params = obj.streams.values_list("parameters", flat=True).distinct()
+        return list(set(param for params in all_params for param in params))
 
     def to_internal_value(self, data):
         # Copy data to avoid mutating the input
