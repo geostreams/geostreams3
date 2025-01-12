@@ -4,6 +4,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from datetime import datetime
 
 import json
 
@@ -837,6 +838,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             response[label].append(datapoint)
         return Response(response, status=status.HTTP_200_OK)
 
+    # TODO: Require authentication for this endpoint
     @staticmethod
     def refresh_time_bucket(time_period):
         """Refresh the time bucket for the given time period to reflect the latest data."""
@@ -861,6 +863,8 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
                     start_time=start_time, end_time=end_time
                 )
             elif time_period == "monthly":
+                # TODO: Testing to see if we need to handle the case where the start_time is not the
+                #  first day of the month or the end_time is not the last day of the month
                 query = """
                         CALL
                             refresh_continuous_aggregate('monthly_sensor_data', '{start_time}', '{end_time}')
@@ -868,11 +872,14 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
                     start_time=start_time, end_time=end_time
                 )
             elif time_period == "yearly":
+                year_start = datetime(start_time.year, 1, 1)
+                year_end = datetime(end_time.year, 12, 31)
+
                 query = """
                         CALL
                             refresh_continuous_aggregate('yearly_sensor_data', '{start_time}', '{end_time}')
                         """.format(
-                    start_time=start_time, end_time=end_time
+                    start_time=year_start, end_time=year_end
                 )
             else:
                 return Response(

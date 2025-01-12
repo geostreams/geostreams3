@@ -1,21 +1,92 @@
 
-# Geostreams [Development]
+# Geostreams3 [Development]
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 [![Tests](https://github.com/geostreams/geostreams3/actions/workflows/django_tests.yml/badge.svg)](https://github.com/geostreams/geostreams3/actions/workflows/django_tests.yml)
 
-Geostreams API is a RESTful web service to manage data streams in time and space. It relies on
-[PostgreSQL](https://www.postgresql.org/), [PostGIS](http://postgis.net/), and the [Timescale](https://www.timescale.com/) extension. The application stack includes a [Django Rest Framework](http://www.django-rest-framework.org/) backend, a React frontend, and [Keycloak](https://www.keycloak.org/) for authentication.
+Geostreams3  is a RESTful web service to manage geospatial data streams. It integrates multiple tools and frameworks for
+seamless data handling, processing and binning.
+
+## Features
+- User authentication and API key management and Django REST framework
+- Geospatial data processing with TimescaleDB and PostGIS
+- Continuous aggregates for optimized querying of large datasets.
+- Frontend to allow users to register, login and procure API keys.
+
+## Table of Contents
+
+1. [Architecture Overview](#architecture-overview)
+2. [Tools and Frameworks](#tools-and-frameworks)
+3. [Setup Guide for Developers](#setup-guide-for-developers)
+
+## Architecture Overview
+
+The system is divided into 4 main components:
+
+1. **API Layer**:
+    - Django REST framework for the backend API.
+    - Handles user authentication, API key management, and data processing.
+    - Levarages TimescaleDB and PostGIS for geospatial data processing.
+    - Provides endpoints for data ingestion, querying, and management.
+    - Swagger documentation for API reference.
+
+2. **Frontend**:
+    - React frontend for user registration, login, and API key management.
+    - Allows users to register, login, and manage their API keys.
+
+3. **Databases**:
+    - PostgreSQL database with TimescaleDB and PostGIS extensions.
+    - Stores user data, API keys, and geospatial data streams.
+    - Continuous aggregates for optimized querying of large datasets.
+    - Used by Keycloak for store and persist user data.
+
+4. **Keycloak**:
+    - Open-source identity and access management for user authentication.
+    - Provides user registration, login, and API key management.
+    - Used to secure the API endpoints and manage user permissions.
 
 
+## Tools and Frameworks
+- Django REST framework: A powerful and flexible python toolkit for building Web APIs.
+- Keycloak: An open-source identity and access management for user authentication.
+- React: A JavaScript library for building user interfaces.
+- TimescaleDB: An open-source time-series database optimized for fast ingest and complex queries.
+- PostGIS: An open-source software program that adds support for geographic objects to the PostgreSQL object-relational database.
+- Docker: A platform for developing, shipping, and running applications in containers.
+- Docker Compose: A tool for defining and running multi-container Docker applications.
+- Swagger: API documentation tool for RESTful web services.
+- NGINX: Server for reverse proxy and load balancing.
 
-## For Developers
+## Setup Guide for Developers
 ### Prerequisites
-
 - Docker and Docker Compose installed
 - Node.js and npm installed for the frontend
 - Python 3.10 or higher for the backend
+
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/geostreams/geostreams3.git
+cd geostreams3
+```
+
+### 2. Setup Environment Variables
+Create .env files for the backend and frontend by copying the provided .env-example files:
+
+    ```bash
+    cp backend/geostreams3/.env_example backend/geostreams3/.env
+    cp frontend/.env_example frontend/.env
+    ```
+
+Update the values in the .env files to match your environment setup, including API URLs,
+database settings, and Keycloak configurations and secrets.
+
+### 3. Start the
+
+
+
 
 ### Docker-compose
 
