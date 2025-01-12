@@ -1,0 +1,17 @@
+meta {
+  name: Assign category to parameter Copy
+  type: http
+  seq: 24
+}
+
+put {
+  url: {{base_url}}/api/parameters/37/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "visualization": "scatter"
+  }
+}

@@ -1,0 +1,27 @@
+meta {
+  name: Post a stream
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{base_url}}/api/streams/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "RS-2",
+    "geog": "POINT(35.6895 139.6917)",
+    "created": "2023-07-24T17:14:47.783Z",
+    "parameters": [
+      "nitrogen",
+      "phosphorus"
+    ],
+    "properties": {},
+    "min_start_time": "2023-04-24T17:14:47.783Z",
+    "max_end_time": "2024-04-24T17:14:47.783Z",
+    "sensor":1
+  }
+}

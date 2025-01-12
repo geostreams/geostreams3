@@ -1,0 +1,31 @@
+meta {
+  name: Post a sensor
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/api/sensors
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Reinhart",
+    "created": "2023-07-24T17:14:47.783Z",
+    "geometry": {
+              "type": "Point",
+              "coordinates": [
+                  -88.290075,
+                  40.0062722,
+                  0.0
+              ]
+          },
+    "parameters": [
+      "nitrogen",
+      "phosphorus"
+    ],
+    "properties": {}
+  }
+}

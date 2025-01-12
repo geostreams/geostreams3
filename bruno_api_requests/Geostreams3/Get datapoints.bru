@@ -1,0 +1,11 @@
+meta {
+  name: Get datapoints
+  type: http
+  seq: 20
+}
+
+get {
+  url: {{base_url}}/api/datapoints/
+  body: json
+  auth: none
+}

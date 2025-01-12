@@ -1,6 +1,7 @@
 -- Create a continuous aggregate for each time bucket
 -- This will allow us to query the data in a more efficient way
 -- The continuous aggregate will be updated every 24 hours except the hourly one which will be updated every hour
+-- Data aggregation will not include the current day to get all data
 
 -- Create a continuous aggregate for year with respective refresh policy
 CREATE MATERIALIZED VIEW yearly_sensor_data

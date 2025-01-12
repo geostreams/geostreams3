@@ -86,15 +86,3 @@ class GenerateAPIKeyView(APIView):
 
         # Return the unhashed key to the user
         return Response({"key": token}, status=201)
-
-
-# TODO - This is a proof of concept API, please remove
-class ProtectedView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        return Response(
-            {
-                "message": "This is a protected view accessible only to authenticated users."
-            }
-        )

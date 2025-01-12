@@ -1,0 +1,24 @@
+meta {
+  name: Generate API Key
+  type: http
+  seq: 32
+}
+
+post {
+  url: {{base_url}}/auth/generate-api-key/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+vars:post-response {
+  api_key: res.body.key
+}
+
+tests {
+  const response = res.getBody();
+  bru.setGlobalEnvVar("api_key", response["key"]);
+}

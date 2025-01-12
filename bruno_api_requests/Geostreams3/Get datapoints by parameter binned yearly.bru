@@ -1,0 +1,15 @@
+meta {
+  name: Get datapoints by parameter binned yearly
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{base_url}}/api/cache/day/?sensor_id=3
+  body: json
+  auth: none
+}
+
+params:query {
+  sensor_id: 3
+}

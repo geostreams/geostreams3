@@ -1,0 +1,15 @@
+meta {
+  name: Get all parameters
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{base_url}}/api/parameters/
+  body: none
+  auth: none
+}
+
+params:query {
+  ~username: mohanar2@illinois.edu
+}

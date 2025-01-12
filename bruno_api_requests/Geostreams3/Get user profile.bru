@@ -1,0 +1,15 @@
+meta {
+  name: Get user profile
+  type: http
+  seq: 29
+}
+
+get {
+  url: {{base_url}}/auth/userprofile/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{access_token}}
+}

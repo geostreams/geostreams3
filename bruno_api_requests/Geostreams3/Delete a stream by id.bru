@@ -1,0 +1,19 @@
+meta {
+  name: Delete a stream by id
+  type: http
+  seq: 12
+}
+
+delete {
+  url: {{base_url}}/api/streams/1
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "name": "canopy-height",
+      "title": "Canopy Height",
+      "unit": "m"
+  }
+}
