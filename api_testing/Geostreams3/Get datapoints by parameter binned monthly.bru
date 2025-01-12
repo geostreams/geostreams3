@@ -1,0 +1,18 @@
+meta {
+  name: Get datapoints by parameter binned monthly
+  type: http
+  seq: 16
+}
+
+get {
+  url: http://localhost:9007/api/cache/month/?since=2021-06-01T00:00:00Z&until=2022-09-27T20:07:00.000Z&sensor_id=518
+  body: json
+  auth: none
+}
+
+params:query {
+  since: 2021-06-01T00:00:00Z
+  until: 2022-09-27T20:07:00.000Z
+  sensor_id: 518
+  ~parameter: longwave_outgoing_up_radiation
+}

@@ -1,0 +1,21 @@
+meta {
+  name: -Testing-Getting Protected View
+  type: http
+  seq: 31
+}
+
+get {
+  url: {{base_url}}/auth/protected/?username=mohanar2@illinois.edu
+  body: json
+  auth: apikey
+}
+
+params:query {
+  username: mohanar2@illinois.edu
+}
+
+auth:apikey {
+  key: Authorization
+  value: QkbNNthJfroRK73sH6Cqxwi763A3K_dLBBJtuXOql4c
+  placement: header
+}

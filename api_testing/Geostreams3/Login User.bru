@@ -1,0 +1,23 @@
+meta {
+  name: Login User
+  type: http
+  seq: 28
+}
+
+post {
+  url: {{base_url}}/auth/login/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "username":"mohanar2@illinois.edu",
+      "password": "password"
+  }
+}
+
+tests {
+  const response = res.getBody();
+  bru.setGlobalEnvVar("kc_token", response["token"]["access_token"]);
+}

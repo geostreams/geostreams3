@@ -1,0 +1,19 @@
+meta {
+  name: Get datapoints by parameter binned daily
+  type: http
+  seq: 14
+}
+
+get {
+  url: http://localhost:9007/api/cache/day/?parameter=sif&parameter=co2_flux&sensor_id=516
+  body: json
+  auth: none
+}
+
+params:query {
+  parameter: sif
+  parameter: co2_flux
+  sensor_id: 516
+  ~since: 2021-06-01T19:14:29.000Z
+  ~until: 2022-09-27T20:07:00.000Z
+}

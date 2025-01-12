@@ -1,0 +1,32 @@
+meta {
+  name: Post a stream_1
+  type: http
+  seq: 25
+}
+
+post {
+  url: http://localhost:9007/api/streams/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Reinhart",
+    "sensor": 250,
+    "created": "2023-07-24T17:14:47.783Z",
+    "geometry": {
+              "type": "Point",
+              "coordinates": [
+                  -88.290075,
+                  40.0062722,
+                  0.0
+              ]
+          },
+    "parameters": [
+      "nitrogen",
+      "phosphorus"
+    ],
+    "properties": {}
+  }
+}

@@ -1,0 +1,18 @@
+meta {
+  name: Post a category
+  type: http
+  seq: 8
+}
+
+post {
+  url: http://localhost:9007/sensordata/categories/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "name": "Wind Speed",
+      "detail_type": "time"
+  }
+}

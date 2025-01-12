@@ -1,0 +1,16 @@
+meta {
+  name: Generate API Key
+  type: http
+  seq: 32
+}
+
+post {
+  url: http://localhost:9007/auth/generate-api-key/
+  body: none
+  auth: none
+}
+
+tests {
+  const response = res.getBody();
+  bru.setGlobalEnvVar("api_key", response["key"]);
+}

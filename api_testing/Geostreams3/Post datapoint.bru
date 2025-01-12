@@ -1,0 +1,27 @@
+meta {
+  name: Post datapoint
+  type: http
+  seq: 21
+}
+
+post {
+  url: http://localhost:9007/api/datapoints/
+  body: json
+  auth: none
+}
+
+body:json {
+  [{
+  "time": "2025-07-24T15:14:47.783000Z",
+  "data": {
+  "n2o_flux": 23.1557 },
+  "stream":  1
+  },
+  {
+  "time": "2025-07-24T15:14:47.783000Z",
+  "data": {
+  "canopy-height": 4.2 },
+  "stream":  1
+  }
+  ]
+}

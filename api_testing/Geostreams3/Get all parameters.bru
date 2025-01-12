@@ -1,0 +1,15 @@
+meta {
+  name: Get all parameters
+  type: http
+  seq: 9
+}
+
+get {
+  url: http://localhost:9007/api/parameters/
+  body: none
+  auth: none
+}
+
+params:query {
+  ~username: mohanar2@illinois.edu
+}
