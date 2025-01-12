@@ -7,7 +7,7 @@ tqdm.pandas()
 
 geostreams_url = "http://localhost:9007/"
 api_key = "your_api_key"  # Replace with Geostreams API that you can get from frontend
-headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+headers = {"Authorization": api_key, "Content-Type": "application/json"}
 
 # Order of updating- Visualizations, Categories, Parameters, Sensors, Streams, Datapoints
 
@@ -154,9 +154,9 @@ def post_datapoints():
 
 
 if __name__ == "__main__":
-    post_visualizations()
+    # post_visualizations()
     # post_categories()
     # post_parameters()
     # post_sensors()
     # post_streams()
-    # post_datapoints()
+    post_datapoints()
