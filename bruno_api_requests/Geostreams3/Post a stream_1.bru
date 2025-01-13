@@ -1,11 +1,11 @@
 meta {
-  name: Post a sensor
+  name: Post a stream_1
   type: http
-  seq: 4
+  seq: 25
 }
 
 post {
-  url: http://localhost:9007/api/sensors
+  url: {{base_url}}/api/streams/
   body: json
   auth: none
 }
@@ -13,6 +13,7 @@ post {
 body:json {
   {
     "name": "Reinhart",
+    "sensor": 250,
     "created": "2023-07-24T17:14:47.783Z",
     "geometry": {
               "type": "Point",

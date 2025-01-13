@@ -19,6 +19,7 @@ seamless data handling, processing and binning.
 1. [Architecture Overview](#architecture-overview)
 2. [Tools and Frameworks](#tools-and-frameworks)
 3. [Setup Guide for Developers](#setup-guide-for-developers)
+4. [API Testing with Bruno](#api-testing-with-bruno)
 
 ## Architecture Overview
 
@@ -155,3 +156,19 @@ To access the API documentation, open the Swagger page by appending `/swagger` t
 ```
 http://localhost:9007/swagger
 ```
+
+## API Testing with Bruno
+We use Bruno to manage and test our API requests.
+Bruno is a modern, lightweight, and open-source API client designed to simplify API development and testing. It also
+allows you to save and share API requests, collaborate with your team, and automate API testing.
+All our API requests are saved in the collection `Geostreams3` inside the folder `bruno_api_requests`
+
+Getting Started
+	1.	Download Bruno
+Download the Bruno API client from [here](https://www.usebruno.com/downloads.
+	2.	Import Requests
+Once installed, import the saved requests from the bruno_api_requests folder.
+	3.	Set the Base URL
+Make sure to configure the Base URL in Bruno’s environment settings to match your API environment (e.g., development, staging, production).
+    4.	Run Requests
+      Run the requests to test the API endpoints and verify the responses.
