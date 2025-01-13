@@ -17,6 +17,10 @@ body:json {
   }
 }
 
+vars:post-response {
+  access_token: res.body.token.access_token
+}
+
 tests {
   const response = res.getBody();
   bru.setGlobalEnvVar("kc_token", response["token"]["access_token"]);

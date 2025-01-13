@@ -31,6 +31,7 @@ services:
       - KC_DB_URL_DATABASE=keycloak
       - KC_DB_USERNAME=keycloak
       - KC_DB_PASSWORD=password
+      - KEYCLOAK_HOSTNAME=localhost # Change this to your domain
     volumes:
       - ./keycloak/geostreams-realm.json:/opt/keycloak/data/import/realm.json:ro
     ports:
@@ -78,21 +79,21 @@ services:
       - 3000:80
     networks:
     - geostreams
-#
-##  Nginx reverse proxy
-#  nginx:
-#    image: nginx:alpine
-#    container_name: geostreams-nginx
-#    volumes:
-#      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-#    ports:
-#      - 80:80
-#    depends_on:
-#      - frontend
-#      - backend
-#      - keycloak
-#    networks:
-#    - geostreams
+
+#  Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: geostreams-nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - 80:80
+    depends_on:
+      - frontend
+      - backend
+      - keycloak
+    networks:
+    - geostreams
 
 networks:
   geostreams:

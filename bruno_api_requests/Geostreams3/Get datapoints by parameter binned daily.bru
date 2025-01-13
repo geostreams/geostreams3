@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{base_url}}/api/cache/day/?parameter=sif&parameter=co2_flux&sensor_id=516
+  url: {{base_url}}/api/cache/day/?parameter=sif&parameter=co2_flux&sensor_id=1
   body: json
   auth: none
 }
@@ -13,7 +13,5 @@ get {
 params:query {
   parameter: sif
   parameter: co2_flux
-  sensor_id: 516
-  ~since: 2021-06-01T19:14:29.000Z
-  ~until: 2022-09-27T20:07:00.000Z
+  sensor_id: 1
 }
