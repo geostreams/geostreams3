@@ -37,7 +37,7 @@ def post_visualizations():
 
     for viz in viz_data:
         response = requests.post(
-            geostreams_url + "api/visualizations/", json=viz, headers=headers
+            geostreams_url + "data/visualizations/", json=viz, headers=headers
         )
         if response.status_code != 201:
             print(response.status_code)
@@ -50,7 +50,7 @@ def post_categories():
     def post_category(row):
         data = {"name": row["name"], "description": ""}
         response = requests.post(
-            geostreams_url + "api/categories/", json=data, headers=headers
+            geostreams_url + "data/categories/", json=data, headers=headers
         )
         if response.status_code != 201:
             print(response.status_code)
@@ -71,7 +71,7 @@ def post_parameters():
             "visualization": "line",
         }
         response = requests.post(
-            geostreams_url + "api/parameters/", json=data, headers=headers
+            geostreams_url + "data/parameters/", json=data, headers=headers
         )
         if response.status_code != 201:
             print(response.status_code)
@@ -93,7 +93,7 @@ def post_sensors():
         }
 
         response = requests.post(
-            geostreams_url + "api/sensors/", json=data, headers=headers
+            geostreams_url + "data/sensors/", json=data, headers=headers
         )
         if response.status_code != 201:
             print(sensor["name"])
@@ -107,7 +107,7 @@ def post_streams():
 
     def post_stream(stream):
         sensor = requests.get(
-            geostreams_url + "api/sensors/?name=" + stream["name"]
+            geostreams_url + "data/sensors/?name=" + stream["name"]
         ).json()["sensor"]
 
         data = {
@@ -118,7 +118,7 @@ def post_streams():
             "properties": {},
         }
         response = requests.post(
-            geostreams_url + "api/streams/", json=data, headers=headers
+            geostreams_url + "data/streams/", json=data, headers=headers
         )
         if response.status_code != 201:
             print(stream["name"])
@@ -138,16 +138,16 @@ def post_datapoints():
             "stream": stream_id,
         }
         response = requests.post(
-            geostreams_url + "api/datapoints/", json=data, headers=headers
+            geostreams_url + "data/datapoints/", json=data, headers=headers
         )
         if response.status_code != 201:
             print(response.status_code)
             print(response.text)
 
     for stream in tqdm(streams):
-        stream_id = requests.get(geostreams_url + "api/streams/?name=" + stream).json()[
-            "stream"
-        ]["id"]
+        stream_id = requests.get(
+            geostreams_url + "data/streams/?name=" + stream
+        ).json()["stream"]["id"]
         datapoints[datapoints["stream_name"] == stream].progress_apply(
             post_datapoint, stream_id=stream_id, axis=1
         )
