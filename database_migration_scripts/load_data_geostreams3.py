@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 tqdm.pandas()
 
-geostreams_url = "http://localhost:9007/"
+geostreams_url = "http://localhost:8000/"
 api_key = "your_api_key"  # Replace with Geostreams API that you can get from frontend
 headers = {"Authorization": api_key, "Content-Type": "application/json"}
 

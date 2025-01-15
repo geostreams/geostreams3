@@ -134,10 +134,10 @@ For the backend, change to the `backend` directory, install the requirements, an
 cd backend
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py runserver 9007
+python manage.py runserver 8000
 ```
 
-The backend will be running at `http://localhost:9007`. This port number can be modified but make sure to update keycloak and other required configurations accordingly.
+The backend will be running at `http://localhost:8000`. This port number can be modified but make sure to update keycloak and other required configurations accordingly.
 
 ### Pre-commit Setup
 
@@ -151,10 +151,10 @@ This will automatically run checks such as Black formatting on every commit.
 
 ### Swagger Documentation
 
-To access the API documentation, open the Swagger page by appending `/swagger` to the base URL. For example, if the backend is running on `http://localhost:9007`, access the Swagger UI at:
+To access the API documentation, open the Swagger page by appending `/swagger` to the base URL. For example, if the backend is running on `http://localhost:8000`, access the Swagger UI at:
 
 ```
-http://localhost:9007/swagger
+http://localhost:8000/swagger
 ```
 
 ## API Testing with Bruno

@@ -620,11 +620,11 @@
       "clientAuthenticatorType": "client-secret",
       "secret": "**********",
       "redirectUris": [
-        "http://localhost:9007/*",
+        "http://localhost:8000/*",
         "http://localhost:3000/*"
       ],
       "webOrigins": [
-        "http://localhost:9007",
+        "http://localhost:8000",
         "http://localhost:3000",
         "https://www.keycloak.org"
       ],
