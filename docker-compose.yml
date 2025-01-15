@@ -23,6 +23,7 @@ services:
     command:
       - start-dev
       - --import-realm
+      - --http-relative-path=/keycloak
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
@@ -36,6 +37,11 @@ services:
       - ./keycloak/geostreams-realm.json:/opt/keycloak/data/import/realm.json:ro
     ports:
       - 8080:8080
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=PathPrefix(`/keycloak`)"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+      - "traefik.http.routers.keycloak.priority=10"
     depends_on:
       - kc_postgres
 
@@ -66,19 +72,45 @@ services:
       - 8000:8000
     networks:
       - geostreams
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes=/api"
+      - "traefik.http.routers.backend.middlewares=strip-api-prefix@docker"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+      - "traefik.http.routers.backend.priority=5"
 
-  frontend:
-    build:
-      context: ./frontend
-    container_name: geostreams-frontend
-    env_file:
-      - ./frontend/.env
-    depends_on:
-      - backend
+#  frontend:
+#    build:
+#      context: ./frontend
+#    container_name: geostreams-frontend
+#    env_file:
+#      - ./frontend/.env
+#    depends_on:
+#      - backend
+#    ports:
+#      - 3000:80
+#    networks:
+#      - geostreams
+
+  traefik:
+    image: traefik:v2.5
+    restart: unless-stopped
+    command:
+      - --api.insecure=true
+      - --providers.docker
+      - --entryPoints.web.address=:80
     ports:
-      - 3000:80
+      # The HTTP port
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8081:8080"
     networks:
       - geostreams
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+
 #
 ##  Nginx reverse proxy
 #  nginx:
