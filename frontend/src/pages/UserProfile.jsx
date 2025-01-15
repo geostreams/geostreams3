@@ -26,7 +26,7 @@ function UserProfile() {
                 };
                 // TODO: Make URL configurable from environment variable
                 const response = await axios.post(
-                    "http://localhost:8000/auth/generate-api-key/",
+                    "http://localhost/api/auth/generate-api-key/",
                     null,
                     config,
                 );

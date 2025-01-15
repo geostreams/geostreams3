@@ -35,8 +35,6 @@ services:
       - KEYCLOAK_HOSTNAME=localhost
     volumes:
       - ./keycloak/geostreams-realm.json:/opt/keycloak/data/import/realm.json:ro
-    ports:
-      - 8080:8080
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.keycloak.rule=PathPrefix(`/keycloak`)"
@@ -68,8 +66,6 @@ services:
     depends_on:
       - timescaledb
       - keycloak
-    ports:
-      - 8000:8000
     networks:
       - geostreams
     labels:
@@ -80,18 +76,22 @@ services:
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
       - "traefik.http.routers.backend.priority=5"
 
-#  frontend:
-#    build:
-#      context: ./frontend
-#    container_name: geostreams-frontend
-#    env_file:
-#      - ./frontend/.env
-#    depends_on:
-#      - backend
-#    ports:
-#      - 3000:80
-#    networks:
-#      - geostreams
+  frontend:
+    build:
+      context: ./frontend
+    container_name: geostreams-frontend
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+        - "traefik.http.services.frontend.loadbalancer.server.port=80"
+        - "traefik.http.routers.frontend.priority=1"
+        - "traefik.http.routers.frontend.entrypoints=web"
+    networks:
+      - geostreams
 
   traefik:
     image: traefik:v2.5
@@ -111,21 +111,6 @@ services:
       # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock
 
-#
-##  Nginx reverse proxy
-#  nginx:
-#    image: nginx:alpine
-#    container_name: geostreams-nginx
-#    volumes:
-#      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-#    ports:
-#      - 80:80
-#    depends_on:
-#      - frontend
-#      - backend
-#      - keycloak
-#    networks:
-#    - geostreams
 
 networks:
   geostreams:
