@@ -787,6 +787,12 @@ class DatapointsViewSetTestCase(TestCase):
         # Bulk create datapoints
         self.client.post("/data/datapoints/", data=datapoint_data[1:], format="json")
 
+        # Refresh cache
+        self.client.get("/data/cache/refresh/", data={"time_period": "hourly"})
+        self.client.get("/data/cache/refresh/", data={"time_period": "daily"})
+        self.client.get("/data/cache/refresh/", data={"time_period": "monthly"})
+        self.client.get("/data/cache/refresh/", data={"time_period": "yearly"})
+
     def test_get_hourly_average_datapoints_by_parameter(self):
         sensor_id = self.client.get("/data/sensors/").data["sensors"][0]["id"]
         parameter = self.client.get("/data/parameters/").data["parameters"][0]["name"]
@@ -800,11 +806,13 @@ class DatapointsViewSetTestCase(TestCase):
     def test_get_daily_average_datapoints_by_parameter(self):
         sensor_id = self.client.get("/data/sensors/").data["sensors"][0]["id"]
         parameter = self.client.get("/data/parameters/").data["parameters"][0]["name"]
+
         response = self.client.get(
             "/data/cache/day/", data={"sensor_id": sensor_id, "parameter": parameter}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
+        print(data)
         self.assertIsInstance(data, dict)
 
     def test_get_monthly_average_datapoints_by_parameter(self):

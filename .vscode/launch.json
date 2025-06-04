@@ -1,0 +1,77 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Django",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "runserver"
+            ],
+            "django": true,
+            "autoStartBrowser": false,
+            "program": "${workspaceFolder}/backend/manage.py"
+        },
+        {
+            "name": "Django: Test All",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "test"
+            ],
+            "django": true,
+            "autoStartBrowser": false,
+            "program": "${workspaceFolder}/backend/manage.py",
+            "cwd": "${workspaceFolder}/backend",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Django: Test Specific App",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "test",
+                "${input:appName}",
+                "--verbosity=2"
+            ],
+            "django": true,
+            "autoStartBrowser": false,
+            "program": "${workspaceFolder}/backend/manage.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Django: Test Specific File",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "test",
+                "${input:testPath}",
+                "--verbosity=2"
+            ],
+            "django": true,
+            "autoStartBrowser": false,
+            "program": "${workspaceFolder}/backend/manage.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        }
+    ],
+    "inputs": [
+        {
+            "id": "appName",
+            "description": "Enter the Django app name to test",
+            "default": "sensordata",
+            "type": "promptString"
+        },
+        {
+            "id": "testPath",
+            "description": "Enter the test path (e.g., myapp.tests.test_models.MyTestClass.test_method)",
+            "default": "sensordata.tests",
+            "type": "promptString"
+        }
+    ]
+}
