@@ -113,7 +113,7 @@ class Datapoint(TimescaleModel):
     created = models.DateTimeField(blank=True, null=True, default=timezone.now)
     type = models.CharField(max_length=50, blank=True, null=True)
     # geog = geomodels.GeometryField(
-    #     dim=3, blank=False, null=False
+    #     dim=3, blank=True, null=True
     # )  # if missing, use sensor geog
     # TODO: the interval should be adjusted in settings as it determines number of chunks
     #  high frequency data should have smaller interval to avoid large chunks

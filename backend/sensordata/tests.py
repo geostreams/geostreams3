@@ -3,6 +3,7 @@ import random
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
+from rest_framework import status
 
 
 def get_authenticated_client(user=None):
@@ -100,7 +101,7 @@ class SensorApiTest(TestCase):
         update_response = self.client.put(
             f"/data/sensors/{sensor_id}/", data=updated_data, format="json"
         )
-        self.assertEqual(update_response.status_code, 200)
+        self.assertEqual(update_response.status_code, status.HTTP_200_OK)
 
         # Verify the updated sensor
         get_response = self.client.get(f"/data/sensors/{sensor_id}/")
@@ -134,7 +135,7 @@ class SensorApiTest(TestCase):
         update_response = self.client.patch(
             f"/data/sensors/{sensor_id}/", data=updated_data, format="json"
         )
-        self.assertEqual(update_response.status_code, 200)
+        self.assertEqual(update_response.status_code, status.HTTP_200_OK)
 
         # Verify the updated sensor
         get_response = self.client.get(f"/data/sensors/{sensor_id}/")
@@ -245,7 +246,7 @@ class StreamApiTest(TestCase):
         update_response = self.client.put(
             f"/data/streams/{stream_id}/", data=updated_data, format="json"
         )
-        self.assertEqual(update_response.status_code, 200)
+        self.assertEqual(update_response.status_code, status.HTTP_200_OK)
 
         # Verify the updated stream
         get_response = self.client.get(f"/data/streams/{stream_id}/")
@@ -310,7 +311,7 @@ class StreamApiTest(TestCase):
         update_response = self.client.patch(
             f"/data/streams/{stream_id}/", data=updated_data, format="json"
         )
-        self.assertEqual(update_response.status_code, 200)
+        self.assertEqual(update_response.status_code, status.HTTP_200_OK)
 
         # Verify the updated stream
         get_response = self.client.get(f"/data/streams/{stream_id}/")
@@ -365,7 +366,7 @@ class VisualizationApiTest(TestCase):
         create_response = self.client.post(
             "/data/visualizations/", data=data, format="json"
         )
-        self.assertEqual(create_response.status_code, 201)
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
 
         visualization_id = create_response.json().get("id")
 
@@ -401,7 +402,7 @@ class VisualizationApiTest(TestCase):
         create_response = self.client.post(
             "/data/visualizations/", data=data, format="json"
         )
-        self.assertEqual(create_response.status_code, 201)
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
 
         visualization_id = create_response.json().get("id")
 
@@ -792,7 +793,7 @@ class DatapointsViewSetTestCase(TestCase):
         response = self.client.get(
             "/data/cache/hour/", data={"sensor_id": sensor_id, "parameter": parameter}
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertIsInstance(data, dict)
 
@@ -802,7 +803,7 @@ class DatapointsViewSetTestCase(TestCase):
         response = self.client.get(
             "/data/cache/day/", data={"sensor_id": sensor_id, "parameter": parameter}
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertIsInstance(data, dict)
 
@@ -812,7 +813,7 @@ class DatapointsViewSetTestCase(TestCase):
         response = self.client.get(
             "/data/cache/month/", data={"sensor_id": sensor_id, "parameter": parameter}
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertIsInstance(data, dict)
 
@@ -822,6 +823,73 @@ class DatapointsViewSetTestCase(TestCase):
         response = self.client.get(
             "/data/cache/year/", data={"sensor_id": sensor_id, "parameter": parameter}
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertIsInstance(data, dict)
+
+
+class SensorInShapeTestCase(TestCase):
+    def setUp(self):
+        self.client = get_authenticated_client()
+
+        # Create first sensor
+        sensor_data = {
+            "name": "NCSA Sensor 1",
+            "geotype": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
+            "properties": {},
+        }
+        self.client.post("/data/sensors/", data=sensor_data, format="json")
+
+        # Create second sensor
+        sensor_data = {
+            "name": "NCSA Sensor 2",
+            "geotype": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-88.154722, 39.883611, 0.0]},
+            "properties": {},
+        }
+
+        self.client.post("/data/sensors/", data=sensor_data, format="json")
+
+        # Create third sensor
+        sensor_data = {
+            "name": "NCSA Sensor 3",
+            "geotype": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-88.213772, 39.889292, 0.0]},
+            "properties": {},
+        }
+
+        self.client.post("/data/sensors/", data=sensor_data, format="json")
+
+    def test_get_sensors_in_polygon(self):
+        shape = "polygon"
+        wkt = (
+            "POLYGON((-88.4584808 40.0034239, -88.4646606 39.4255858, -87.3275757 39.4998022, -87.3577881 "
+            "40.4657559, -88.3850098 40.4553072, -88.4584808 40.0034239))"
+        )
+        buffer = 1
+
+        response = self.client.get(
+            "/data/sensors/sensors_in_shape/",
+            {"shape": shape, "wkt": wkt, "buffer": buffer},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        sensors = response.json()["sensors"]
+        self.assertIsInstance(sensors, list)
+        self.assertEqual(len(sensors), 3)  # All sensors should be in the polygon
+
+    def test_get_sensors_in_circle(self):
+        shape = "circle"
+        wkt = "POINT(-88.290075 40.0062722)"
+        buffer = 16  # 16 km radius
+
+        response = self.client.get(
+            "/data/sensors/sensors_in_shape/",
+            {"shape": shape, "wkt": wkt, "buffer": buffer},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        sensors = response.json()["sensors"]
+        self.assertIsInstance(sensors, list)
+        self.assertEqual(len(sensors), 2)  # Two sensors should be in the circle
