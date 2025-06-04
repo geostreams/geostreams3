@@ -1,0 +1,31 @@
+meta {
+  name: Get sensors in polygon
+  type: http
+  seq: 34
+}
+
+get {
+  url: {{base_url}}/data/sensors/sensors_in_shape/?shape=polygon&wkt=POLYGON((-88.4584808 40.0034239, -88.4646606 39.4255858, -87.3275757 39.4998022, -88.4584808 40.0034239))
+  body: json
+  auth: none
+}
+
+params:query {
+  shape: polygon
+  wkt: POLYGON((-88.4584808 40.0034239, -88.4646606 39.4255858, -87.3275757 39.4998022, -88.4584808 40.0034239))
+  ~buffer:
+}
+
+body:json {
+  {
+      "shape": "polygon",
+      "coordinates": [
+       [-88.4584808, 40.0034239],
+      [-88.4646606, 39.4255858],
+      [-87.3275757, 39.4998022],
+      [-87.3577881, 40.4657559],
+      [-88.3850098, 40.4553072]
+       ]
+  }
+
+}

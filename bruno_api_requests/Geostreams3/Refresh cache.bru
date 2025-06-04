@@ -1,0 +1,15 @@
+meta {
+  name: Refresh cache
+  type: http
+  seq: 26
+}
+
+get {
+  url: {{base_url}}/data/cache/refresh?time_period=yearly
+  body: none
+  auth: none
+}
+
+params:query {
+  time_period: yearly
+}

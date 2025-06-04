@@ -16,6 +16,7 @@ function UserProfile() {
 
     const getAPIKey = async () => {
         const token = auth.user?.access_token;
+        console.log("auth.user", auth.user);
         if (token) {
             try {
                 const config = {
@@ -23,8 +24,9 @@ function UserProfile() {
                         Authorization: `Bearer ${token}`,
                     },
                 };
+                // TODO: Make URL configurable from environment variable
                 const response = await axios.post(
-                    "http://localhost:9007/auth/generate-api-key/",
+                    "http://localhost/api/auth/generate-api-key/",
                     null,
                     config,
                 );

@@ -42,13 +42,13 @@ class SensorApiTest(TestCase):
             "properties": {},
         }
 
-        response = self.client.post("/api/sensors/", data=data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = self.client.post("/data/sensors/", data=data, format="json")
+        self.assertEqual(response.status_code, 201)
         sensor_id = response.json().get("id")
 
         # Verify the created sensor by fetching its details
-        get_response = self.client.get(f"/api/sensors/{sensor_id}/")
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        get_response = self.client.get(f"/data/sensors/{sensor_id}/")
+        self.assertEqual(get_response.status_code, 200)
         sensor = get_response.json()
         self.assertEqual(sensor["name"], "NCSA Sensor 1")
         self.assertEqual(sensor["geometry"]["type"], "Point")
@@ -59,7 +59,7 @@ class SensorApiTest(TestCase):
 
     def test_get_all_sensors(self):
         # No sensors check
-        response = self.client.get("/api/sensors/")
+        response = self.client.get("/data/sensors/")
         self.assertEqual(response.status_code, 404)
         sensors = response.json()
 
@@ -71,10 +71,10 @@ class SensorApiTest(TestCase):
             "properties": {},
         }
 
-        self.client.post("/api/sensors/", data=data, format="json")
+        self.client.post("/data/sensors/", data=data, format="json")
 
-        response = self.client.get("/api/sensors/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.get("/data/sensors/")
+        self.assertEqual(response.status_code, 200)
         sensors = response.json()
         self.assertIsInstance(sensors["sensors"], list)
 
@@ -86,8 +86,8 @@ class SensorApiTest(TestCase):
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
-        response = self.client.post("/api/sensors/", data=data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = self.client.post("/data/sensors/", data=data, format="json")
+        self.assertEqual(response.status_code, 201)
 
         sensor_id = response.json().get("id")
 
@@ -99,13 +99,13 @@ class SensorApiTest(TestCase):
         }
 
         update_response = self.client.put(
-            f"/api/sensors/{sensor_id}/", data=updated_data, format="json"
+            f"/data/sensors/{sensor_id}/", data=updated_data, format="json"
         )
         self.assertEqual(update_response.status_code, status.HTTP_200_OK)
 
         # Verify the updated sensor
-        get_response = self.client.get(f"/api/sensors/{sensor_id}/")
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        get_response = self.client.get(f"/data/sensors/{sensor_id}/")
+        self.assertEqual(get_response.status_code, 200)
         sensor = get_response.json()
         self.assertEqual(sensor["name"], "NCSA Sensor 3")
         self.assertEqual(sensor["geometry"]["type"], "Point")
@@ -121,8 +121,8 @@ class SensorApiTest(TestCase):
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
-        response = self.client.post("/api/sensors/", data=data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = self.client.post("/data/sensors/", data=data, format="json")
+        self.assertEqual(response.status_code, 201)
 
         sensor_id = response.json().get("id")
 
@@ -133,13 +133,13 @@ class SensorApiTest(TestCase):
         }
 
         update_response = self.client.patch(
-            f"/api/sensors/{sensor_id}/", data=updated_data, format="json"
+            f"/data/sensors/{sensor_id}/", data=updated_data, format="json"
         )
         self.assertEqual(update_response.status_code, status.HTTP_200_OK)
 
         # Verify the updated sensor
-        get_response = self.client.get(f"/api/sensors/{sensor_id}/")
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        get_response = self.client.get(f"/data/sensors/{sensor_id}/")
+        self.assertEqual(get_response.status_code, 200)
         sensor = get_response.json()
         self.assertEqual(
             sensor["geometry"]["coordinates"], [-88.213772, 39.889292, 0.0]
@@ -153,13 +153,13 @@ class SensorApiTest(TestCase):
             "properties": {},
         }
 
-        create_response = self.client.post("/api/sensors/", data=data, format="json")
-        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        create_response = self.client.post("/data/sensors/", data=data, format="json")
+        self.assertEqual(create_response.status_code, 201)
 
         sensor_id = create_response.json().get("id")
 
         # Delete the sensor
-        delete_response = self.client.delete(f"/api/sensors/{sensor_id}/")
+        delete_response = self.client.delete(f"/data/sensors/{sensor_id}/")
         self.assertEqual(delete_response.status_code, 204)
 
 
@@ -179,7 +179,7 @@ class StreamApiTest(TestCase):
             },
         }
 
-        response = self.client.post("/api/sensors/", data=data, format="json")
+        response = self.client.post("/data/sensors/", data=data, format="json")
         self.sensor_id = response.json().get("id")
 
     def test_create_stream(self):
@@ -191,18 +191,18 @@ class StreamApiTest(TestCase):
             "properties": {},
         }
 
-        response = self.client.post("/api/streams/", data=data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = self.client.post("/data/streams/", data=data, format="json")
+        self.assertEqual(response.status_code, 201)
         stream_id = response.json().get("id")
 
         # Verify the created stream by fetching its details
-        get_response = self.client.get(f"/api/streams/{stream_id}/")
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        get_response = self.client.get(f"/data/streams/{stream_id}/")
+        self.assertEqual(get_response.status_code, 200)
         stream = get_response.json()
         self.assertEqual(stream["name"], "NCSA Stream 1")
 
     def test_get_all_streams(self):
-        response = self.client.get("/api/streams/")
+        response = self.client.get("/data/streams/")
         self.assertEqual(response.status_code, 404)
 
         # Create a stream first
@@ -214,10 +214,10 @@ class StreamApiTest(TestCase):
             "properties": {},
         }
 
-        self.client.post("/api/streams/", data=data, format="json")
+        self.client.post("/data/streams/", data=data, format="json")
 
-        response = self.client.get("/api/streams/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.get("/data/streams/")
+        self.assertEqual(response.status_code, 200)
         streams = response.json()
         self.assertIsInstance(streams["streams"], list)
 
@@ -230,8 +230,8 @@ class StreamApiTest(TestCase):
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
-        response = self.client.post("/api/streams/", data=data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = self.client.post("/data/streams/", data=data, format="json")
+        self.assertEqual(response.status_code, 201)
 
         stream_id = response.json().get("id")
 
@@ -244,13 +244,13 @@ class StreamApiTest(TestCase):
         }
 
         update_response = self.client.put(
-            f"/api/streams/{stream_id}/", data=updated_data, format="json"
+            f"/data/streams/{stream_id}/", data=updated_data, format="json"
         )
         self.assertEqual(update_response.status_code, status.HTTP_200_OK)
 
         # Verify the updated stream
-        get_response = self.client.get(f"/api/streams/{stream_id}/")
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        get_response = self.client.get(f"/data/streams/{stream_id}/")
+        self.assertEqual(get_response.status_code, 200)
         stream = get_response.json()
         self.assertEqual(stream["name"], "NCSA Stream 2")
         self.assertEqual(
@@ -267,13 +267,13 @@ class StreamApiTest(TestCase):
             "properties": {},
         }
 
-        create_response = self.client.post("/api/streams/", data=data, format="json")
-        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        create_response = self.client.post("/data/streams/", data=data, format="json")
+        self.assertEqual(create_response.status_code, 201)
 
         stream_id = create_response.json().get("id")
 
         # Delete the stream
-        delete_response = self.client.delete(f"/api/streams/{stream_id}/")
+        delete_response = self.client.delete(f"/data/streams/{stream_id}/")
         self.assertEqual(delete_response.status_code, 204)
 
     def test_patch_stream(self):
@@ -285,7 +285,7 @@ class StreamApiTest(TestCase):
             "properties": {},
         }
 
-        response = self.client.post("/api/sensors/", data=data, format="json")
+        response = self.client.post("/data/sensors/", data=data, format="json")
         second_sensor = response.json().get("id")
 
         # Create a stream first
@@ -296,8 +296,8 @@ class StreamApiTest(TestCase):
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
-        response = self.client.post("/api/streams/", data=data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = self.client.post("/data/streams/", data=data, format="json")
+        self.assertEqual(response.status_code, 201)
 
         stream_id = response.json().get("id")
 
@@ -309,13 +309,13 @@ class StreamApiTest(TestCase):
         }
 
         update_response = self.client.patch(
-            f"/api/streams/{stream_id}/", data=updated_data, format="json"
+            f"/data/streams/{stream_id}/", data=updated_data, format="json"
         )
         self.assertEqual(update_response.status_code, status.HTTP_200_OK)
 
         # Verify the updated stream
-        get_response = self.client.get(f"/api/streams/{stream_id}/")
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        get_response = self.client.get(f"/data/streams/{stream_id}/")
+        self.assertEqual(get_response.status_code, 200)
         stream = get_response.json()
         self.assertEqual(
             stream["geometry"]["coordinates"], [-88.213772, 39.889292, 0.0]
@@ -333,14 +333,14 @@ class VisualizationApiTest(TestCase):
             "title": "A line chart visualization",
         }
 
-        response = self.client.post("/api/visualizations/", data=data, format="json")
+        response = self.client.post("/data/visualizations/", data=data, format="json")
         self.assertEqual(
             response.status_code, 201
         )  # Expecting a successful creation status code
         visualization_id = response.json().get("id")
 
         # Verify the created visualization by fetching its details
-        get_response = self.client.get(f"/api/visualizations/{visualization_id}/")
+        get_response = self.client.get(f"/data/visualizations/{visualization_id}/")
         self.assertEqual(
             get_response.status_code, 200
         )  # Expecting a successful retrieval status code
@@ -349,7 +349,7 @@ class VisualizationApiTest(TestCase):
         self.assertEqual(visualization["title"], "A line chart visualization")
 
     def test_get_all_visualizations(self):
-        response = self.client.get("/api/visualizations/")
+        response = self.client.get("/data/visualizations/")
         self.assertEqual(
             response.status_code, 200
         )  # Expecting a successful retrieval status code
@@ -364,7 +364,7 @@ class VisualizationApiTest(TestCase):
         }
 
         create_response = self.client.post(
-            "/api/visualizations/", data=data, format="json"
+            "/data/visualizations/", data=data, format="json"
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
 
@@ -377,15 +377,17 @@ class VisualizationApiTest(TestCase):
         }
 
         update_response = self.client.put(
-            f"/api/visualizations/{visualization_id}/", data=updated_data, format="json"
+            f"/data/visualizations/{visualization_id}/",
+            data=updated_data,
+            format="json",
         )
         self.assertEqual(
             update_response.status_code, 200
         )  # Expecting a successful update status code
 
         # Verify the updated visualization
-        get_response = self.client.get(f"/api/visualizations/{visualization_id}/")
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        get_response = self.client.get(f"/data/visualizations/{visualization_id}/")
+        self.assertEqual(get_response.status_code, 200)
         visualization = get_response.json()
         self.assertEqual(visualization["name"], "Bar Chart Updated")
         self.assertEqual(visualization["title"], "An updated bar chart visualization")
@@ -398,20 +400,22 @@ class VisualizationApiTest(TestCase):
         }
 
         create_response = self.client.post(
-            "/api/visualizations/", data=data, format="json"
+            "/data/visualizations/", data=data, format="json"
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
 
         visualization_id = create_response.json().get("id")
 
         # Delete the visualization
-        delete_response = self.client.delete(f"/api/visualizations/{visualization_id}/")
+        delete_response = self.client.delete(
+            f"/data/visualizations/{visualization_id}/"
+        )
         self.assertEqual(
             delete_response.status_code, 204
         )  # Expecting a successful delete status code
 
         # Verify the visualization is deleted
-        get_response = self.client.get(f"/api/visualizations/{visualization_id}/")
+        get_response = self.client.get(f"/data/visualizations/{visualization_id}/")
         self.assertEqual(
             get_response.status_code, 404
         )  # Expecting a not found status code
@@ -427,14 +431,14 @@ class CategoryApiTest(TestCase):
             "description": "Temperature data",
         }
 
-        response = self.client.post("/api/categories/", data=data, format="json")
+        response = self.client.post("/data/categories/", data=data, format="json")
         self.assertEqual(
             response.status_code, 201
         )  # Expecting a successful creation status code
         category_id = response.json().get("id")
 
         # Verify the created category by fetching its details
-        get_response = self.client.get(f"/api/categories/{category_id}/")
+        get_response = self.client.get(f"/data/categories/{category_id}/")
         self.assertEqual(
             get_response.status_code, 200
         )  # Expecting a successful retrieval status code
@@ -443,7 +447,7 @@ class CategoryApiTest(TestCase):
         self.assertEqual(category["description"], "Temperature data")
 
     def test_get_all_categories(self):
-        response = self.client.get("/api/categories/")
+        response = self.client.get("/data/categories/")
         self.assertEqual(
             response.status_code, 200
         )  # Expecting a successful retrieval status code
@@ -457,8 +461,10 @@ class CategoryApiTest(TestCase):
             "description": "stacked-line",
         }
 
-        create_response = self.client.post("/api/categories/", data=data, format="json")
-        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        create_response = self.client.post(
+            "/data/categories/", data=data, format="json"
+        )
+        self.assertEqual(create_response.status_code, 201)
 
         category_id = create_response.json().get("id")
 
@@ -469,15 +475,15 @@ class CategoryApiTest(TestCase):
         }
 
         update_response = self.client.put(
-            f"/api/categories/{category_id}/", data=updated_data, format="json"
+            f"/data/categories/{category_id}/", data=updated_data, format="json"
         )
         self.assertEqual(
             update_response.status_code, 200
         )  # Expecting a successful update status code
 
         # Verify the updated category
-        get_response = self.client.get(f"/api/categories/{category_id}/")
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        get_response = self.client.get(f"/data/categories/{category_id}/")
+        self.assertEqual(get_response.status_code, 200)
         category = get_response.json()
         self.assertEqual(category["name"], "Pressure Level")
         self.assertEqual(category["description"], "Pressure data")
@@ -486,19 +492,21 @@ class CategoryApiTest(TestCase):
         # Create a category first
         data = {"name": "Weight", "description": "Weight of different elements"}
 
-        create_response = self.client.post("/api/categories/", data=data, format="json")
-        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        create_response = self.client.post(
+            "/data/categories/", data=data, format="json"
+        )
+        self.assertEqual(create_response.status_code, 201)
 
         category_id = create_response.json().get("id")
 
         # Delete the category
-        delete_response = self.client.delete(f"/api/categories/{category_id}/")
+        delete_response = self.client.delete(f"/data/categories/{category_id}/")
         self.assertEqual(
             delete_response.status_code, 204
         )  # Expecting a successful delete status code
 
         # Verify the category is deleted
-        get_response = self.client.get(f"/api/categories/{category_id}/")
+        get_response = self.client.get(f"/data/categories/{category_id}/")
         self.assertEqual(
             get_response.status_code, 404
         )  # Expecting a not found status code
@@ -513,20 +521,24 @@ class ParameterApiTest(TestCase):
             "name": "line_chart",
             "title": "A line chart visualization",
         }
-        self.client.post("/api/visualizations/", data=visualization_data, format="json")
+        self.client.post(
+            "/data/visualizations/", data=visualization_data, format="json"
+        )
         # Create another visualization
         visualization_data = {
             "name": "bar_chart",
             "title": "A bar chart visualization",
         }
-        self.client.post("/api/visualizations/", data=visualization_data, format="json")
+        self.client.post(
+            "/data/visualizations/", data=visualization_data, format="json"
+        )
 
         # Create category
         category_data = {
             "name": "environment",
             "title": "Environmental Parameters",
         }
-        self.client.post("/api/categories/", data=category_data, format="json")
+        self.client.post("/data/categories/", data=category_data, format="json")
 
     def test_create_parameter(self):
         data = {
@@ -539,13 +551,13 @@ class ParameterApiTest(TestCase):
             "category": "environment",
         }
 
-        response = self.client.post("/api/parameters/", data=data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = self.client.post("/data/parameters/", data=data, format="json")
+        self.assertEqual(response.status_code, 201)
         parameter_id = response.json().get("id")
 
         # Verify the created parameter by fetching its details
-        get_response = self.client.get(f"/api/parameters/{parameter_id}/")
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        get_response = self.client.get(f"/data/parameters/{parameter_id}/")
+        self.assertEqual(get_response.status_code, 200)
         parameter = get_response.json()
         self.assertEqual(parameter["name"], "temperature")
         self.assertEqual(parameter["unit"], "Celsius")
@@ -553,7 +565,7 @@ class ParameterApiTest(TestCase):
 
     def test_get_all_parameters(self):
         self.test_create_parameter()
-        response = self.client.get("/api/parameters/")
+        response = self.client.get("/data/parameters/")
         self.assertEqual(
             response.status_code, 200
         )  # Expecting a successful retrieval status code
@@ -565,8 +577,8 @@ class ParameterApiTest(TestCase):
         self.test_create_parameter()
 
         # Test filtering by name
-        response = self.client.get("/api/parameters/?name=temperature")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.get("/data/parameters/?name=temperature")
+        self.assertEqual(response.status_code, 200)
         parameter = response.json()["parameter"]
         self.assertTrue(parameter["name"] == "temperature")  # Ensure filtering works
 
@@ -584,8 +596,10 @@ class ParameterApiTest(TestCase):
             "visualization": "line_chart",
         }
 
-        create_response = self.client.post("/api/parameters/", data=data, format="json")
-        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        create_response = self.client.post(
+            "/data/parameters/", data=data, format="json"
+        )
+        self.assertEqual(create_response.status_code, 201)
 
         parameter_id = create_response.json().get("id")
 
@@ -602,15 +616,15 @@ class ParameterApiTest(TestCase):
         }
 
         update_response = self.client.put(
-            f"/api/parameters/{parameter_id}/", data=updated_data, format="json"
+            f"/data/parameters/{parameter_id}/", data=updated_data, format="json"
         )
         self.assertEqual(
             update_response.status_code, 200
         )  # Expecting a successful update status code
 
         # Verify the updated parameter
-        get_response = self.client.get(f"/api/parameters/{parameter_id}/")
-        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+        get_response = self.client.get(f"/data/parameters/{parameter_id}/")
+        self.assertEqual(get_response.status_code, 200)
         parameter = get_response.json()
         self.assertEqual(parameter["title"], "Pressure Level")
         self.assertEqual(parameter["unit"], "Pa")
@@ -627,19 +641,21 @@ class ParameterApiTest(TestCase):
             "category": "environment",
         }
 
-        create_response = self.client.post("/api/parameters/", data=data, format="json")
-        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        create_response = self.client.post(
+            "/data/parameters/", data=data, format="json"
+        )
+        self.assertEqual(create_response.status_code, 201)
 
         parameter_id = create_response.json().get("id")
 
         # Delete the parameter
-        delete_response = self.client.delete(f"/api/parameters/{parameter_id}/")
+        delete_response = self.client.delete(f"/data/parameters/{parameter_id}/")
         self.assertEqual(
             delete_response.status_code, 204
         )  # Expecting a successful delete status code
 
         # Verify the parameter is deleted
-        get_response = self.client.get(f"/api/parameters/{parameter_id}/")
+        get_response = self.client.get(f"/data/parameters/{parameter_id}/")
         self.assertEqual(
             get_response.status_code, 404
         )  # Expecting a not found status code
@@ -654,13 +670,15 @@ class DatapointsViewSetTestCase(TestCase):
             "name": "line_chart",
             "title": "A line chart visualization",
         }
-        self.client.post("/api/visualizations/", data=visualization_data, format="json")
+        self.client.post(
+            "/data/visualizations/", data=visualization_data, format="json"
+        )
         # Create category
         category_data = {
             "name": "air_quality",
             "title": "Air Quality",
         }
-        self.client.post("/api/categories/", data=category_data, format="json")
+        self.client.post("/data/categories/", data=category_data, format="json")
         # Create parameters
         parameter_data = [
             {
@@ -679,7 +697,7 @@ class DatapointsViewSetTestCase(TestCase):
             },
         ]
         for parameter in parameter_data:
-            self.client.post("/api/parameters/", data=parameter, format="json")
+            self.client.post("/data/parameters/", data=parameter, format="json")
 
         # Create a sensor
         sensor_data = {
@@ -688,7 +706,9 @@ class DatapointsViewSetTestCase(TestCase):
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
-        sensor_data = self.client.post("/api/sensors/", data=sensor_data, format="json")
+        sensor_data = self.client.post(
+            "/data/sensors/", data=sensor_data, format="json"
+        )
         # Create a stream
         stream_data = [
             {
@@ -714,7 +734,7 @@ class DatapointsViewSetTestCase(TestCase):
         ]
         stream_ids = []
         for stream in stream_data:
-            stream = self.client.post("/api/streams/", data=stream, format="json")
+            stream = self.client.post("/data/streams/", data=stream, format="json")
             stream_ids.append(stream.data["id"])
         # Create datapoints
         datapoint_data = [
@@ -763,45 +783,45 @@ class DatapointsViewSetTestCase(TestCase):
         for datapoint in datapoint_data:
             datapoint["stream"] = random.choice(stream_ids)
         # Create a datapoint
-        self.client.post("/api/datapoints/", data=datapoint_data[0], format="json")
+        self.client.post("/data/datapoints/", data=datapoint_data[0], format="json")
         # Bulk create datapoints
-        self.client.post("/api/datapoints/", data=datapoint_data[1:], format="json")
+        self.client.post("/data/datapoints/", data=datapoint_data[1:], format="json")
 
     def test_get_hourly_average_datapoints_by_parameter(self):
-        sensor_id = self.client.get("/api/sensors/").data["sensors"][0]["id"]
-        parameter = self.client.get("/api/parameters/").data["parameters"][0]["name"]
+        sensor_id = self.client.get("/data/sensors/").data["sensors"][0]["id"]
+        parameter = self.client.get("/data/parameters/").data["parameters"][0]["name"]
         response = self.client.get(
-            "/api/cache/hour/", data={"sensor_id": sensor_id, "parameter": parameter}
+            "/data/cache/hour/", data={"sensor_id": sensor_id, "parameter": parameter}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertIsInstance(data, dict)
 
     def test_get_daily_average_datapoints_by_parameter(self):
-        sensor_id = self.client.get("/api/sensors/").data["sensors"][0]["id"]
-        parameter = self.client.get("/api/parameters/").data["parameters"][0]["name"]
+        sensor_id = self.client.get("/data/sensors/").data["sensors"][0]["id"]
+        parameter = self.client.get("/data/parameters/").data["parameters"][0]["name"]
         response = self.client.get(
-            "/api/cache/day/", data={"sensor_id": sensor_id, "parameter": parameter}
+            "/data/cache/day/", data={"sensor_id": sensor_id, "parameter": parameter}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertIsInstance(data, dict)
 
     def test_get_monthly_average_datapoints_by_parameter(self):
-        sensor_id = self.client.get("/api/sensors/").data["sensors"][0]["id"]
-        parameter = self.client.get("/api/parameters/").data["parameters"][0]["name"]
+        sensor_id = self.client.get("/data/sensors/").data["sensors"][0]["id"]
+        parameter = self.client.get("/data/parameters/").data["parameters"][0]["name"]
         response = self.client.get(
-            "/api/cache/month/", data={"sensor_id": sensor_id, "parameter": parameter}
+            "/data/cache/month/", data={"sensor_id": sensor_id, "parameter": parameter}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertIsInstance(data, dict)
 
     def test_get_yearly_average_datapoints_by_parameter(self):
-        sensor_id = self.client.get("/api/sensors/").data["sensors"][0]["id"]
-        parameter = self.client.get("/api/parameters/").data["parameters"][0]["name"]
+        sensor_id = self.client.get("/data/sensors/").data["sensors"][0]["id"]
+        parameter = self.client.get("/data/parameters/").data["parameters"][0]["name"]
         response = self.client.get(
-            "/api/cache/year/", data={"sensor_id": sensor_id, "parameter": parameter}
+            "/data/cache/year/", data={"sensor_id": sensor_id, "parameter": parameter}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -819,7 +839,7 @@ class SensorInShapeTestCase(TestCase):
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
-        self.client.post("/api/sensors/", data=sensor_data, format="json")
+        self.client.post("/data/sensors/", data=sensor_data, format="json")
 
         # Create second sensor
         sensor_data = {
@@ -829,7 +849,7 @@ class SensorInShapeTestCase(TestCase):
             "properties": {},
         }
 
-        self.client.post("/api/sensors/", data=sensor_data, format="json")
+        self.client.post("/data/sensors/", data=sensor_data, format="json")
 
         # Create third sensor
         sensor_data = {
@@ -839,7 +859,7 @@ class SensorInShapeTestCase(TestCase):
             "properties": {},
         }
 
-        self.client.post("/api/sensors/", data=sensor_data, format="json")
+        self.client.post("/data/sensors/", data=sensor_data, format="json")
 
     def test_get_sensors_in_polygon(self):
         shape = "polygon"
@@ -850,7 +870,7 @@ class SensorInShapeTestCase(TestCase):
         buffer = 1
 
         response = self.client.get(
-            "/api/sensors/sensors_in_shape/",
+            "/data/sensors/sensors_in_shape/",
             {"shape": shape, "wkt": wkt, "buffer": buffer},
         )
 
@@ -865,7 +885,7 @@ class SensorInShapeTestCase(TestCase):
         buffer = 16  # 16 km radius
 
         response = self.client.get(
-            "/api/sensors/sensors_in_shape/",
+            "/data/sensors/sensors_in_shape/",
             {"shape": shape, "wkt": wkt, "buffer": buffer},
         )
 

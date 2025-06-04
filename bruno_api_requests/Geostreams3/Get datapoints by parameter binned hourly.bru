@@ -1,0 +1,16 @@
+meta {
+  name: Get datapoints by parameter binned hourly
+  type: http
+  seq: 17
+}
+
+get {
+  url: {{base_url}}/data/cache/hour/?sensor_id=3
+  body: json
+  auth: none
+}
+
+params:query {
+  sensor_id: 3
+  ~parameter: surface_humidity
+}

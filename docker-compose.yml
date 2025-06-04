@@ -2,26 +2,28 @@
 services:
 
   # postgresql + postgis + timescale database
-  postgres:
-    image: timescale/timescaledb-ha:pg14-latest
+  timescaledb:
+    image: timescale/timescaledb-ha:pg17
+    platform: linux/amd64 #for platform error on Apple M1 chips
     networks:
-    - geostreams
+      - geostreams
     ports:
-    - 5433:5432
+      - 5433:5432
     environment:
-    - POSTGRES_PASSWORD=geostreams
+      - POSTGRES_PASSWORD=geostreams
     volumes:
-    - postgres:/home/postgres/pgdata/data
+      - postgres:/home/postgres/pgdata/data
     restart: unless-stopped
 
   # Keycloak identity provider
   keycloak:
     image: quay.io/keycloak/keycloak:25.0.4
     networks:
-    - geostreams
+      - geostreams
     command:
       - start-dev
       - --import-realm
+      - --http-relative-path=/keycloak
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
@@ -30,23 +32,89 @@ services:
       - KC_DB_URL_DATABASE=keycloak
       - KC_DB_USERNAME=keycloak
       - KC_DB_PASSWORD=password
+      - KEYCLOAK_HOSTNAME=localhost
     volumes:
       - ./keycloak/geostreams-realm.json:/opt/keycloak/data/import/realm.json:ro
-    ports:
-      - 8080:8080
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=PathPrefix(`/keycloak`)"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+      - "traefik.http.routers.keycloak.priority=10"
     depends_on:
-        - kc_postgres
+      - kc_postgres
 
   kc_postgres:
     image: postgres
+    platform: linux/amd64 #for platform error on Apple M1 chips
     networks:
-    - geostreams
+      - geostreams
     environment:
       - POSTGRES_DB=keycloak
       - POSTGRES_USER=keycloak
       - POSTGRES_PASSWORD=password
+    restart: unless-stopped
     volumes:
-    - keycloak_postgres:/var/lib/postgresql/data
+      - keycloak_postgres:/var/lib/postgresql/data
+
+  # The containers we create for the backend and frontend
+  backend:
+    build:
+      context: ./backend
+    container_name: geostreams-backend
+    env_file:
+      #      TODO: Fix the env configuration
+      - ./backend/.env
+    depends_on:
+      - timescaledb
+      - keycloak
+    networks:
+      - geostreams
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes=/api"
+      - "traefik.http.routers.backend.middlewares=strip-api-prefix@docker"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+      - "traefik.http.routers.backend.priority=5"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: geostreams-frontend
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+        - "traefik.http.services.frontend.loadbalancer.server.port=80"
+        - "traefik.http.routers.frontend.priority=1"
+        - "traefik.http.routers.frontend.entrypoints=web"
+    restart: unless-stopped
+    networks:
+      - geostreams
+
+  traefik:
+    image: traefik:v2.5
+    restart: unless-stopped
+    command:
+      - --api.insecure=true
+      - --providers.docker
+      - --entryPoints.web.address=:80
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8081:8080"
+    networks:
+      - geostreams
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+
 
 networks:
   geostreams:

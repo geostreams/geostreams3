@@ -1,0 +1,58 @@
+# TODO: Change the names
+services:
+
+  # postgresql + postgis + timescale database
+  postgres:
+    image: timescale/timescaledb-ha:pg17
+    platform: linux/amd64 #for platform error on Apple M1 chips
+    networks:
+    - geostreams
+    ports:
+    - 5433:5432
+    environment:
+    - POSTGRES_PASSWORD=geostreams
+    volumes:
+    - postgres:/home/postgres/pgdata/data
+    restart: unless-stopped
+
+  # Keycloak identity provider
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.4
+    networks:
+    - geostreams
+    command:
+      - start-dev
+      - --import-realm
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_URL_HOST=kc_postgres
+      - KC_DB_URL_DATABASE=keycloak
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=password
+    volumes:
+      - ./keycloak/geostreams-realm.json:/opt/keycloak/data/import/realm.json:ro
+    ports:
+      - 8080:8080
+    depends_on:
+        - kc_postgres
+
+  kc_postgres:
+    image: postgres
+    platform: linux/amd64 #for platform error on Apple M1 chips
+    networks:
+    - geostreams
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=keycloak
+      - POSTGRES_PASSWORD=password
+    volumes:
+    - keycloak_postgres:/var/lib/postgresql/data
+
+networks:
+  geostreams:
+
+volumes:
+  postgres:
+  keycloak_postgres:

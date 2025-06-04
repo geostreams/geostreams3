@@ -1,0 +1,17 @@
+meta {
+  name: Assign viz to parameter
+  type: http
+  seq: 23
+}
+
+put {
+  url: {{base_url}}/data/parameters/33/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "visualization": "scatter"
+  }
+}
