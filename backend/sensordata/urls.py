@@ -49,8 +49,8 @@ urlpatterns = [
         name="get_yearly_average_datapoints_by_parameter",
     ),
     path(
-        "cache/refresh",
-        DatapointsViewSet.as_view({"get": "refresh_cache"}),
-        name="refresh_cache",
+        "cache/refresh/",
+        DatapointsViewSet.as_view({"post": "refresh_aggregates"}),
+        name="refresh_aggregates",
     ),
 ]

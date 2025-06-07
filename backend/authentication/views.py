@@ -89,12 +89,12 @@ class GenerateAPIKeyView(APIView):
 
 
 # TODO - This is a proof of concept API, please remove
-class ProtectedView(APIView):
-    permission_classes = [IsAuthenticated]
+# class ProtectedView(APIView):
+#     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        return Response(
-            {
-                "message": "This is a protected view accessible only to authenticated users."
-            }
-        )
+#     def get(self, request):
+#         return Response(
+#             {
+#                 "message": "This is a protected view accessible only to authenticated users."
+#             }
+#         )

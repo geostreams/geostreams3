@@ -6,7 +6,7 @@
 -- Create a continuous aggregate for year with respective refresh policy
 CREATE MATERIALIZED VIEW yearly_sensor_data
 WITH (timescaledb.continuous) AS
-SELECT time_bucket('1 year',time) AS "bucket",
+SELECT time_bucket(INTERVAL'1 year',time) AS "bucket",
 AVG((value)::double precision) AS "average",
 COUNT(value) AS "count",
 parameter_id,
@@ -23,7 +23,7 @@ schedule_interval => INTERVAL '1 day');
 -- Create a continuous aggregate for month with respective refresh policy
 CREATE MATERIALIZED VIEW monthly_sensor_data
 WITH (timescaledb.continuous) AS
-SELECT time_bucket('1 month',time) AS "bucket",
+SELECT time_bucket(INTERVAL'1 month',time) AS "bucket",
 AVG((value)::double precision) AS "average",
 COUNT(value) AS "count",
 parameter_id,
@@ -40,7 +40,7 @@ schedule_interval => INTERVAL '1 day');
 -- Create a continuous aggregate for day with respective refresh policy
 CREATE MATERIALIZED VIEW daily_sensor_data
 WITH (timescaledb.continuous) AS
-SELECT time_bucket('1 day',time) AS "bucket",
+SELECT time_bucket(INTERVAL'1 day',time) AS "bucket",
 AVG((value)::double precision) AS "average",
 COUNT(value) AS "count",
 parameter_id,
@@ -57,7 +57,7 @@ schedule_interval => INTERVAL '1 day');
 -- Create a continuous aggregate for hour with respective refresh policy
 CREATE MATERIALIZED VIEW hourly_sensor_data
 WITH (timescaledb.continuous) AS
-SELECT time_bucket('1 hour',time) AS "bucket",
+SELECT time_bucket(INTERVAL'1 hour',time) AS "bucket",
 AVG((value)::double precision) AS "average",
 COUNT(value) AS "count",
 parameter_id,

@@ -122,7 +122,5 @@ class Datapoint(TimescaleModel):
     parameter = models.ForeignKey(Parameter, models.DO_NOTHING, blank=False)
     value = models.FloatField(blank=True, null=True)
 
-    # TODO properties = models.JSONField()
-
     class Meta:
         db_table = "datapoints"

@@ -5,13 +5,13 @@ meta {
 }
 
 get {
-  url: {{base_url}}/data/cache/day/?parameter=sif&parameter=co2_flux&sensor_id=1
+  url: {{base_url}}/data/cache/day/?sensor_id=3
   body: json
   auth: none
 }
 
 params:query {
-  parameter: sif
-  parameter: co2_flux
-  sensor_id: 1
+  sensor_id: 3
+  ~parameter: sif
+  ~parameter: co2_flux
 }
