@@ -14,9 +14,13 @@ class StreamsViewSet(AuthEnforcedModelViewSet):
     def get_queryset(self):
         queryset = Stream.objects.all()
         name_filter = self.request.query_params.get("name", None)
+        sensor_filter = self.request.query_params.get("sensor", None)
 
         if name_filter:
             queryset = queryset.filter(name=name_filter)
+
+        if sensor_filter:
+            queryset = queryset.filter(sensor=sensor_filter)
 
         return queryset
 
