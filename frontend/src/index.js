@@ -8,9 +8,9 @@ import { AuthProvider } from "react-oidc-context";
 const oidcConfig = {
     authority: process.env.REACT_APP_KEYCLOAK_AUTH_URL,
     client_id: process.env.REACT_APP_KEYCLOAK_CLIENT_ID,
-    redirect_uri: process.env.REACT_APP_KEYCLOAK_REDIRECT_URI,
+    redirect_uri: process.env.REACT_APP_URL,
     client_secret: process.env.REACT_APP_KEYCLOAK_CLIENT_SECRET,
-    post_logout_redirect_uri: process.env.REACT_APP_KEYCLOAK_REDIRECT_URI,
+    post_logout_redirect_uri: process.env.REACT_APP_URL,
 };
 
 const root = ReactDOM.createRoot(document.getElementById("root"));

@@ -24,9 +24,8 @@ function UserProfile() {
                         Authorization: `Bearer ${token}`,
                     },
                 };
-                // TODO: Make URL configurable from environment variable
                 const response = await axios.post(
-                    "http://localhost/api/auth/generate-api-key/",
+                    `${process.env.REACT_APP_API_URL}/api/auth/generate-api-key/`,
                     null,
                     config,
                 );

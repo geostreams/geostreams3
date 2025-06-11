@@ -5,16 +5,29 @@ import os
 
 
 def create_aggregate_views(apps, schema_editor):
-    filename = os.path.join("sensordata", "sql", "create_continuous_aggregates.sql")
-    sql = open(filename, "r").read()
+    # Get the directory where this migration file is located
+    migration_dir = os.path.dirname(__file__)
+    # Go up one level to the app directory, then into sql
+    sql_dir = os.path.join(os.path.dirname(migration_dir), "sql")
+    filename = os.path.join(sql_dir, "create_continuous_aggregates.sql")
+
+    with open(filename, "r") as f:
+        sql = f.read()
 
     with schema_editor.connection.cursor() as cursor:
         cursor.execute(sql)
 
 
 def delete_aggregate_views(apps, schema_editor):
-    filename = os.path.join("sensordata", "sql", "delete_continuous_aggregates.sql")
-    sql = open(filename, "r").read()
+    # Get the directory where this migration file is located
+    migration_dir = os.path.dirname(__file__)
+    # Go up one level to the app directory, then into sql
+    sql_dir = os.path.join(os.path.dirname(migration_dir), "sql")
+    filename = os.path.join(sql_dir, "delete_continuous_aggregates.sql")
+
+    with open(filename, "r") as f:
+        sql = f.read()
+
     with schema_editor.connection.cursor() as cursor:
         cursor.execute(sql)
 

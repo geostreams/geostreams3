@@ -1,6 +1,6 @@
 import random
 
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
@@ -661,7 +661,8 @@ class ParameterApiTest(TestCase):
         )  # Expecting a not found status code
 
 
-class DatapointsViewSetTestCase(TestCase):
+# Using TransactionTestCase to see the data in the database
+class DatapointsViewSetTestCase(TransactionTestCase):
     def setUp(self):
         self.client = get_authenticated_client()
         # Add any necessary setup code here (e.g., create Sensor and Datapoint instances)
@@ -787,8 +788,15 @@ class DatapointsViewSetTestCase(TestCase):
         # Bulk create datapoints
         self.client.post("/data/datapoints/", data=datapoint_data[1:], format="json")
 
+        # Refresh cache
+        self.client.post(
+            "/data/cache/refresh/", data={"time_period": "all"}, format="json"
+        )
+
     def test_get_hourly_average_datapoints_by_parameter(self):
-        sensor_id = self.client.get("/data/sensors/").data["sensors"][0]["id"]
+        sensor = self.client.get("/data/sensors/").data["sensors"][0]
+        sensor_id = sensor["id"]
+        sensor_name = sensor["name"]
         parameter = self.client.get("/data/parameters/").data["parameters"][0]["name"]
         response = self.client.get(
             "/data/cache/hour/", data={"sensor_id": sensor_id, "parameter": parameter}
@@ -796,19 +804,33 @@ class DatapointsViewSetTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertIsInstance(data, dict)
+        self.assertEqual("sensor_name" in data, True)
+        self.assertEqual(data["sensor_name"], sensor_name)
+        self.assertEqual(len(data["properties"]) > 0, True)
 
     def test_get_daily_average_datapoints_by_parameter(self):
-        sensor_id = self.client.get("/data/sensors/").data["sensors"][0]["id"]
+        sensor = self.client.get("/data/sensors/").data["sensors"][0]
+        sensor_id = sensor["id"]
+        sensor_name = sensor["name"]
         parameter = self.client.get("/data/parameters/").data["parameters"][0]["name"]
+
         response = self.client.get(
             "/data/cache/day/", data={"sensor_id": sensor_id, "parameter": parameter}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertIsInstance(data, dict)
+        self.assertEqual("sensor_name" in data, True)
+        self.assertEqual(data["sensor_name"], sensor_name)
+        # Check properties is not empty
+        self.assertEqual(len(data["properties"]) > 0, True)
+        # Check properties is a dictionary
+        self.assertIsInstance(data["properties"], dict)
 
     def test_get_monthly_average_datapoints_by_parameter(self):
-        sensor_id = self.client.get("/data/sensors/").data["sensors"][0]["id"]
+        sensor = self.client.get("/data/sensors/").data["sensors"][0]
+        sensor_id = sensor["id"]
+        sensor_name = sensor["name"]
         parameter = self.client.get("/data/parameters/").data["parameters"][0]["name"]
         response = self.client.get(
             "/data/cache/month/", data={"sensor_id": sensor_id, "parameter": parameter}
@@ -816,16 +838,29 @@ class DatapointsViewSetTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertIsInstance(data, dict)
+        self.assertEqual("sensor_name" in data, True)
+        self.assertEqual(data["sensor_name"], sensor_name)
+        # Check properties is not empty
+        self.assertEqual(len(data["properties"]) > 0, True)
+        # Check properties is a dictionary
+        self.assertIsInstance(data["properties"], dict)
 
     def test_get_yearly_average_datapoints_by_parameter(self):
-        sensor_id = self.client.get("/data/sensors/").data["sensors"][0]["id"]
+        sensor = self.client.get("/data/sensors/").data["sensors"][0]
+        sensor_id = sensor["id"]
+        sensor_name = sensor["name"]
         parameter = self.client.get("/data/parameters/").data["parameters"][0]["name"]
         response = self.client.get(
             "/data/cache/year/", data={"sensor_id": sensor_id, "parameter": parameter}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
-        self.assertIsInstance(data, dict)
+        self.assertEqual("sensor_name" in data, True)
+        self.assertEqual(data["sensor_name"], sensor_name)
+        # Check properties is not empty
+        self.assertEqual(len(data["properties"]) > 0, True)
+        # Check properties is a dictionary
+        self.assertIsInstance(data["properties"], dict)
 
 
 class SensorInShapeTestCase(TestCase):
@@ -893,3 +928,163 @@ class SensorInShapeTestCase(TestCase):
         sensors = response.json()["sensors"]
         self.assertIsInstance(sensors, list)
         self.assertEqual(len(sensors), 2)  # Two sensors should be in the circle
+
+
+# Edge Case Datapoint Test
+class EdgeCaseDatapointTestCase(TransactionTestCase):
+    def setUp(self):
+        self.client = get_authenticated_client()
+
+        # Create visualization
+        visualization_data = {
+            "name": "line_chart",
+            "title": "A line chart visualization",
+        }
+        self.client.post(
+            "/data/visualizations/", data=visualization_data, format="json"
+        )
+        # Create category
+        category_data = {
+            "name": "environment",
+            "title": "Environment",
+        }
+        self.client.post("/data/categories/", data=category_data, format="json")
+        # Create a parameter
+        parameter_data = {
+            "name": "Temperature",
+            "unit": "Celsius",
+            "visualization": "line_chart",
+            "category": "environment",
+        }
+        self.client.post("/data/parameters/", data=parameter_data, format="json")
+
+        # Create a sensor
+        sensor_data = {
+            "name": "NCSA Sensor 1",
+            "geotype": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
+            "properties": {},
+        }
+        sensor_data = self.client.post(
+            "/data/sensors/", data=sensor_data, format="json"
+        )
+        self.sensor_id = sensor_data.data["id"]
+        # Create a stream
+        stream_data = {
+            "name": "NCSA Stream 1",
+            "geotype": "Feature",
+            "sensor": self.sensor_id,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [-88.290075, 40.0062722, 0.0],
+            },
+            "properties": {},
+        }
+        stream = self.client.post("/data/streams/", data=stream_data, format="json")
+        stream_id = stream.data["id"]
+
+        # Create multiple datapoints in the same hour
+        base_time = "2024-01-01T10:00:00Z"
+        datapoints = [
+            {"stream": stream_id, "time": base_time, "data": {"Temperature": 20.0}},
+            {
+                "stream": stream_id,
+                "time": "2024-01-01T10:15:00Z",
+                "data": {"Temperature": 22.0},
+            },
+            {
+                "stream": stream_id,
+                "time": "2024-01-01T10:30:00Z",
+                "data": {"Temperature": 24.0},
+            },
+            {
+                "stream": stream_id,
+                "time": "2024-01-01T10:45:00Z",
+                "data": {"Temperature": 26.0},
+            },
+        ]
+
+        self.client.post("/data/datapoints/", data=datapoints, format="json")
+
+        # Refresh aggregates to ensure data is available
+        self.client.post(
+            "/data/cache/refresh/", data={"time_period": "all"}, format="json"
+        )
+
+    def test_get_hourly_average_datapoints_same_hour(self):
+        # Get hourly averages
+        response = self.client.get(
+            "/data/cache/hour/",
+            {
+                "sensor_id": self.sensor_id,
+                "parameter": ["Temperature"],
+                "since": "2024-01-01T00:00:00Z",
+                "until": "2024-01-01T23:59:59Z",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+
+        # Verify we get exactly one hourly average
+        self.assertIn("Temperature", data["properties"])
+        hourly_data = data["properties"]["Temperature"]
+        self.assertEqual(len(hourly_data), 1)
+
+        # Verify the average is correct (should be 23.0)
+        self.assertEqual(hourly_data[0]["average"], 23.0)
+        self.assertEqual(hourly_data[0]["count"], 4)
+
+    def test_get_daily_average_datapoints_same_hour(self):
+        # Get Daily averages
+        response = self.client.get(
+            "/data/cache/day/",
+            {
+                "sensor_id": self.sensor_id,
+                "parameter": ["Temperature"],
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertIn("Temperature", data["properties"])
+        daily_data = data["properties"]["Temperature"]
+        self.assertEqual(len(daily_data), 1)
+        self.assertEqual(daily_data[0]["average"], 23.0)
+        self.assertEqual(daily_data[0]["count"], 4)
+
+    def test_get_monthly_average_datapoints_same_hour(self):
+        # Get Monthly averages
+        response = self.client.get(
+            "/data/cache/month/",
+            {
+                "sensor_id": self.sensor_id,
+                "parameter": ["Temperature"],
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertIn("Temperature", data["properties"])
+        monthly_data = data["properties"]["Temperature"]
+        self.assertEqual(len(monthly_data), 1)
+        self.assertEqual(monthly_data[0]["average"], 23.0)
+        self.assertEqual(monthly_data[0]["count"], 4)
+
+    def test_get_yearly_average_datapoints_same_hour(self):
+        # Get Yearly averages
+        response = self.client.get(
+            "/data/cache/year/",
+            {
+                "sensor_id": self.sensor_id,
+                "parameter": ["Temperature"],
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertIn("Temperature", data["properties"])
+        yearly_data = data["properties"]["Temperature"]
+        self.assertEqual(len(yearly_data), 1)
+        self.assertEqual(yearly_data[0]["average"], 23.0)
+        self.assertEqual(yearly_data[0]["count"], 4)

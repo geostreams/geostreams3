@@ -1,7 +1,7 @@
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
-from datetime import datetime
+from collections import defaultdict
 
 import json
 
@@ -195,15 +195,13 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             sensor_id, "yearly", parameter, since, until
         )
 
-    @action(detail=False, methods=["GET"])
-    def refresh_cache(self, request):
-        time_period = request.GET.get("time_period", None)
-        print(time_period)
-        return DatapointsViewSet.refresh_time_bucket(time_period)
+    @action(detail=False, methods=["POST"])
+    def refresh_aggregates(self, request):
+        time_period = request.data.get("time_period", None)
+        return self.refresh_continuous_aggregates(time_period)
 
     @staticmethod
     def get_datapoint_values(sensor_id, parameter, since=None, until=None):
-        # TODO: Check sensor_id is valid, and also if parameter is valid
         if sensor_id is None:
             return Response(
                 {"message": "Sensor ID must be provided"},
@@ -220,6 +218,20 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
         except ValueError:
             return Response(
                 {"message": "Sensor ID must be an integer"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validate sensor_id is valid
+        if not Sensor.objects.filter(id=sensor_id).exists():
+            return Response(
+                {"message": "Sensor ID does not exist"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validate parameter is valid
+        if not Parameter.objects.filter(name=parameter).exists():
+            return Response(
+                {"message": "Parameter does not exist"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -250,9 +262,8 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             columns = [desc[0] for desc in cursor.description]
             results = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-        data = []
-        for datapoint in results:
-            data.append(datapoint["value"])
+        # More efficient list comprehension
+        data = [datapoint["value"] for datapoint in results]
 
         return Response(data, status=status.HTTP_200_OK)
 
@@ -260,6 +271,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
     def get_time_period_binned_datapoint(
         sensor_id, time_period, parameter=None, since=None, until=None
     ):
+
         # Check if sensor id is valid
         if sensor_id is None:
             return Response(
@@ -275,10 +287,18 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Validate sensor_id is valid
+        if not Sensor.objects.filter(id=sensor_id).exists():
+            return Response(
+                {"message": "Sensor ID does not exist"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         if time_period == "hourly":
             query = """
                     SELECT
                         parameters.name AS parameter,
+                        streams.name as stream,
                         average,
                         count,
                         bucket AS date,
@@ -300,6 +320,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             query = """
                     SELECT
                         parameters.name AS parameter,
+                        streams.name as stream,
                         average,
                         count,
                         bucket AS date,
@@ -320,6 +341,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             query = """
                     SELECT
                     parameters.name AS parameter,
+                    streams.name as stream,
                     average,
                     count,
                     bucket AS date,
@@ -338,6 +360,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             query = """
                     SELECT
                     parameters.name AS parameter,
+                    streams.name as stream,
                     average,
                     count,
                     bucket AS date,
@@ -376,13 +399,13 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             columns = [desc[0] for desc in cursor.description]
             results = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-        data = {}
+        # More efficient grouping using defaultdict
+        # since it eliminates the need for checking if the label is in the dictionary
+        data = defaultdict(list)
         for datapoint in results:
-            label = datapoint["parameter"]
-            if label not in data:
-                data[label] = []
-            del datapoint["parameter"]  # Remove 'label' key
+            label = datapoint.pop("parameter")  # Extract and remove in one operation
             data[label].append(datapoint)
+        data = dict(data)  # Convert back to regular dict for consistent API
 
         response = {
             "sensor_name": Sensor.objects.get(id=sensor_id).name,
@@ -406,11 +429,20 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
                 {"message": "Sensor ID must be an integer"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        # Validate sensor_id is valid
+        if not Sensor.objects.filter(id=sensor_id).exists():
+            return Response(
+                {"message": "Sensor ID does not exist"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         query = ""
         if time_period == "hourly":
             query = """
                     SELECT
                         parameters.name AS parameter,
+                        streams.name as stream,
                         average,
                         count,
                         bucket AS date,
@@ -428,6 +460,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             query = """
                     SELECT
                         parameters.name AS parameter,
+                        streams.name as stream,
                         average,
                         count,
                         bucket AS date,
@@ -445,6 +478,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             query = """
                     SELECT
                     parameters.name AS parameter,
+                    streams.name as stream,
                     average,
                     count,
                     bucket AS date,
@@ -461,6 +495,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             query = """
                     SELECT
                     parameters.name AS parameter,
+                    streams.name as stream,
                     average,
                     count,
                     bucket AS date,
@@ -498,58 +533,60 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             columns = [desc[0] for desc in cursor.description]
             results = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-        response = {}
+        # More efficient grouping using defaultdict
+        # since it eliminates the need for checking if the label is in the dictionary
+        response = defaultdict(list)
         for datapoint in results:
-            label = datapoint["parameter"]
-            if label not in response:
-                response[label] = []
-            del datapoint["parameter"]  # Remove 'label' key
+            label = datapoint.pop("parameter")  # Extract and remove in one operation
             response[label].append(datapoint)
+        response = dict(response)  # Convert back to regular dict for consistent API
         return Response(response, status=status.HTTP_200_OK)
 
-    # TODO: Require authentication for this endpoint
-    @staticmethod
-    def refresh_time_bucket(time_period):
-        """Refresh the time bucket for the given time period to reflect the latest data."""
+    def refresh_continuous_aggregates(self, time_period):
+        """Refresh the continuous aggregates for the given time period to reflect the latest data."""
         # Get start_time and end_time for datapoints
         try:
-            start_time = Datapoint.objects.earliest("time").time
-            end_time = Datapoint.objects.latest("time").time
-
             query = ""
-            if time_period == "hourly":
+            if time_period == "hour":
                 query = """
                         CALL
-                            refresh_continuous_aggregate('hourly_sensor_data', '{start_time}', '{end_time}')
-                        """.format(
-                    start_time=start_time, end_time=end_time
-                )
-            elif time_period == "daily":
+                            refresh_continuous_aggregate('hourly_sensor_data', NULL, NULL)
+                            """
+            elif time_period == "day":
                 query = """
                         CALL
-                            refresh_continuous_aggregate('daily_sensor_data', '{start_time}', '{end_time}')
-                        """.format(
-                    start_time=start_time, end_time=end_time
-                )
-            elif time_period == "monthly":
-                # TODO: Testing to see if we need to handle the case where the start_time is not the
-                #  first day of the month or the end_time is not the last day of the month
+                            refresh_continuous_aggregate('daily_sensor_data', NULL, NULL)
+                        """
+            elif time_period == "month":
                 query = """
                         CALL
-                            refresh_continuous_aggregate('monthly_sensor_data', '{start_time}', '{end_time}')
-                        """.format(
-                    start_time=start_time, end_time=end_time
-                )
-            elif time_period == "yearly":
-                year_start = datetime(start_time.year, 1, 1)
-                year_end = datetime(end_time.year, 12, 31)
+                            refresh_continuous_aggregate('monthly_sensor_data', NULL, NULL)
+                        """
+            elif time_period == "year":
+                query = """
+                        CALL
+                            refresh_continuous_aggregate('yearly_sensor_data', NULL, NULL)
+                        """
+            elif time_period == "all":
+                query = [
+                    """
+                        CALL
+                            refresh_continuous_aggregate('hourly_sensor_data', NULL, NULL)
+                    """,
+                    """
+                        CALL
+                            refresh_continuous_aggregate('daily_sensor_data', NULL, NULL)
+                    """,
+                    """
+                        CALL
+                            refresh_continuous_aggregate('monthly_sensor_data', NULL, NULL)
+                    """,
+                    """
+                        CALL
+                            refresh_continuous_aggregate('yearly_sensor_data', NULL, NULL)
+                    """,
+                ]
 
-                query = """
-                        CALL
-                            refresh_continuous_aggregate('yearly_sensor_data', '{start_time}', '{end_time}')
-                        """.format(
-                    start_time=year_start, end_time=year_end
-                )
             else:
                 return Response(
                     {"message": "Invalid time period provided"},
@@ -557,7 +594,11 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
                 )
 
             with connection.cursor() as cursor:
-                cursor.execute(query)
+                if isinstance(query, list):
+                    for q in query:
+                        cursor.execute(q)
+                else:
+                    cursor.execute(query)
 
             return Response(
                 {"message": "Cache refreshed successfully"}, status=status.HTTP_200_OK
