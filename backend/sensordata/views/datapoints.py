@@ -298,7 +298,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             query = """
                     SELECT
                         parameters.name AS parameter,
-                        streams.name as stream,
+                        streams.id as stream_id,
                         average,
                         count,
                         bucket AS date,
@@ -320,7 +320,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             query = """
                     SELECT
                         parameters.name AS parameter,
-                        streams.name as stream,
+                        streams.id as stream_id,
                         average,
                         count,
                         bucket AS date,
@@ -341,7 +341,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             query = """
                     SELECT
                     parameters.name AS parameter,
-                    streams.name as stream,
+                    streams.id as stream_id,
                     average,
                     count,
                     bucket AS date,
@@ -360,7 +360,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             query = """
                     SELECT
                     parameters.name AS parameter,
-                    streams.name as stream,
+                    streams.id as stream_id,
                     average,
                     count,
                     bucket AS date,
@@ -392,7 +392,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
         if until:
             query += "AND bucket <= '{until}'::timestamp ".format(until=until)
 
-        query += ";"
+        query += "ORDER BY bucket ASC;"
         query = query.format(sensor_id=sensor_id)
         with connection.cursor() as cursor:
             cursor.execute(query)
@@ -407,8 +407,16 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             data[label].append(datapoint)
         data = dict(data)  # Convert back to regular dict for consistent API
 
+        # Get stream names by filtering streams by sensor_id
+        stream_dict = {
+            stream.id: stream.name
+            for stream in Stream.objects.filter(sensor_id=sensor_id)
+        }
+
+        # Convert back to regular dict for consistent API
         response = {
             "sensor_name": Sensor.objects.get(id=sensor_id).name,
+            "streams": stream_dict,
             "properties": data,
         }
 
@@ -442,7 +450,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             query = """
                     SELECT
                         parameters.name AS parameter,
-                        streams.name as stream,
+                        streams.id as stream_id,
                         average,
                         count,
                         bucket AS date,
@@ -460,7 +468,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             query = """
                     SELECT
                         parameters.name AS parameter,
-                        streams.name as stream,
+                        streams.id as stream_id,
                         average,
                         count,
                         bucket AS date,
@@ -478,7 +486,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             query = """
                     SELECT
                     parameters.name AS parameter,
-                    streams.name as stream,
+                    streams.id as stream_id,
                     average,
                     count,
                     bucket AS date,
@@ -495,7 +503,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             query = """
                     SELECT
                     parameters.name AS parameter,
-                    streams.name as stream,
+                    streams.id as stream_id,
                     average,
                     count,
                     bucket AS date,
@@ -526,20 +534,36 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
         if until:
             query += "AND bucket <= '{until}'::timestamp ".format(until=until)
 
-        query += ";"
+        query += "ORDER BY bucket ASC;"
         query = query.format(sensor_id=sensor_id)
         with connection.cursor() as cursor:
             cursor.execute(query)
             columns = [desc[0] for desc in cursor.description]
             results = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-        # More efficient grouping using defaultdict
-        # since it eliminates the need for checking if the label is in the dictionary
-        response = defaultdict(list)
+        # More efficient grouping using defaultdict and optimized stream collection
+        data = defaultdict(list)
+        stream_ids = set()  # Use set to collect unique stream IDs
+
         for datapoint in results:
+            stream_ids.add(datapoint["stream_id"])  # Collect unique stream IDs
             label = datapoint.pop("parameter")  # Extract and remove in one operation
-            response[label].append(datapoint)
-        response = dict(response)  # Convert back to regular dict for consistent API
+            data[label].append(datapoint)
+
+        data = dict(data)  # Convert back to regular dict for consistent API
+
+        # Get stream names by filtering streams by sensor_id
+        stream_dict = {
+            stream.id: stream.name
+            for stream in Stream.objects.filter(sensor_id=sensor_id)
+        }
+
+        response = {
+            "sensor_name": Sensor.objects.get(id=sensor_id).name,
+            "streams": stream_dict,
+            "properties": data,
+        }
+
         return Response(response, status=status.HTTP_200_OK)
 
     def refresh_continuous_aggregates(self, time_period):

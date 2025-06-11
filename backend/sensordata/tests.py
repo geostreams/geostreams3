@@ -807,6 +807,9 @@ class DatapointsViewSetTestCase(TransactionTestCase):
         self.assertEqual("sensor_name" in data, True)
         self.assertEqual(data["sensor_name"], sensor_name)
         self.assertEqual(len(data["properties"]) > 0, True)
+        self.assertEqual(len(data["streams"]) > 0, True)
+        # Check streams are in the streams dictionary
+        self.assertEqual(len(data["streams"]) == 2, True)
 
     def test_get_daily_average_datapoints_by_parameter(self):
         sensor = self.client.get("/data/sensors/").data["sensors"][0]
@@ -824,6 +827,7 @@ class DatapointsViewSetTestCase(TransactionTestCase):
         self.assertEqual(data["sensor_name"], sensor_name)
         # Check properties is not empty
         self.assertEqual(len(data["properties"]) > 0, True)
+        self.assertEqual(len(data["streams"]) == 2, True)
         # Check properties is a dictionary
         self.assertIsInstance(data["properties"], dict)
 
@@ -842,6 +846,7 @@ class DatapointsViewSetTestCase(TransactionTestCase):
         self.assertEqual(data["sensor_name"], sensor_name)
         # Check properties is not empty
         self.assertEqual(len(data["properties"]) > 0, True)
+        self.assertEqual(len(data["streams"]) == 2, True)
         # Check properties is a dictionary
         self.assertIsInstance(data["properties"], dict)
 
@@ -859,6 +864,7 @@ class DatapointsViewSetTestCase(TransactionTestCase):
         self.assertEqual(data["sensor_name"], sensor_name)
         # Check properties is not empty
         self.assertEqual(len(data["properties"]) > 0, True)
+        self.assertEqual(len(data["streams"]) == 2, True)
         # Check properties is a dictionary
         self.assertIsInstance(data["properties"], dict)
 
