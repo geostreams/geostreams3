@@ -23,6 +23,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
         """
         Take a single JSON post of datapoint data (with multiple parameters) and split it into
         multiple datapoints with one parameter each, and return the list of datapoints.
+        Raises ValueError if parameter doesn't exist.
         """
         datapoints = []
         datapoint_template = {
@@ -46,16 +47,13 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
                         stream.parameters.append(key.strip())
                         stream.save()
                     else:
-                        response = {"message": f"Parameter {key} does not exist"}
-                        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+                        raise ValueError(f"Parameter {key} does not exist")
 
                 datapoint["parameter"] = Parameter.objects.get(name=key.strip()).id
                 datapoint["value"] = value
                 datapoints.append(datapoint)
             except Parameter.DoesNotExist:
-                response = {"message": f"Parameter {key} does not exist"}
-                return Response(response, status=status.HTTP_400_BAD_REQUEST)
-                continue
+                raise ValueError(f"Parameter {key} does not exist")
         return datapoints
 
     def create(self, request, *args, **kwargs):
@@ -65,11 +63,18 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
         # Convert JSON to datapoint array
         is_many = isinstance(data, list)
         new_datapoints = []
-        if not is_many:
-            new_datapoints += self._parse_datapoint_parameters(data)
-        else:
-            for dp in data:
-                new_datapoints += self._parse_datapoint_parameters(dp)
+
+        try:
+            if not is_many:
+                new_datapoints += self._parse_datapoint_parameters(data)
+            else:
+                # Use map for more efficient processing of list
+                parsed_datapoints = list(map(self._parse_datapoint_parameters, data))
+                # Flatten the list of lists
+                for dp_list in parsed_datapoints:
+                    new_datapoints += dp_list
+        except ValueError as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         # Determine earliest/latest time per stream
         stream_times = {}
