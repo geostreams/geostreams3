@@ -172,3 +172,14 @@ Once installed, import the saved requests from the bruno_api_requests folder.
 Make sure to configure the Base URL in Bruno’s environment settings to match your API environment (e.g., development, staging, production).
     4.	Run Requests
       Run the requests to test the API endpoints and verify the responses.
+
+
+## Model Diagram
+
+Need to install graphvis in the system and pydotplus in the python environment. Also enable django_extensions in the settings.py file.
+
+```bash
+python manage.py graph_models --all-applications --output model_diagram.png
+```
+
+![Model Diagram](model_diagram.png)
