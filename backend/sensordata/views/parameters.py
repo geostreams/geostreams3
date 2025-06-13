@@ -36,16 +36,16 @@ class ParametersViewSet(AuthEnforcedModelViewSet):
         # Check if name query parameter is provided and return only that parameter
         # and its mappings and categories
         if self.request.query_params.get("name", None):
-            param_serializer = ParameterSerializer(queryset[0])
+            param_serializer = ParameterSerializer(queryset, many=True)
             mapping_serialized = ParameterCategorySerializer(
-                ParameterCategory.objects.filter(parameter=queryset[0]), many=True
+                ParameterCategory.objects.filter(parameter__in=queryset), many=True
             )
             category_serialized = CategorySerializer(
                 Category.objects.filter(
                     id__in=[
                         param_category.category.id
                         for param_category in ParameterCategory.objects.filter(
-                            parameter=queryset[0]
+                            parameter__in=queryset
                         )
                     ]
                 ),
@@ -54,7 +54,7 @@ class ParametersViewSet(AuthEnforcedModelViewSet):
 
             return Response(
                 {
-                    "parameter": param_serializer.data,
+                    "parameters": param_serializer.data,
                     "mappings": mapping_serialized.data,
                     "categories": category_serialized.data,
                 }

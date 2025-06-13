@@ -579,8 +579,8 @@ class ParameterApiTest(TestCase):
         # Test filtering by name
         response = self.client.get("/data/parameters/?name=temperature")
         self.assertEqual(response.status_code, 200)
-        parameter = response.json()["parameter"]
-        self.assertTrue(parameter["name"] == "temperature")  # Ensure filtering works
+        parameter = response.json()["parameters"]
+        self.assertTrue(parameter[0]["name"] == "temperature")  # Ensure filtering works
 
     def test_update_parameter(self):
         # Create a parameter first
