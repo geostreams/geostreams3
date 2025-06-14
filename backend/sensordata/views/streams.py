@@ -41,7 +41,7 @@ class StreamsViewSet(AuthEnforcedModelViewSet):
             )
 
         if self.request.query_params.get("name", None):
-            serializer = StreamSerializer(queryset)
+            serializer = StreamSerializer(queryset, many=True)
             return Response({"streams": serializer.data})
         serializer = StreamSerializer(queryset, many=True)
         return Response({"streams": serializer.data})
