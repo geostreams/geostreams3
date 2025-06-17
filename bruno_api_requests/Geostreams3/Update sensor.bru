@@ -4,12 +4,37 @@ meta {
   seq: 2
 }
 
-get {
-  url: {{base_url}}/data/sensors/?name=Rund
-  body: none
+put {
+  url: {{base_url}}/data/sensors/2/
+  body: json
   auth: none
 }
 
-params:query {
-  name: Rund
+body:json {
+  {
+    "name": "Pesotum",
+    "geotype": "Feature",
+    "created": "2025-01-12T19:36:32.070820Z",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        -88.213772,
+        39.889292,
+        0
+      ]
+    },
+    "properties": {
+      "name": "Pesotum",
+      "type": {
+        "id": "field",
+        "title": "Field Data"
+      },
+      "region": "Pesotum",
+      "popupContent": "Pesotum",
+      "source": "Pesotum"
+    },
+    "parameters": [],
+    "min_start_time": null,
+    "max_end_time": null
+  }
 }

@@ -25,7 +25,7 @@ function UserProfile() {
                     },
                 };
                 const response = await axios.post(
-                    `${process.env.REACT_APP_API_URL}/api/auth/generate-api-key/`,
+                    `${process.env.REACT_APP_URL}api/auth/generate-api-key/`,
                     null,
                     config,
                 );

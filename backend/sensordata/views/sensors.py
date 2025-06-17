@@ -40,8 +40,8 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
             )
 
         if self.request.query_params.get("name", None):
-            serializer = SensorSerializer(queryset[0])
-            return Response({"sensor": serializer.data})
+            serializer = SensorSerializer(queryset, many=True)
+            return Response({"sensors": serializer.data})
         serializer = SensorSerializer(queryset, many=True)
         return Response({"sensors": serializer.data})
 

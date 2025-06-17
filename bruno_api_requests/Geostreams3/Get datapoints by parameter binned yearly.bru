@@ -5,11 +5,12 @@ meta {
 }
 
 get {
-  url: {{base_url}}/data/cache/day/?sensor_id=3
+  url: {{base_url}}/data/cache/day/?sensor_id=3&shortened=true
   body: json
   auth: none
 }
 
 params:query {
   sensor_id: 3
+  shortened: true
 }

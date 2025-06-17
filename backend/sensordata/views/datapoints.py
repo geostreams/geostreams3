@@ -42,6 +42,7 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             try:
                 datapoint = datapoint_template.copy()
                 # Check if parameter in streams or in parameters
+                # If parameter exists but not in stream, add it to stream
                 if key.strip() not in stream.parameters:
                     if Parameter.objects.filter(name=key.strip()).exists():
                         stream.parameters.append(key.strip())
