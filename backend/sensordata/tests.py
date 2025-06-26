@@ -175,8 +175,6 @@ class SensorApiTest(TestCase):
             "properties": {},
         }
 
-        self.client.post("/data/sensors/", data=data, format="json")
-
         create_response = self.client.post("/data/sensors/", data=data, format="json")
         self.assertEqual(create_response.status_code, 201)
 
