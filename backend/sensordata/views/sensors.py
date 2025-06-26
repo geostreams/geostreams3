@@ -26,9 +26,13 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
     def get_queryset(self):
         queryset = Sensor.objects.all()
         name_filter = self.request.query_params.get("name", None)
+        source_filter = self.request.query_params.get("source", None)
 
         if name_filter:
             queryset = queryset.filter(name=name_filter)
+
+        if source_filter:
+            queryset = queryset.filter(source=source_filter)
 
         return queryset
 
@@ -39,9 +43,6 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
                 {"message": "No sensors found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        if self.request.query_params.get("name", None):
-            serializer = SensorSerializer(queryset, many=True)
-            return Response({"sensors": serializer.data})
         serializer = SensorSerializer(queryset, many=True)
         return Response({"sensors": serializer.data})
 

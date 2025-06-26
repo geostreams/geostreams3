@@ -54,6 +54,7 @@ class SensorSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
+            "source",
             "geotype",
             "created",
             "geometry",
