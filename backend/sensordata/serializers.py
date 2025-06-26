@@ -178,12 +178,12 @@ class GeoJSONSensorSerializer(serializers.ModelSerializer):
 
     def get_properties(self, obj):
         # Get aggregated data efficiently
-        min_start_time = obj.streams.aggregate(min_start_time=Min("start_time"))[
-            "min_start_time"
-        ]
-        max_end_time = obj.streams.aggregate(max_end_time=Max("end_time"))[
-            "max_end_time"
-        ]
+        min_max_times = obj.streams.aggregate(
+            min_start_time=Min("start_time"),
+            max_end_time=Max("end_time"),
+        )
+        min_start_time = min_max_times["min_start_time"]
+        max_end_time = min_max_times["max_end_time"]
 
         # Get unique parameters from all streams
         all_params = obj.streams.values_list("parameters", flat=True).distinct()

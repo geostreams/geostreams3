@@ -24,7 +24,7 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self):
-        queryset = Sensor.objects.all()
+        queryset = Sensor.objects.all().prefetch_related("streams")
         name_filter = self.request.query_params.get("name", None)
         source_filter = self.request.query_params.get("source", None)
 
