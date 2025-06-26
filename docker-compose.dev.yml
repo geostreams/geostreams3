@@ -2,7 +2,7 @@
 services:
 
   # postgresql + postgis + timescale database
-  postgres:
+  timescaledb:
     image: timescale/timescaledb-ha:pg17
     platform: linux/amd64 #for platform error on Apple M1 chips
     networks:
@@ -12,7 +12,7 @@ services:
     environment:
     - POSTGRES_PASSWORD=geostreams
     volumes:
-    - postgres:/home/postgres/pgdata/data
+    - timescaledb:/home/postgres/pgdata/data
     restart: unless-stopped
 
   # Keycloak identity provider
@@ -54,5 +54,5 @@ networks:
   geostreams:
 
 volumes:
-  postgres:
+  timescaledb:
   keycloak_postgres:
