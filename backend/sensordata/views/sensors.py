@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework import status
 from ..models import Sensor
-from ..serializers import SensorSerializer
+from ..serializers import SensorSerializer, GeoJSONSensorSerializer
 from .auth_base import AuthEnforcedModelViewSet
 from rest_framework.decorators import action
 from django.contrib.gis.geos import Point, Polygon, GEOSGeometry
@@ -24,7 +24,7 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self):
-        queryset = Sensor.objects.all()
+        queryset = Sensor.objects.all().prefetch_related("streams")
         name_filter = self.request.query_params.get("name", None)
         source_filter = self.request.query_params.get("source", None)
 
@@ -38,13 +38,22 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
+
         if not queryset:
             return Response(
                 {"message": "No sensors found"}, status=status.HTTP_404_NOT_FOUND
             )
+        # Check if format parameter is provided
+        type_param = request.query_params.get("type", "").lower()
 
-        serializer = SensorSerializer(queryset, many=True)
-        return Response({"sensors": serializer.data})
+        if type_param == "geojson":
+            # Use GeoJSON serializer - returns array of GeoJSON Features
+            serializer = GeoJSONSensorSerializer(queryset, many=True)
+            return Response(serializer.data)
+        else:
+            # Return data in default format
+            serializer = SensorSerializer(queryset, many=True)
+            return Response({"sensors": serializer.data})
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()

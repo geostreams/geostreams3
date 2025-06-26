@@ -94,6 +94,7 @@ class SensorApiTest(TestCase):
         # Update the sensor
         updated_data = {
             "name": "NCSA Sensor 3 ",
+            "geotype": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.213772, 39.889292, 0.0]},
             "properties": {},
         }
@@ -118,6 +119,7 @@ class SensorApiTest(TestCase):
         # Create a sensor first
         data = {
             "name": "NCSA Sensor 2",
+            "geotype": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
@@ -149,6 +151,7 @@ class SensorApiTest(TestCase):
         # Create a sensor first
         data = {
             "name": "NCSA Sensor 2",
+            "geotype": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
@@ -161,6 +164,31 @@ class SensorApiTest(TestCase):
         # Delete the sensor
         delete_response = self.client.delete(f"/data/sensors/{sensor_id}/")
         self.assertEqual(delete_response.status_code, 204)
+
+    def test_get_sensor_geojson(self):
+        # Create a sensor first
+        data = {
+            "name": "NCSA Sensor 1",
+            "source": "NCSA",
+            "geotype": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
+            "properties": {},
+        }
+
+        create_response = self.client.post("/data/sensors/", data=data, format="json")
+        self.assertEqual(create_response.status_code, 201)
+
+        response = self.client.get("/data/sensors/?type=geojson")
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response.json(), list)
+        # Check the keys of the first item
+        self.assertEqual(
+            list(response.json()[0].keys()), ["type", "geometry", "properties"]
+        )
+        self.assertEqual(response.json()[0]["type"], "Feature")
+        self.assertEqual(response.json()[0]["geometry"]["type"], "Point")
+        self.assertEqual(response.json()[0]["properties"]["name"], "NCSA Sensor 1")
+        self.assertEqual(response.json()[0]["properties"]["source"], "NCSA")
 
 
 class StreamApiTest(TestCase):
