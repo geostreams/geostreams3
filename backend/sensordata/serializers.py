@@ -155,3 +155,47 @@ class DatapointSerializer(serializers.ModelSerializer):
             "parameter",
             "value",
         ]
+
+
+class GeoJSONSensorSerializer(serializers.ModelSerializer):
+    """Serializer that formats a single sensor as a GeoJSON Feature."""
+
+    type = serializers.SerializerMethodField()
+    geometry = serializers.SerializerMethodField()
+    properties = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Sensor
+        fields = ["type", "geometry", "properties"]
+
+    def get_type(self, obj):
+        return obj.geotype
+
+    def get_geometry(self, obj):
+        # Convert the GEOSGeometry object to a GeoJSON dict
+        # The geometry type will be determined by the actual geometry (Point, Polygon, etc.)
+        return json.loads(obj.geog.geojson) if obj.geog else None
+
+    def get_properties(self, obj):
+        # Get aggregated data efficiently
+        min_start_time = obj.streams.aggregate(min_start_time=Min("start_time"))[
+            "min_start_time"
+        ]
+        max_end_time = obj.streams.aggregate(max_end_time=Max("end_time"))[
+            "max_end_time"
+        ]
+
+        # Get unique parameters from all streams
+        all_params = obj.streams.values_list("parameters", flat=True).distinct()
+        unique_params = list(set(param for params in all_params for param in params))
+
+        return {
+            "id": obj.id,
+            "name": obj.name,
+            "source": obj.source,
+            "created": obj.created,
+            "properties": obj.properties,
+            "parameters": unique_params,
+            "min_start_time": min_start_time,
+            "max_end_time": max_end_time,
+        }
