@@ -19,6 +19,11 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
     queryset = Datapoint.objects.all()
     serializer_class = DatapointSerializer
 
+    def get_queryset(self):
+        return Datapoint.objects.select_related(
+            "stream__sensor", "parameter"
+        ).prefetch_related("stream__sensor__streams")
+
     def _parse_datapoint_parameters(self, datapoint):
         """
         Take a single JSON post of datapoint data (with multiple parameters) and split it into
@@ -277,7 +282,6 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
     def get_time_period_binned_datapoint(
         sensor_id, time_period, parameter=None, since=None, until=None
     ):
-
         # Check if sensor id is valid
         if sensor_id is None:
             return Response(
@@ -413,15 +417,23 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
             data[label].append(datapoint)
         data = dict(data)  # Convert back to regular dict for consistent API
 
-        # Get stream names by filtering streams by sensor_id
-        stream_dict = {
-            stream.id: stream.name
-            for stream in Stream.objects.filter(sensor_id=sensor_id)
-        }
+        # Single query to get both sensor name and stream info
+        try:
+            sensor = (
+                Sensor.objects.select_related()
+                .prefetch_related("streams")
+                .get(id=sensor_id)
+            )
+            sensor_name = sensor.name
+            stream_dict = {stream.id: stream.name for stream in sensor.streams.all()}
+        except Sensor.DoesNotExist:
+            return Response(
+                {"message": "Sensor ID does not exist"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        # Convert back to regular dict for consistent API
         response = {
-            "sensor_name": Sensor.objects.get(id=sensor_id).name,
+            "sensor_name": sensor_name,
             "streams": stream_dict,
             "properties": data,
         }
