@@ -1,11 +1,7 @@
 from rest_framework.response import Response
 from rest_framework import status
 from ..models import Parameter, Category, ParameterCategory, Visualization
-from ..serializers import (
-    ParameterSerializer,
-    CategorySerializer,
-    ParameterCategorySerializer,
-)
+from ..serializers import ParameterSerializer
 from rest_framework.permissions import IsAuthenticated
 from .auth_base import AuthEnforcedModelViewSet
 
@@ -16,7 +12,12 @@ class ParametersViewSet(AuthEnforcedModelViewSet):
 
     # Overwrite get queryset to allow filtering by name
     def get_queryset(self):
-        queryset = Parameter.objects.all()
+        # Prefetch related data
+        queryset = (
+            Parameter.objects.select_related("visualization")
+            .prefetch_related("parametercategory_set__category")
+            .all()
+        )
         name_filter = self.request.query_params.get("name", None)
 
         if name_filter:
@@ -33,45 +34,9 @@ class ParametersViewSet(AuthEnforcedModelViewSet):
                 {"message": "No parameters found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        # Check if name query parameter is provided and return only that parameter
-        # and its mappings and categories
-        if self.request.query_params.get("name", None):
-            param_serializer = ParameterSerializer(queryset, many=True)
-            mapping_serialized = ParameterCategorySerializer(
-                ParameterCategory.objects.filter(parameter__in=queryset), many=True
-            )
-            category_serialized = CategorySerializer(
-                Category.objects.filter(
-                    id__in=[
-                        param_category.category.id
-                        for param_category in ParameterCategory.objects.filter(
-                            parameter__in=queryset
-                        )
-                    ]
-                ),
-                many=True,
-            )
-
-            return Response(
-                {
-                    "parameters": param_serializer.data,
-                    "mappings": mapping_serialized.data,
-                    "categories": category_serialized.data,
-                }
-            )
-
+        # Simplified response - just return parameters with embedded categories
         param_serializer = ParameterSerializer(queryset, many=True)
-        category_serialized = CategorySerializer(Category.objects.all(), many=True)
-        mapping_serialized = ParameterCategorySerializer(
-            ParameterCategory.objects.all(), many=True
-        )
-        return Response(
-            {
-                "parameters": param_serializer.data,
-                "categories": category_serialized.data,
-                "mappings": mapping_serialized.data,
-            }
-        )
+        return Response({"parameters": param_serializer.data})
 
     # Overwrite create to allow adding visualization by name
     def create(self, request, *args, **kwargs):

@@ -37,10 +37,22 @@ class ParameterCategorySerializer(serializers.ModelSerializer):
 class ParameterSerializer(serializers.ModelSerializer):
     # Showing the name of the visualization instead of the id
     visualization = serializers.CharField(source="visualization.name", read_only=True)
+    # Add categories directly to the parameter
+    categories = serializers.SerializerMethodField()
 
     class Meta:
         model = Parameter
-        fields = "__all__"
+        fields = ["id", "name", "title", "unit", "visualization", "categories"]
+
+    def get_categories(self, obj):
+        # Get the categories for the parameter
+        parameter_categories = getattr(obj, "parametercategory_set", None)
+        if parameter_categories:
+            return [
+                {"name": pc.category.name, "description": pc.category.description}
+                for pc in parameter_categories.all()
+            ]
+        return []
 
 
 class SensorSerializer(serializers.ModelSerializer):
