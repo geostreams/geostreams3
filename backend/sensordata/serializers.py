@@ -1,7 +1,6 @@
 from django.contrib.gis.geos import GEOSGeometry
 from rest_framework import serializers
 import json
-import itertools
 from .models import (
     Category,
     ParameterCategory,
@@ -83,13 +82,12 @@ class SensorSerializer(serializers.ModelSerializer):
 
     def get_parameters(self, obj):
         # Get all the different parameters from all streams associated with this sensor
-        all_parameters = getattr(obj, "all_parameters", None)
-        if all_parameters:
-            # Flatten the nested arrays and remove duplicates using itertools.chain
-            return list(
-                set(itertools.chain.from_iterable(filter(None, all_parameters)))
-            )
-        return []
+        # Using prefetch_related to avoid N+1 queries
+        parameters = []
+        for stream in obj.streams.all():
+            if stream.parameters:
+                parameters.extend(stream.parameters)
+        return list(set(parameters))
 
     def to_internal_value(self, data):
         # Copy data to avoid mutating the input
@@ -191,15 +189,12 @@ class GeoJSONSensorSerializer(serializers.ModelSerializer):
         min_start_time = getattr(obj, "min_start_time", None)
         max_end_time = getattr(obj, "max_end_time", None)
 
-        # Use the annotated parameters from the queryset instead of making separate queries
-        all_parameters = getattr(obj, "all_parameters", None)
-        if all_parameters:
-            # Flatten the nested arrays and remove duplicates using itertools.chain
-            unique_params = list(
-                set(itertools.chain.from_iterable(filter(None, all_parameters)))
-            )
-        else:
-            unique_params = []
+        # Get parameters from streams using prefetch_related to avoid N+1 queries
+        parameters = []
+        for stream in obj.streams.all():
+            if stream.parameters:
+                parameters.extend(stream.parameters)
+        unique_params = list(set(parameters))
 
         return {
             "id": obj.id,

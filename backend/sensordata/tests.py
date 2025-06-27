@@ -564,7 +564,7 @@ class ParameterApiTest(TestCase):
         # Create category
         category_data = {
             "name": "environment",
-            "title": "Environmental Parameters",
+            "description": "Environmental Parameters",
         }
         self.client.post("/data/categories/", data=category_data, format="json")
 
@@ -589,7 +589,9 @@ class ParameterApiTest(TestCase):
         parameter = get_response.json()
         self.assertEqual(parameter["name"], "temperature")
         self.assertEqual(parameter["unit"], "Celsius")
-        # Add additional verification for visualization and category if needed
+        # Verify the parameter now includes categories
+        self.assertIn("categories", parameter)
+        self.assertIsInstance(parameter["categories"], list)
 
     def test_get_all_parameters(self):
         self.test_create_parameter()
@@ -598,7 +600,17 @@ class ParameterApiTest(TestCase):
             response.status_code, 200
         )  # Expecting a successful retrieval status code
         parameters = response.json()
+
+        # Verify the simplified response structure
         self.assertIsInstance(parameters["parameters"], list)
+        self.assertGreater(len(parameters["parameters"]), 0)
+
+        # Verify each parameter has the expected structure with embedded categories
+        first_parameter = parameters["parameters"][0]
+        self.assertIn("id", first_parameter)
+        self.assertIn("name", first_parameter)
+        self.assertIn("categories", first_parameter)
+        self.assertIsInstance(first_parameter["categories"], list)
 
     def test_get_all_parameters_with_filtering(self):
         # Create a parameter to ensure there's at least one in the database
@@ -607,8 +619,23 @@ class ParameterApiTest(TestCase):
         # Test filtering by name
         response = self.client.get("/data/parameters/?name=temperature")
         self.assertEqual(response.status_code, 200)
-        parameter = response.json()["parameters"]
-        self.assertTrue(parameter[0]["name"] == "temperature")  # Ensure filtering works
+        parameters_response = response.json()
+
+        # Verify the simplified response structure
+        self.assertIn("parameters", parameters_response)
+        parameters = parameters_response["parameters"]
+        self.assertIsInstance(parameters, list)
+        self.assertEqual(len(parameters), 1)
+        self.assertEqual(parameters[0]["name"], "temperature")
+
+        # Verify the parameter includes embedded categories
+        self.assertIn("categories", parameters[0])
+        self.assertIsInstance(parameters[0]["categories"], list)
+        if len(parameters[0]["categories"]) > 0:
+            category = parameters[0]["categories"][0]
+            self.assertIn("name", category)
+            self.assertIn("description", category)
+            self.assertEqual(category["name"], "environment")
 
     def test_update_parameter(self):
         # Create a parameter first
@@ -656,6 +683,10 @@ class ParameterApiTest(TestCase):
         parameter = get_response.json()
         self.assertEqual(parameter["title"], "Pressure Level")
         self.assertEqual(parameter["unit"], "Pa")
+
+        # Verify categories are still embedded
+        self.assertIn("categories", parameter)
+        self.assertIsInstance(parameter["categories"], list)
 
     def test_delete_parameter(self):
         # Create a parameter first

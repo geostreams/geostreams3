@@ -7,7 +7,6 @@ from rest_framework.decorators import action
 from django.contrib.gis.geos import Point, Polygon, GEOSGeometry
 from django.contrib.gis.measure import D
 from django.db.models import Min, Max
-from django.contrib.postgres.aggregates import ArrayAgg
 
 
 class SensorsViewSet(AuthEnforcedModelViewSet):
@@ -32,7 +31,6 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
             .annotate(
                 min_start_time=Min("streams__start_time"),
                 max_end_time=Max("streams__end_time"),
-                all_parameters=ArrayAgg("streams__parameters", distinct=True),
             )
         )
         name_filter = self.request.query_params.get("name", None)
