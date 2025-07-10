@@ -83,7 +83,7 @@ class Sensor(models.Model):
     geotype = models.CharField(max_length=50, blank=False, null=True)
     geog = geomodels.GeometryField(dim=3, blank=False, null=False)
     created = models.DateTimeField(blank=True, null=True, default=timezone.now)
-    source = models.CharField(max_length=255, blank=True, null=True)
+    source = models.CharField(max_length=255, blank=True, null=True, db_index=True)
     properties = models.JSONField()
 
     class Meta:

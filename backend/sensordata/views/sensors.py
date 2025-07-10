@@ -6,6 +6,7 @@ from .auth_base import AuthEnforcedModelViewSet
 from rest_framework.decorators import action
 from django.contrib.gis.geos import Point, Polygon, GEOSGeometry
 from django.contrib.gis.measure import D
+from django.db.models import Min, Max
 
 
 class SensorsViewSet(AuthEnforcedModelViewSet):
@@ -24,7 +25,14 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self):
-        queryset = Sensor.objects.all().prefetch_related("streams")
+        queryset = (
+            Sensor.objects.all()
+            .prefetch_related("streams")
+            .annotate(
+                min_start_time=Min("streams__start_time"),
+                max_end_time=Max("streams__end_time"),
+            )
+        )
         name_filter = self.request.query_params.get("name", None)
         source_filter = self.request.query_params.get("source", None)
 

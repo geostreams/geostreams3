@@ -1,5 +1,4 @@
 from django.contrib.gis.geos import GEOSGeometry
-from django.db.models import Min, Max
 from rest_framework import serializers
 import json
 from .models import (
@@ -11,6 +10,7 @@ from .models import (
     Datapoint,
     Visualization,
 )
+from collections import OrderedDict
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -37,16 +37,29 @@ class ParameterCategorySerializer(serializers.ModelSerializer):
 class ParameterSerializer(serializers.ModelSerializer):
     # Showing the name of the visualization instead of the id
     visualization = serializers.CharField(source="visualization.name", read_only=True)
+    # Add categories directly to the parameter
+    categories = serializers.SerializerMethodField()
 
     class Meta:
         model = Parameter
-        fields = "__all__"
+        fields = ["id", "name", "title", "unit", "visualization", "categories"]
+
+    def get_categories(self, obj):
+        # Get the categories for the parameter
+        parameter_categories = getattr(obj, "parametercategory_set", None)
+        if parameter_categories:
+            return [
+                {"name": pc.category.name, "description": pc.category.description}
+                for pc in parameter_categories.all()
+            ]
+        return []
 
 
 class SensorSerializer(serializers.ModelSerializer):
     geometry = serializers.SerializerMethodField()
-    min_start_time = serializers.SerializerMethodField()
-    max_end_time = serializers.SerializerMethodField()
+    # These are now handled by the queryset annotation, no SerializerMethodField needed
+    min_start_time = serializers.DateTimeField(read_only=True)
+    max_end_time = serializers.DateTimeField(read_only=True)
     parameters = serializers.SerializerMethodField()
 
     class Meta:
@@ -68,18 +81,14 @@ class SensorSerializer(serializers.ModelSerializer):
         # Convert the GEOSGeometry object to a GeoJSON dict and stores it in the 'geometry' field
         return json.loads(obj.geog.geojson) if obj.geog else None
 
-    def get_min_start_time(self, obj):
-        # Gets the earliest start_time from all streams associated with this sensor
-        return obj.streams.aggregate(min_start_time=Min("start_time"))["min_start_time"]
-
-    def get_max_end_time(self, obj):
-        # Gets the latest end_time from all streams associated with this sensor
-        return obj.streams.aggregate(max_end_time=Max("end_time"))["max_end_time"]
-
     def get_parameters(self, obj):
-        # Gets all parameters from streams associated with this sensor
-        all_params = obj.streams.values_list("parameters", flat=True).distinct()
-        return list(set(param for params in all_params for param in params))
+        # Get all the different parameters from all streams associated with this sensor
+        # Using prefetch_related to avoid N+1 queries
+        parameters = []
+        for stream in obj.streams.all():
+            if stream.parameters:
+                parameters.extend(stream.parameters)
+        return list(OrderedDict.fromkeys(parameters))
 
     def to_internal_value(self, data):
         # Copy data to avoid mutating the input
@@ -177,17 +186,16 @@ class GeoJSONSensorSerializer(serializers.ModelSerializer):
         return json.loads(obj.geog.geojson) if obj.geog else None
 
     def get_properties(self, obj):
-        # Get aggregated data efficiently
-        min_max_times = obj.streams.aggregate(
-            min_start_time=Min("start_time"),
-            max_end_time=Max("end_time"),
-        )
-        min_start_time = min_max_times["min_start_time"]
-        max_end_time = min_max_times["max_end_time"]
+        # Use the annotated values from the queryset instead of making separate queries
+        min_start_time = getattr(obj, "min_start_time", None)
+        max_end_time = getattr(obj, "max_end_time", None)
 
-        # Get unique parameters from all streams
-        all_params = obj.streams.values_list("parameters", flat=True).distinct()
-        unique_params = list(set(param for params in all_params for param in params))
+        # Get parameters from streams using prefetch_related to avoid N+1 queries
+        parameters = []
+        for stream in obj.streams.all():
+            if stream.parameters:
+                parameters.extend(stream.parameters)
+        unique_params = list(set(parameters))
 
         return {
             "id": obj.id,
