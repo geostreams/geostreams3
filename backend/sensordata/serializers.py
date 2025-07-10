@@ -10,6 +10,7 @@ from .models import (
     Datapoint,
     Visualization,
 )
+from collections import OrderedDict
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -87,7 +88,7 @@ class SensorSerializer(serializers.ModelSerializer):
         for stream in obj.streams.all():
             if stream.parameters:
                 parameters.extend(stream.parameters)
-        return list(set(parameters))
+        return list(OrderedDict.fromkeys(parameters))
 
     def to_internal_value(self, data):
         # Copy data to avoid mutating the input
