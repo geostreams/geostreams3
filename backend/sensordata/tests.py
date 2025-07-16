@@ -180,15 +180,21 @@ class SensorApiTest(TestCase):
 
         response = self.client.get("/data/sensors/?type=geojson")
         self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response.json(), list)
-        # Check the keys of the first item
-        self.assertEqual(
-            list(response.json()[0].keys()), ["type", "geometry", "properties"]
-        )
-        self.assertEqual(response.json()[0]["type"], "Feature")
-        self.assertEqual(response.json()[0]["geometry"]["type"], "Point")
-        self.assertEqual(response.json()[0]["properties"]["name"], "NCSA Sensor 1")
-        self.assertEqual(response.json()[0]["properties"]["source"], "NCSA")
+
+        # Check that response is a proper GeoJSON FeatureCollection
+        geojson_response = response.json()
+        self.assertIsInstance(geojson_response, dict)
+        self.assertEqual(geojson_response["type"], "FeatureCollection")
+        self.assertIn("features", geojson_response)
+        self.assertIsInstance(geojson_response["features"], list)
+
+        # Check the first feature
+        first_feature = geojson_response["features"][0]
+        self.assertEqual(list(first_feature.keys()), ["type", "geometry", "properties"])
+        self.assertEqual(first_feature["type"], "Feature")
+        self.assertEqual(first_feature["geometry"]["type"], "Point")
+        self.assertEqual(first_feature["properties"]["name"], "NCSA Sensor 1")
+        self.assertEqual(first_feature["properties"]["source"], "NCSA")
 
 
 class StreamApiTest(TestCase):
