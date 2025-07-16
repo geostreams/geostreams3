@@ -55,9 +55,13 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
         type_param = request.query_params.get("type", "").lower()
 
         if type_param == "geojson":
-            # Use GeoJSON serializer - returns array of GeoJSON Features
+            # Wrap array of GeoJSON Features in a proper GeoJSON FeatureCollection
             serializer = GeoJSONSensorSerializer(queryset, many=True)
-            return Response(serializer.data)
+            geojson_response = {
+                "type": "FeatureCollection",
+                "features": serializer.data,
+            }
+            return Response(geojson_response)
         else:
             # Return data in default format
             serializer = SensorSerializer(queryset, many=True)
