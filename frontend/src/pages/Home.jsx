@@ -228,50 +228,6 @@ function Home() {
                     ))}
                 </Grid>
             </Box>
-
-            {/* Call to Action Section */}
-            <Box
-                sx={{
-                    textAlign: "center",
-                    py: 6,
-                    px: 4,
-                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
-                    borderRadius: 4,
-                    color: "white",
-                }}
-            >
-                <Typography
-                    variant="h4"
-                    component="h2"
-                    sx={{ mb: 2, fontWeight: 600 }}
-                >
-                    Ready to get started?
-                </Typography>
-                <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
-                    Sign up now to access your API token and start managing your
-                    data
-                </Typography>
-                <Button
-                    variant="contained"
-                    size="large"
-                    startIcon={<LoginIcon />}
-                    onClick={() => auth.signinRedirect()}
-                    sx={{
-                        px: 4,
-                        py: 1.5,
-                        fontSize: "1.1rem",
-                        fontWeight: 600,
-                        bgcolor: "white",
-                        color: "primary.main",
-                        "&:hover": {
-                            bgcolor: alpha("#ffffff", 0.9),
-                            transform: "translateY(-2px)",
-                        },
-                    }}
-                >
-                    Sign In / Sign Up
-                </Button>
-            </Box>
         </PageLayout>
     );
 }
