@@ -81,8 +81,6 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/geostreams/api`)"
-      - "traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes=/geostreams/api"
-      - "traefik.http.routers.backend.middlewares=strip-api-prefix@docker"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
       - "traefik.http.routers.backend.priority=5"
       # Uncomment this for production
