@@ -13,8 +13,6 @@ import {
     Stack,
     Avatar,
     Alert,
-    Tooltip,
-    IconButton,
 } from "@mui/material";
 import {
     Person as PersonIcon,
@@ -30,7 +28,8 @@ import StatusMessage from "../components/ui/StatusMessage";
 
 function UserProfile() {
     const auth = useAuth();
-    const [copySuccess, setCopySuccess] = useState("");
+    const [copyMessage, setCopyMessage] = useState("");
+    const [messageType, setMessageType] = useState("success"); // "success" | "error"
     const [showCopyMessage, setShowCopyMessage] = useState(false);
     const [isGeneratingKey, setIsGeneratingKey] = useState(false);
 
@@ -59,7 +58,8 @@ function UserProfile() {
                 return response.data.key;
             } catch (err) {
                 console.error("API key error:", err);
-                setCopySuccess("Failed to generate API key. Please try again.");
+                setCopyMessage("Failed to generate API key. Please try again.");
+                setMessageType("error");
                 setShowCopyMessage(true);
                 //     Logout if token is invalid
                 if (err.response?.status === 403) {
@@ -78,11 +78,13 @@ function UserProfile() {
             const token = await getAPIKey();
             if (token) {
                 await navigator.clipboard.writeText(token);
-                setCopySuccess("API token copied to clipboard!");
+                setCopyMessage("API token copied to clipboard!");
+                setMessageType("success");
                 setShowCopyMessage(true);
             }
         } catch (err) {
-            setCopySuccess("Failed to copy token. Please try again.");
+            setCopyMessage("Failed to copy token. Please try again.");
+            setMessageType("error");
             setShowCopyMessage(true);
             console.error("Copy error:", err);
         }
@@ -90,7 +92,8 @@ function UserProfile() {
 
     const handleCloseMessage = () => {
         setShowCopyMessage(false);
-        setCopySuccess("");
+        setCopyMessage("");
+        setMessageType("success"); // Reset to default
     };
 
     if (!userProfile || !auth.user) {
@@ -270,12 +273,12 @@ function UserProfile() {
                                     : "Generate & Copy Token"}
                             </Button>
 
-                            {copySuccess && !showCopyMessage && (
+                            {copyMessage && !showCopyMessage && (
                                 <Alert
-                                    severity="success"
+                                    severity={messageType}
                                     sx={{ mt: 2, textAlign: "left" }}
                                 >
-                                    {copySuccess}
+                                    {copyMessage}
                                 </Alert>
                             )}
                         </Box>
@@ -286,8 +289,8 @@ function UserProfile() {
             {/* Status Message Snackbar */}
             <StatusMessage
                 open={showCopyMessage}
-                message={copySuccess}
-                severity={copySuccess.includes("Failed") ? "error" : "success"}
+                message={copyMessage}
+                severity={messageType}
                 onClose={handleCloseMessage}
             />
         </PageLayout>
