@@ -7,18 +7,49 @@ import {
     Box,
     Menu,
     MenuItem,
+    Avatar,
+    IconButton,
+    useScrollTrigger,
+    Slide,
+    alpha,
+    useTheme,
 } from "@mui/material";
+import {
+    Home as HomeIcon,
+    Person as PersonIcon,
+    Logout as LogoutIcon,
+    Login as LoginIcon,
+} from "@mui/icons-material";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 import { useNavigate } from "react-router-dom";
 
+function HideOnScroll({ children }) {
+    const trigger = useScrollTrigger();
+    return (
+        <Slide appear={false} direction="down" in={!trigger}>
+            {children}
+        </Slide>
+    );
+}
+
 function Navbar() {
     const auth = useAuth();
     const navigate = useNavigate();
+    const theme = useTheme();
 
     const isAuthenticated = auth.isAuthenticated;
-
     const [anchorEl, setAnchorEl] = useState(null);
+
+    const getInitials = (name) => {
+        if (!name) return "U";
+        return name
+            .split(" ")
+            .map((word) => word.charAt(0))
+            .join("")
+            .toUpperCase()
+            .slice(0, 2);
+    };
 
     const handleMenuOpen = (event) => {
         setAnchorEl(event.currentTarget);
@@ -42,102 +73,250 @@ function Navbar() {
     };
 
     return (
-        <AppBar position="static" sx={{ boxShadow: "none" }}>
-            <Toolbar sx={{ padding: { xs: 1, sm: 1 } }}>
-                <Typography
-                    variant="h6"
-                    component="div"
+        <HideOnScroll>
+            <AppBar
+                position="sticky"
+                elevation={2}
+                sx={{
+                    background:
+                        "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
+                    backdropFilter: "blur(10px)",
+                    borderBottom: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
+                    borderRadius: 0,
+                }}
+            >
+                <Toolbar
                     sx={{
-                        flexGrow: 1,
-                        fontWeight: "bold",
-                        letterSpacing: 1.2,
-                        fontSize: { xs: "1.2rem", sm: "1.5rem" },
-                        color: "#fff",
+                        px: { xs: 2, sm: 3 },
+                        py: 1,
+                        justifyContent: "space-between",
                     }}
                 >
-                    Geostreams
-                </Typography>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Button
-                        color="inherit"
+                    {/* Logo */}
+                    <Typography
+                        variant="h5"
                         component={RouterLink}
                         to="/"
                         sx={{
-                            color: "#fff",
-                            fontSize: { xs: "0.8rem", sm: "1rem" },
-                            textTransform: "uppercase",
+                            fontWeight: 700,
+                            letterSpacing: 1.5,
+                            color: "white",
+                            textDecoration: "none",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            transition: "all 0.2s ease-in-out",
+                            "&:hover": {
+                                transform: "scale(1.02)",
+                            },
                         }}
                     >
-                        Home
-                    </Button>
-                    {!isAuthenticated ? (
-                        <>
+                        🌊 Geostreams
+                    </Typography>
+
+                    {/* Navigation */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Button
+                            color="inherit"
+                            component={RouterLink}
+                            to="/"
+                            startIcon={<HomeIcon />}
+                            sx={{
+                                color: "white",
+                                fontWeight: 600,
+                                px: 2,
+                                py: 1,
+                                borderRadius: 2,
+                                transition: "all 0.2s ease-in-out",
+                                "&:hover": {
+                                    backgroundColor: alpha(
+                                        theme.palette.common.white,
+                                        0.1,
+                                    ),
+                                    transform: "translateY(-1px)",
+                                },
+                            }}
+                        >
+                            Home
+                        </Button>
+
+                        {!isAuthenticated ? (
                             <Button
                                 color="inherit"
-                                component={RouterLink}
                                 onClick={handleLogin}
+                                startIcon={<LoginIcon />}
+                                variant="outlined"
                                 sx={{
-                                    color: "#fff",
-                                    fontSize: { xs: "0.8rem", sm: "1rem" },
-                                    textTransform: "uppercase",
-                                }}
-                            >
-                                Login/Signup
-                            </Button>
-                        </>
-                    ) : (
-                        <>
-                            <Button
-                                color="inherit"
-                                aria-controls="user-menu"
-                                aria-haspopup="true"
-                                onClick={handleMenuOpen}
-                                sx={{
-                                    color: "#fff",
-                                    fontSize: { xs: "0.8rem", sm: "1rem" },
-                                    textTransform: "none",
-                                    fontWeight: "bold",
-                                }}
-                            >
-                                Hello, {auth.user?.profile.given_name}
-                            </Button>
-                            <Menu
-                                id="user-menu"
-                                anchorEl={anchorEl}
-                                open={Boolean(anchorEl)}
-                                onClose={handleMenuClose}
-                                sx={{
-                                    "& .MuiPaper-root": {
-                                        backgroundColor: "#f5f5f5",
-                                        boxShadow: "0 3px 5px rgba(0,0,0,0.3)",
-                                        minWidth: "150px",
-                                        marginLeft: "1em",
+                                    color: "white",
+                                    borderColor: alpha(
+                                        theme.palette.common.white,
+                                        0.5,
+                                    ),
+                                    fontWeight: 600,
+                                    px: 3,
+                                    py: 1,
+                                    borderRadius: 2,
+                                    transition: "all 0.2s ease-in-out",
+                                    "&:hover": {
+                                        borderColor: "white",
+                                        backgroundColor: alpha(
+                                            theme.palette.common.white,
+                                            0.1,
+                                        ),
+                                        transform: "translateY(-1px)",
                                     },
-                                    "& .MuiMenuItem-root": {
-                                        color: "#333",
-                                        fontSize: "0.9rem",
+                                }}
+                            >
+                                Sign In
+                            </Button>
+                        ) : (
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                }}
+                            >
+                                <IconButton
+                                    onClick={handleMenuOpen}
+                                    sx={{
+                                        p: 0.5,
+                                        transition: "all 0.2s ease-in-out",
                                         "&:hover": {
-                                            backgroundColor: "#ddd",
+                                            transform: "scale(1.05)",
                                         },
-                                    },
-                                }}
-                            >
-                                <MenuItem
-                                    onClick={handleMenuClose}
-                                    component={RouterLink}
-                                    to="/profile"
+                                    }}
                                 >
-                                    Profile
-                                </MenuItem>
-                                <MenuItem onClick={handleLogout}>
-                                    Logout
-                                </MenuItem>
-                            </Menu>
-                        </>
-                    )}
-                </Box>
-            </Toolbar>
-        </AppBar>
+                                    <Avatar
+                                        sx={{
+                                            bgcolor: alpha(
+                                                theme.palette.common.white,
+                                                0.2,
+                                            ),
+                                            color: "white",
+                                            fontWeight: 600,
+                                            fontSize: "0.9rem",
+                                            width: 40,
+                                            height: 40,
+                                            border: `2px solid ${alpha(theme.palette.common.white, 0.3)}`,
+                                        }}
+                                    >
+                                        {getInitials(auth.user?.profile.name)}
+                                    </Avatar>
+                                </IconButton>
+
+                                <Menu
+                                    anchorEl={anchorEl}
+                                    open={Boolean(anchorEl)}
+                                    onClose={handleMenuClose}
+                                    sx={{
+                                        mt: 1,
+                                        "& .MuiPaper-root": {
+                                            borderRadius: 2,
+                                            minWidth: 200,
+                                            boxShadow: theme.shadows[4],
+                                            border: `1px solid ${theme.palette.divider}`,
+                                        },
+                                    }}
+                                    transformOrigin={{
+                                        horizontal: "right",
+                                        vertical: "top",
+                                    }}
+                                    anchorOrigin={{
+                                        horizontal: "right",
+                                        vertical: "bottom",
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            px: 2,
+                                            py: 1.5,
+                                            borderBottom: `1px solid ${theme.palette.divider}`,
+                                        }}
+                                    >
+                                        <Typography
+                                            variant="subtitle2"
+                                            color="text.secondary"
+                                            sx={{ fontSize: "0.75rem" }}
+                                        >
+                                            Signed in as
+                                        </Typography>
+                                        <Typography
+                                            variant="body2"
+                                            sx={{ fontWeight: 600 }}
+                                        >
+                                            {auth.user?.profile.name ||
+                                                auth.user?.profile
+                                                    .preferred_username}
+                                        </Typography>
+                                    </Box>
+
+                                    <MenuItem
+                                        onClick={() => {
+                                            handleMenuClose();
+                                            navigate("/profile");
+                                        }}
+                                        sx={{
+                                            py: 1.5,
+                                            gap: 1.5,
+                                            "&:hover": {
+                                                backgroundColor: alpha(
+                                                    theme.palette.primary.main,
+                                                    0.1,
+                                                ),
+                                            },
+                                        }}
+                                    >
+                                        <PersonIcon
+                                            fontSize="small"
+                                            color="primary"
+                                        />
+                                        <Typography
+                                            variant="body2"
+                                            sx={{ fontWeight: 500 }}
+                                        >
+                                            Profile
+                                        </Typography>
+                                    </MenuItem>
+
+                                    <MenuItem
+                                        onClick={() => {
+                                            handleMenuClose();
+                                            handleLogout();
+                                        }}
+                                        sx={{
+                                            py: 1.5,
+                                            gap: 1.5,
+                                            borderTop: `1px solid ${theme.palette.divider}`,
+                                            "&:hover": {
+                                                backgroundColor: alpha(
+                                                    theme.palette.error.main,
+                                                    0.1,
+                                                ),
+                                            },
+                                        }}
+                                    >
+                                        <LogoutIcon
+                                            fontSize="small"
+                                            color="error"
+                                        />
+                                        <Typography
+                                            variant="body2"
+                                            sx={{
+                                                fontWeight: 500,
+                                                color: "error.main",
+                                            }}
+                                        >
+                                            Sign Out
+                                        </Typography>
+                                    </MenuItem>
+                                </Menu>
+                            </Box>
+                        )}
+                    </Box>
+                </Toolbar>
+            </AppBar>
+        </HideOnScroll>
     );
 }
 

@@ -4,22 +4,28 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { AuthProvider } from "react-oidc-context";
+import { ThemeProvider } from "@mui/material/styles";
+import { CssBaseline } from "@mui/material";
+import theme from "./theme/theme";
 
 const oidcConfig = {
     authority: process.env.REACT_APP_KEYCLOAK_AUTH_URL,
     client_id: process.env.REACT_APP_KEYCLOAK_CLIENT_ID,
-    redirect_uri: process.env.REACT_APP_URL,
+    redirect_uri: window.location.origin,
     client_secret: process.env.REACT_APP_KEYCLOAK_CLIENT_SECRET,
-    post_logout_redirect_uri: process.env.REACT_APP_URL,
+    post_logout_redirect_uri: window.location.origin,
 };
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
     // Removed React.StrictMode cos it breaks the react-oidc-context auth flow on a refresh
     // <React.StrictMode>
-    <AuthProvider {...oidcConfig}>
-        <App />
-    </AuthProvider>,
+    <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <AuthProvider {...oidcConfig}>
+            <App />
+        </AuthProvider>
+    </ThemeProvider>,
     // </React.StrictMode>,
 );
 

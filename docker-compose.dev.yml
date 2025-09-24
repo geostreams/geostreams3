@@ -23,6 +23,7 @@ services:
     command:
       - start-dev
       - --import-realm
+      - --http-relative-path=/keycloak
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
@@ -33,10 +34,14 @@ services:
       - KC_DB_PASSWORD=password
     volumes:
       - ./keycloak/geostreams-realm.json:/opt/keycloak/data/import/realm.json:ro
-    ports:
-      - 8080:8080
     depends_on:
         - kc_postgres
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=PathPrefix(`/keycloak`)"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+      - "traefik.http.routers.keycloak.priority=10"
+      - "traefik.http.routers.keycloak.entrypoints=web"
 
   kc_postgres:
     image: postgres
@@ -49,6 +54,23 @@ services:
       - POSTGRES_PASSWORD=password
     volumes:
     - keycloak_postgres:/var/lib/postgresql/data
+
+  traefik:
+    image: traefik:v2.5
+    restart: unless-stopped
+    command:
+      - --api.insecure=true
+      - --providers.docker
+      - --entryPoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8081:8080"
+    networks:
+      - geostreams
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+
 
 networks:
   geostreams:
