@@ -22,7 +22,7 @@ def get_authenticated_client(user=None):
     client.force_authenticate(user=user)
 
     # Request the API key using the authenticated user
-    response = client.post("/auth/generate-api-key/")
+    response = client.post("/geostreams/api/auth/generate-api-key/")
     api_key = response.json().get("key")
 
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {api_key}")
@@ -42,12 +42,14 @@ class SensorApiTest(TestCase):
             "properties": {},
         }
 
-        response = self.client.post("/data/sensors/", data=data, format="json")
+        response = self.client.post(
+            "/geostreams/api/data/sensors/", data=data, format="json"
+        )
         self.assertEqual(response.status_code, 201)
         sensor_id = response.json().get("id")
 
         # Verify the created sensor by fetching its details
-        get_response = self.client.get(f"/data/sensors/{sensor_id}/")
+        get_response = self.client.get(f"/geostreams/api/data/sensors/{sensor_id}/")
         self.assertEqual(get_response.status_code, 200)
         sensor = get_response.json()
         self.assertEqual(sensor["name"], "NCSA Sensor 1")
@@ -59,7 +61,7 @@ class SensorApiTest(TestCase):
 
     def test_get_all_sensors(self):
         # No sensors check
-        response = self.client.get("/data/sensors/")
+        response = self.client.get("/geostreams/api/data/sensors/")
         self.assertEqual(response.status_code, 404)
         sensors = response.json()
 
@@ -71,9 +73,9 @@ class SensorApiTest(TestCase):
             "properties": {},
         }
 
-        self.client.post("/data/sensors/", data=data, format="json")
+        self.client.post("/geostreams/api/data/sensors/", data=data, format="json")
 
-        response = self.client.get("/data/sensors/")
+        response = self.client.get("/geostreams/api/data/sensors/")
         self.assertEqual(response.status_code, 200)
         sensors = response.json()
         self.assertIsInstance(sensors["sensors"], list)
@@ -86,7 +88,9 @@ class SensorApiTest(TestCase):
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
-        response = self.client.post("/data/sensors/", data=data, format="json")
+        response = self.client.post(
+            "/geostreams/api/data/sensors/", data=data, format="json"
+        )
         self.assertEqual(response.status_code, 201)
 
         sensor_id = response.json().get("id")
@@ -100,12 +104,14 @@ class SensorApiTest(TestCase):
         }
 
         update_response = self.client.put(
-            f"/data/sensors/{sensor_id}/", data=updated_data, format="json"
+            f"/geostreams/api/data/sensors/{sensor_id}/",
+            data=updated_data,
+            format="json",
         )
         self.assertEqual(update_response.status_code, status.HTTP_200_OK)
 
         # Verify the updated sensor
-        get_response = self.client.get(f"/data/sensors/{sensor_id}/")
+        get_response = self.client.get(f"/geostreams/api/data/sensors/{sensor_id}/")
         self.assertEqual(get_response.status_code, 200)
         sensor = get_response.json()
         self.assertEqual(sensor["name"], "NCSA Sensor 3")
@@ -123,7 +129,9 @@ class SensorApiTest(TestCase):
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
-        response = self.client.post("/data/sensors/", data=data, format="json")
+        response = self.client.post(
+            "/geostreams/api/data/sensors/", data=data, format="json"
+        )
         self.assertEqual(response.status_code, 201)
 
         sensor_id = response.json().get("id")
@@ -135,12 +143,14 @@ class SensorApiTest(TestCase):
         }
 
         update_response = self.client.patch(
-            f"/data/sensors/{sensor_id}/", data=updated_data, format="json"
+            f"/geostreams/api/data/sensors/{sensor_id}/",
+            data=updated_data,
+            format="json",
         )
         self.assertEqual(update_response.status_code, status.HTTP_200_OK)
 
         # Verify the updated sensor
-        get_response = self.client.get(f"/data/sensors/{sensor_id}/")
+        get_response = self.client.get(f"/geostreams/api/data/sensors/{sensor_id}/")
         self.assertEqual(get_response.status_code, 200)
         sensor = get_response.json()
         self.assertEqual(
@@ -156,13 +166,17 @@ class SensorApiTest(TestCase):
             "properties": {},
         }
 
-        create_response = self.client.post("/data/sensors/", data=data, format="json")
+        create_response = self.client.post(
+            "/geostreams/api/data/sensors/", data=data, format="json"
+        )
         self.assertEqual(create_response.status_code, 201)
 
         sensor_id = create_response.json().get("id")
 
         # Delete the sensor
-        delete_response = self.client.delete(f"/data/sensors/{sensor_id}/")
+        delete_response = self.client.delete(
+            f"/geostreams/api/data/sensors/{sensor_id}/"
+        )
         self.assertEqual(delete_response.status_code, 204)
 
     def test_get_sensor_geojson(self):
@@ -175,10 +189,12 @@ class SensorApiTest(TestCase):
             "properties": {},
         }
 
-        create_response = self.client.post("/data/sensors/", data=data, format="json")
+        create_response = self.client.post(
+            "/geostreams/api/data/sensors/", data=data, format="json"
+        )
         self.assertEqual(create_response.status_code, 201)
 
-        response = self.client.get("/data/sensors/?type=geojson")
+        response = self.client.get("/geostreams/api/data/sensors/?type=geojson")
         self.assertEqual(response.status_code, 200)
 
         # Check that response is a proper GeoJSON FeatureCollection
@@ -213,7 +229,9 @@ class StreamApiTest(TestCase):
             },
         }
 
-        response = self.client.post("/data/sensors/", data=data, format="json")
+        response = self.client.post(
+            "/geostreams/api/data/sensors/", data=data, format="json"
+        )
         self.sensor_id = response.json().get("id")
 
     def test_create_stream(self):
@@ -225,18 +243,20 @@ class StreamApiTest(TestCase):
             "properties": {},
         }
 
-        response = self.client.post("/data/streams/", data=data, format="json")
+        response = self.client.post(
+            "/geostreams/api/data/streams/", data=data, format="json"
+        )
         self.assertEqual(response.status_code, 201)
         stream_id = response.json().get("id")
 
         # Verify the created stream by fetching its details
-        get_response = self.client.get(f"/data/streams/{stream_id}/")
+        get_response = self.client.get(f"/geostreams/api/data/streams/{stream_id}/")
         self.assertEqual(get_response.status_code, 200)
         stream = get_response.json()
         self.assertEqual(stream["name"], "NCSA Stream 1")
 
     def test_get_all_streams(self):
-        response = self.client.get("/data/streams/")
+        response = self.client.get("/geostreams/api/data/streams/")
         self.assertEqual(response.status_code, 404)
 
         # Create a stream first
@@ -248,9 +268,9 @@ class StreamApiTest(TestCase):
             "properties": {},
         }
 
-        self.client.post("/data/streams/", data=data, format="json")
+        self.client.post("/geostreams/api/data/streams/", data=data, format="json")
 
-        response = self.client.get("/data/streams/")
+        response = self.client.get("/geostreams/api/data/streams/")
         self.assertEqual(response.status_code, 200)
         streams = response.json()
         self.assertIsInstance(streams["streams"], list)
@@ -264,7 +284,9 @@ class StreamApiTest(TestCase):
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
-        response = self.client.post("/data/streams/", data=data, format="json")
+        response = self.client.post(
+            "/geostreams/api/data/streams/", data=data, format="json"
+        )
         self.assertEqual(response.status_code, 201)
 
         stream_id = response.json().get("id")
@@ -278,12 +300,14 @@ class StreamApiTest(TestCase):
         }
 
         update_response = self.client.put(
-            f"/data/streams/{stream_id}/", data=updated_data, format="json"
+            f"/geostreams/api/data/streams/{stream_id}/",
+            data=updated_data,
+            format="json",
         )
         self.assertEqual(update_response.status_code, status.HTTP_200_OK)
 
         # Verify the updated stream
-        get_response = self.client.get(f"/data/streams/{stream_id}/")
+        get_response = self.client.get(f"/geostreams/api/data/streams/{stream_id}/")
         self.assertEqual(get_response.status_code, 200)
         stream = get_response.json()
         self.assertEqual(stream["name"], "NCSA Stream 2")
@@ -301,13 +325,17 @@ class StreamApiTest(TestCase):
             "properties": {},
         }
 
-        create_response = self.client.post("/data/streams/", data=data, format="json")
+        create_response = self.client.post(
+            "/geostreams/api/data/streams/", data=data, format="json"
+        )
         self.assertEqual(create_response.status_code, 201)
 
         stream_id = create_response.json().get("id")
 
         # Delete the stream
-        delete_response = self.client.delete(f"/data/streams/{stream_id}/")
+        delete_response = self.client.delete(
+            f"/geostreams/api/data/streams/{stream_id}/"
+        )
         self.assertEqual(delete_response.status_code, 204)
 
     def test_patch_stream(self):
@@ -319,7 +347,9 @@ class StreamApiTest(TestCase):
             "properties": {},
         }
 
-        response = self.client.post("/data/sensors/", data=data, format="json")
+        response = self.client.post(
+            "/geostreams/api/data/sensors/", data=data, format="json"
+        )
         second_sensor = response.json().get("id")
 
         # Create a stream first
@@ -330,7 +360,9 @@ class StreamApiTest(TestCase):
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
-        response = self.client.post("/data/streams/", data=data, format="json")
+        response = self.client.post(
+            "/geostreams/api/data/streams/", data=data, format="json"
+        )
         self.assertEqual(response.status_code, 201)
 
         stream_id = response.json().get("id")
@@ -343,12 +375,14 @@ class StreamApiTest(TestCase):
         }
 
         update_response = self.client.patch(
-            f"/data/streams/{stream_id}/", data=updated_data, format="json"
+            f"/geostreams/api/data/streams/{stream_id}/",
+            data=updated_data,
+            format="json",
         )
         self.assertEqual(update_response.status_code, status.HTTP_200_OK)
 
         # Verify the updated stream
-        get_response = self.client.get(f"/data/streams/{stream_id}/")
+        get_response = self.client.get(f"/geostreams/api/data/streams/{stream_id}/")
         self.assertEqual(get_response.status_code, 200)
         stream = get_response.json()
         self.assertEqual(
@@ -367,14 +401,18 @@ class VisualizationApiTest(TestCase):
             "title": "A line chart visualization",
         }
 
-        response = self.client.post("/data/visualizations/", data=data, format="json")
+        response = self.client.post(
+            "/geostreams/api/data/visualizations/", data=data, format="json"
+        )
         self.assertEqual(
             response.status_code, 201
         )  # Expecting a successful creation status code
         visualization_id = response.json().get("id")
 
         # Verify the created visualization by fetching its details
-        get_response = self.client.get(f"/data/visualizations/{visualization_id}/")
+        get_response = self.client.get(
+            f"/geostreams/api/data/visualizations/{visualization_id}/"
+        )
         self.assertEqual(
             get_response.status_code, 200
         )  # Expecting a successful retrieval status code
@@ -383,7 +421,7 @@ class VisualizationApiTest(TestCase):
         self.assertEqual(visualization["title"], "A line chart visualization")
 
     def test_get_all_visualizations(self):
-        response = self.client.get("/data/visualizations/")
+        response = self.client.get("/geostreams/api/data/visualizations/")
         self.assertEqual(
             response.status_code, 200
         )  # Expecting a successful retrieval status code
@@ -398,7 +436,7 @@ class VisualizationApiTest(TestCase):
         }
 
         create_response = self.client.post(
-            "/data/visualizations/", data=data, format="json"
+            "/geostreams/api/data/visualizations/", data=data, format="json"
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
 
@@ -411,7 +449,7 @@ class VisualizationApiTest(TestCase):
         }
 
         update_response = self.client.put(
-            f"/data/visualizations/{visualization_id}/",
+            f"/geostreams/api/data/visualizations/{visualization_id}/",
             data=updated_data,
             format="json",
         )
@@ -420,7 +458,9 @@ class VisualizationApiTest(TestCase):
         )  # Expecting a successful update status code
 
         # Verify the updated visualization
-        get_response = self.client.get(f"/data/visualizations/{visualization_id}/")
+        get_response = self.client.get(
+            f"/geostreams/api/data/visualizations/{visualization_id}/"
+        )
         self.assertEqual(get_response.status_code, 200)
         visualization = get_response.json()
         self.assertEqual(visualization["name"], "Bar Chart Updated")
@@ -434,7 +474,7 @@ class VisualizationApiTest(TestCase):
         }
 
         create_response = self.client.post(
-            "/data/visualizations/", data=data, format="json"
+            "/geostreams/api/data/visualizations/", data=data, format="json"
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
 
@@ -442,14 +482,16 @@ class VisualizationApiTest(TestCase):
 
         # Delete the visualization
         delete_response = self.client.delete(
-            f"/data/visualizations/{visualization_id}/"
+            f"/geostreams/api/data/visualizations/{visualization_id}/"
         )
         self.assertEqual(
             delete_response.status_code, 204
         )  # Expecting a successful delete status code
 
         # Verify the visualization is deleted
-        get_response = self.client.get(f"/data/visualizations/{visualization_id}/")
+        get_response = self.client.get(
+            f"/geostreams/api/data/visualizations/{visualization_id}/"
+        )
         self.assertEqual(
             get_response.status_code, 404
         )  # Expecting a not found status code
@@ -465,14 +507,18 @@ class CategoryApiTest(TestCase):
             "description": "Temperature data",
         }
 
-        response = self.client.post("/data/categories/", data=data, format="json")
+        response = self.client.post(
+            "/geostreams/api/data/categories/", data=data, format="json"
+        )
         self.assertEqual(
             response.status_code, 201
         )  # Expecting a successful creation status code
         category_id = response.json().get("id")
 
         # Verify the created category by fetching its details
-        get_response = self.client.get(f"/data/categories/{category_id}/")
+        get_response = self.client.get(
+            f"/geostreams/api/data/categories/{category_id}/"
+        )
         self.assertEqual(
             get_response.status_code, 200
         )  # Expecting a successful retrieval status code
@@ -481,7 +527,7 @@ class CategoryApiTest(TestCase):
         self.assertEqual(category["description"], "Temperature data")
 
     def test_get_all_categories(self):
-        response = self.client.get("/data/categories/")
+        response = self.client.get("/geostreams/api/data/categories/")
         self.assertEqual(
             response.status_code, 200
         )  # Expecting a successful retrieval status code
@@ -496,7 +542,7 @@ class CategoryApiTest(TestCase):
         }
 
         create_response = self.client.post(
-            "/data/categories/", data=data, format="json"
+            "/geostreams/api/data/categories/", data=data, format="json"
         )
         self.assertEqual(create_response.status_code, 201)
 
@@ -509,14 +555,18 @@ class CategoryApiTest(TestCase):
         }
 
         update_response = self.client.put(
-            f"/data/categories/{category_id}/", data=updated_data, format="json"
+            f"/geostreams/api/data/categories/{category_id}/",
+            data=updated_data,
+            format="json",
         )
         self.assertEqual(
             update_response.status_code, 200
         )  # Expecting a successful update status code
 
         # Verify the updated category
-        get_response = self.client.get(f"/data/categories/{category_id}/")
+        get_response = self.client.get(
+            f"/geostreams/api/data/categories/{category_id}/"
+        )
         self.assertEqual(get_response.status_code, 200)
         category = get_response.json()
         self.assertEqual(category["name"], "Pressure Level")
@@ -527,20 +577,24 @@ class CategoryApiTest(TestCase):
         data = {"name": "Weight", "description": "Weight of different elements"}
 
         create_response = self.client.post(
-            "/data/categories/", data=data, format="json"
+            "/geostreams/api/data/categories/", data=data, format="json"
         )
         self.assertEqual(create_response.status_code, 201)
 
         category_id = create_response.json().get("id")
 
         # Delete the category
-        delete_response = self.client.delete(f"/data/categories/{category_id}/")
+        delete_response = self.client.delete(
+            f"/geostreams/api/data/categories/{category_id}/"
+        )
         self.assertEqual(
             delete_response.status_code, 204
         )  # Expecting a successful delete status code
 
         # Verify the category is deleted
-        get_response = self.client.get(f"/data/categories/{category_id}/")
+        get_response = self.client.get(
+            f"/geostreams/api/data/categories/{category_id}/"
+        )
         self.assertEqual(
             get_response.status_code, 404
         )  # Expecting a not found status code
@@ -556,7 +610,9 @@ class ParameterApiTest(TestCase):
             "title": "A line chart visualization",
         }
         self.client.post(
-            "/data/visualizations/", data=visualization_data, format="json"
+            "/geostreams/api/data/visualizations/",
+            data=visualization_data,
+            format="json",
         )
         # Create another visualization
         visualization_data = {
@@ -564,7 +620,9 @@ class ParameterApiTest(TestCase):
             "title": "A bar chart visualization",
         }
         self.client.post(
-            "/data/visualizations/", data=visualization_data, format="json"
+            "/geostreams/api/data/visualizations/",
+            data=visualization_data,
+            format="json",
         )
 
         # Create category
@@ -572,7 +630,9 @@ class ParameterApiTest(TestCase):
             "name": "environment",
             "description": "Environmental Parameters",
         }
-        self.client.post("/data/categories/", data=category_data, format="json")
+        self.client.post(
+            "/geostreams/api/data/categories/", data=category_data, format="json"
+        )
 
     def test_create_parameter(self):
         data = {
@@ -585,12 +645,16 @@ class ParameterApiTest(TestCase):
             "category": "environment",
         }
 
-        response = self.client.post("/data/parameters/", data=data, format="json")
+        response = self.client.post(
+            "/geostreams/api/data/parameters/", data=data, format="json"
+        )
         self.assertEqual(response.status_code, 201)
         parameter_id = response.json().get("id")
 
         # Verify the created parameter by fetching its details
-        get_response = self.client.get(f"/data/parameters/{parameter_id}/")
+        get_response = self.client.get(
+            f"/geostreams/api/data/parameters/{parameter_id}/"
+        )
         self.assertEqual(get_response.status_code, 200)
         parameter = get_response.json()
         self.assertEqual(parameter["name"], "temperature")
@@ -601,7 +665,7 @@ class ParameterApiTest(TestCase):
 
     def test_get_all_parameters(self):
         self.test_create_parameter()
-        response = self.client.get("/data/parameters/")
+        response = self.client.get("/geostreams/api/data/parameters/")
         self.assertEqual(
             response.status_code, 200
         )  # Expecting a successful retrieval status code
@@ -623,7 +687,7 @@ class ParameterApiTest(TestCase):
         self.test_create_parameter()
 
         # Test filtering by name
-        response = self.client.get("/data/parameters/?name=temperature")
+        response = self.client.get("/geostreams/api/data/parameters/?name=temperature")
         self.assertEqual(response.status_code, 200)
         parameters_response = response.json()
 
@@ -658,7 +722,7 @@ class ParameterApiTest(TestCase):
         }
 
         create_response = self.client.post(
-            "/data/parameters/", data=data, format="json"
+            "/geostreams/api/data/parameters/", data=data, format="json"
         )
         self.assertEqual(create_response.status_code, 201)
 
@@ -677,14 +741,18 @@ class ParameterApiTest(TestCase):
         }
 
         update_response = self.client.put(
-            f"/data/parameters/{parameter_id}/", data=updated_data, format="json"
+            f"/geostreams/api/data/parameters/{parameter_id}/",
+            data=updated_data,
+            format="json",
         )
         self.assertEqual(
             update_response.status_code, 200
         )  # Expecting a successful update status code
 
         # Verify the updated parameter
-        get_response = self.client.get(f"/data/parameters/{parameter_id}/")
+        get_response = self.client.get(
+            f"/geostreams/api/data/parameters/{parameter_id}/"
+        )
         self.assertEqual(get_response.status_code, 200)
         parameter = get_response.json()
         self.assertEqual(parameter["title"], "Pressure Level")
@@ -707,20 +775,24 @@ class ParameterApiTest(TestCase):
         }
 
         create_response = self.client.post(
-            "/data/parameters/", data=data, format="json"
+            "/geostreams/api/data/parameters/", data=data, format="json"
         )
         self.assertEqual(create_response.status_code, 201)
 
         parameter_id = create_response.json().get("id")
 
         # Delete the parameter
-        delete_response = self.client.delete(f"/data/parameters/{parameter_id}/")
+        delete_response = self.client.delete(
+            f"/geostreams/api/data/parameters/{parameter_id}/"
+        )
         self.assertEqual(
             delete_response.status_code, 204
         )  # Expecting a successful delete status code
 
         # Verify the parameter is deleted
-        get_response = self.client.get(f"/data/parameters/{parameter_id}/")
+        get_response = self.client.get(
+            f"/geostreams/api/data/parameters/{parameter_id}/"
+        )
         self.assertEqual(
             get_response.status_code, 404
         )  # Expecting a not found status code
@@ -737,14 +809,18 @@ class DatapointsViewSetTestCase(TransactionTestCase):
             "title": "A line chart visualization",
         }
         self.client.post(
-            "/data/visualizations/", data=visualization_data, format="json"
+            "/geostreams/api/data/visualizations/",
+            data=visualization_data,
+            format="json",
         )
         # Create category
         category_data = {
             "name": "air_quality",
             "title": "Air Quality",
         }
-        self.client.post("/data/categories/", data=category_data, format="json")
+        self.client.post(
+            "/geostreams/api/data/categories/", data=category_data, format="json"
+        )
         # Create parameters
         parameter_data = [
             {
@@ -763,7 +839,9 @@ class DatapointsViewSetTestCase(TransactionTestCase):
             },
         ]
         for parameter in parameter_data:
-            self.client.post("/data/parameters/", data=parameter, format="json")
+            self.client.post(
+                "/geostreams/api/data/parameters/", data=parameter, format="json"
+            )
 
         # Create a sensor
         sensor_data = {
@@ -773,7 +851,7 @@ class DatapointsViewSetTestCase(TransactionTestCase):
             "properties": {},
         }
         sensor_data = self.client.post(
-            "/data/sensors/", data=sensor_data, format="json"
+            "/geostreams/api/data/sensors/", data=sensor_data, format="json"
         )
         # Create a stream
         stream_data = [
@@ -800,7 +878,9 @@ class DatapointsViewSetTestCase(TransactionTestCase):
         ]
         stream_ids = []
         for stream in stream_data:
-            stream = self.client.post("/data/streams/", data=stream, format="json")
+            stream = self.client.post(
+                "/geostreams/api/data/streams/", data=stream, format="json"
+            )
             stream_ids.append(stream.data["id"])
         # Create datapoints
         datapoint_data = [
@@ -849,22 +929,31 @@ class DatapointsViewSetTestCase(TransactionTestCase):
         for datapoint in datapoint_data:
             datapoint["stream"] = random.choice(stream_ids)
         # Create a datapoint
-        self.client.post("/data/datapoints/", data=datapoint_data[0], format="json")
+        self.client.post(
+            "/geostreams/api/data/datapoints/", data=datapoint_data[0], format="json"
+        )
         # Bulk create datapoints
-        self.client.post("/data/datapoints/", data=datapoint_data[1:], format="json")
+        self.client.post(
+            "/geostreams/api/data/datapoints/", data=datapoint_data[1:], format="json"
+        )
 
         # Refresh cache
         self.client.post(
-            "/data/cache/refresh/", data={"time_period": "all"}, format="json"
+            "/geostreams/api/data/cache/refresh/",
+            data={"time_period": "all"},
+            format="json",
         )
 
     def test_get_hourly_average_datapoints_by_parameter(self):
-        sensor = self.client.get("/data/sensors/").data["sensors"][0]
+        sensor = self.client.get("/geostreams/api/data/sensors/").data["sensors"][0]
         sensor_id = sensor["id"]
         sensor_name = sensor["name"]
-        parameter = self.client.get("/data/parameters/").data["parameters"][0]["name"]
+        parameter = self.client.get("/geostreams/api/data/parameters/").data[
+            "parameters"
+        ][0]["name"]
         response = self.client.get(
-            "/data/cache/hour/", data={"sensor_id": sensor_id, "parameter": parameter}
+            "/geostreams/api/data/cache/hour/",
+            data={"sensor_id": sensor_id, "parameter": parameter},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -877,13 +966,16 @@ class DatapointsViewSetTestCase(TransactionTestCase):
         self.assertEqual(len(data["streams"]) == 2, True)
 
     def test_get_daily_average_datapoints_by_parameter(self):
-        sensor = self.client.get("/data/sensors/").data["sensors"][0]
+        sensor = self.client.get("/geostreams/api/data/sensors/").data["sensors"][0]
         sensor_id = sensor["id"]
         sensor_name = sensor["name"]
-        parameter = self.client.get("/data/parameters/").data["parameters"][0]["name"]
+        parameter = self.client.get("/geostreams/api/data/parameters/").data[
+            "parameters"
+        ][0]["name"]
 
         response = self.client.get(
-            "/data/cache/day/", data={"sensor_id": sensor_id, "parameter": parameter}
+            "/geostreams/api/data/cache/day/",
+            data={"sensor_id": sensor_id, "parameter": parameter},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -897,12 +989,15 @@ class DatapointsViewSetTestCase(TransactionTestCase):
         self.assertIsInstance(data["properties"], dict)
 
     def test_get_monthly_average_datapoints_by_parameter(self):
-        sensor = self.client.get("/data/sensors/").data["sensors"][0]
+        sensor = self.client.get("/geostreams/api/data/sensors/").data["sensors"][0]
         sensor_id = sensor["id"]
         sensor_name = sensor["name"]
-        parameter = self.client.get("/data/parameters/").data["parameters"][0]["name"]
+        parameter = self.client.get("/geostreams/api/data/parameters/").data[
+            "parameters"
+        ][0]["name"]
         response = self.client.get(
-            "/data/cache/month/", data={"sensor_id": sensor_id, "parameter": parameter}
+            "/geostreams/api/data/cache/month/",
+            data={"sensor_id": sensor_id, "parameter": parameter},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -916,12 +1011,15 @@ class DatapointsViewSetTestCase(TransactionTestCase):
         self.assertIsInstance(data["properties"], dict)
 
     def test_get_yearly_average_datapoints_by_parameter(self):
-        sensor = self.client.get("/data/sensors/").data["sensors"][0]
+        sensor = self.client.get("/geostreams/api/data/sensors/").data["sensors"][0]
         sensor_id = sensor["id"]
         sensor_name = sensor["name"]
-        parameter = self.client.get("/data/parameters/").data["parameters"][0]["name"]
+        parameter = self.client.get("/geostreams/api/data/parameters/").data[
+            "parameters"
+        ][0]["name"]
         response = self.client.get(
-            "/data/cache/year/", data={"sensor_id": sensor_id, "parameter": parameter}
+            "/geostreams/api/data/cache/year/",
+            data={"sensor_id": sensor_id, "parameter": parameter},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -945,7 +1043,9 @@ class SensorInShapeTestCase(TestCase):
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
-        self.client.post("/data/sensors/", data=sensor_data, format="json")
+        self.client.post(
+            "/geostreams/api/data/sensors/", data=sensor_data, format="json"
+        )
 
         # Create second sensor
         sensor_data = {
@@ -955,7 +1055,9 @@ class SensorInShapeTestCase(TestCase):
             "properties": {},
         }
 
-        self.client.post("/data/sensors/", data=sensor_data, format="json")
+        self.client.post(
+            "/geostreams/api/data/sensors/", data=sensor_data, format="json"
+        )
 
         # Create third sensor
         sensor_data = {
@@ -965,7 +1067,9 @@ class SensorInShapeTestCase(TestCase):
             "properties": {},
         }
 
-        self.client.post("/data/sensors/", data=sensor_data, format="json")
+        self.client.post(
+            "/geostreams/api/data/sensors/", data=sensor_data, format="json"
+        )
 
     def test_get_sensors_in_polygon(self):
         shape = "polygon"
@@ -976,7 +1080,7 @@ class SensorInShapeTestCase(TestCase):
         buffer = 1
 
         response = self.client.get(
-            "/data/sensors/sensors_in_shape/",
+            "/geostreams/api/data/sensors/sensors_in_shape/",
             {"shape": shape, "wkt": wkt, "buffer": buffer},
         )
 
@@ -991,7 +1095,7 @@ class SensorInShapeTestCase(TestCase):
         buffer = 16  # 16 km radius
 
         response = self.client.get(
-            "/data/sensors/sensors_in_shape/",
+            "/geostreams/api/data/sensors/sensors_in_shape/",
             {"shape": shape, "wkt": wkt, "buffer": buffer},
         )
 
@@ -1012,14 +1116,18 @@ class EdgeCaseDatapointTestCase(TransactionTestCase):
             "title": "A line chart visualization",
         }
         self.client.post(
-            "/data/visualizations/", data=visualization_data, format="json"
+            "/geostreams/api/data/visualizations/",
+            data=visualization_data,
+            format="json",
         )
         # Create category
         category_data = {
             "name": "environment",
             "title": "Environment",
         }
-        self.client.post("/data/categories/", data=category_data, format="json")
+        self.client.post(
+            "/geostreams/api/data/categories/", data=category_data, format="json"
+        )
         # Create a parameter
         parameter_data = {
             "name": "Temperature",
@@ -1027,7 +1135,9 @@ class EdgeCaseDatapointTestCase(TransactionTestCase):
             "visualization": "line_chart",
             "category": "environment",
         }
-        self.client.post("/data/parameters/", data=parameter_data, format="json")
+        self.client.post(
+            "/geostreams/api/data/parameters/", data=parameter_data, format="json"
+        )
 
         # Create a sensor
         sensor_data = {
@@ -1037,7 +1147,7 @@ class EdgeCaseDatapointTestCase(TransactionTestCase):
             "properties": {},
         }
         sensor_data = self.client.post(
-            "/data/sensors/", data=sensor_data, format="json"
+            "/geostreams/api/data/sensors/", data=sensor_data, format="json"
         )
         self.sensor_id = sensor_data.data["id"]
         # Create a stream
@@ -1051,7 +1161,9 @@ class EdgeCaseDatapointTestCase(TransactionTestCase):
             },
             "properties": {},
         }
-        stream = self.client.post("/data/streams/", data=stream_data, format="json")
+        stream = self.client.post(
+            "/geostreams/api/data/streams/", data=stream_data, format="json"
+        )
         stream_id = stream.data["id"]
 
         # Create multiple datapoints in the same hour
@@ -1075,17 +1187,21 @@ class EdgeCaseDatapointTestCase(TransactionTestCase):
             },
         ]
 
-        self.client.post("/data/datapoints/", data=datapoints, format="json")
+        self.client.post(
+            "/geostreams/api/data/datapoints/", data=datapoints, format="json"
+        )
 
         # Refresh aggregates to ensure data is available
         self.client.post(
-            "/data/cache/refresh/", data={"time_period": "all"}, format="json"
+            "/geostreams/api/data/cache/refresh/",
+            data={"time_period": "all"},
+            format="json",
         )
 
     def test_get_hourly_average_datapoints_same_hour(self):
         # Get hourly averages
         response = self.client.get(
-            "/data/cache/hour/",
+            "/geostreams/api/data/cache/hour/",
             {
                 "sensor_id": self.sensor_id,
                 "parameter": ["Temperature"],
@@ -1109,7 +1225,7 @@ class EdgeCaseDatapointTestCase(TransactionTestCase):
     def test_get_daily_average_datapoints_same_hour(self):
         # Get Daily averages
         response = self.client.get(
-            "/data/cache/day/",
+            "/geostreams/api/data/cache/day/",
             {
                 "sensor_id": self.sensor_id,
                 "parameter": ["Temperature"],
@@ -1127,7 +1243,7 @@ class EdgeCaseDatapointTestCase(TransactionTestCase):
     def test_get_monthly_average_datapoints_same_hour(self):
         # Get Monthly averages
         response = self.client.get(
-            "/data/cache/month/",
+            "/geostreams/api/data/cache/month/",
             {
                 "sensor_id": self.sensor_id,
                 "parameter": ["Temperature"],
@@ -1145,7 +1261,7 @@ class EdgeCaseDatapointTestCase(TransactionTestCase):
     def test_get_yearly_average_datapoints_same_hour(self):
         # Get Yearly averages
         response = self.client.get(
-            "/data/cache/year/",
+            "/geostreams/api/data/cache/year/",
             {
                 "sensor_id": self.sensor_id,
                 "parameter": ["Temperature"],
