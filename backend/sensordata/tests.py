@@ -286,13 +286,54 @@ class StreamApiTest(TestCase):
             "/geostreams/api/data/streams/", data=data, format="json"
         )
         self.assertEqual(response.status_code, 201)
-        stream_id = response.json().get("id")
+        payload = response.json()
+        self.assertEqual(payload["message"], "Stream created successfully")
+        stream_id = payload["stream"]["id"]
 
         # Verify the created stream by fetching its details
         get_response = self.client.get(f"/geostreams/api/data/streams/{stream_id}/")
         self.assertEqual(get_response.status_code, 200)
         stream = get_response.json()
         self.assertEqual(stream["name"], "NCSA Stream 1")
+
+    def test_bulk_create_streams(self):
+        data = [
+            {
+                "name": "Bulk Stream 1",
+                "geoType": "Feature",
+                "sensor": self.sensor_id,
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-88.290075, 40.0062722, 0.0],
+                },
+                "properties": {},
+            },
+            {
+                "name": "Bulk Stream 2",
+                "geoType": "Feature",
+                "sensor": self.sensor_id,
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-88.213772, 39.889292, 0.0],
+                },
+                "properties": {},
+            },
+        ]
+
+        response = self.client.post(
+            "/geostreams/api/data/streams/", data=data, format="json"
+        )
+        self.assertEqual(response.status_code, 201)
+        payload = response.json()
+        self.assertEqual(payload["message"], "Streams created successfully")
+        created_streams = payload["streams"]
+        self.assertEqual(len(created_streams), 2)
+
+        for stream in created_streams:
+            get_response = self.client.get(
+                f"/geostreams/api/data/streams/{stream['id']}/"
+            )
+            self.assertEqual(get_response.status_code, 200)
 
     def test_get_all_streams(self):
         response = self.client.get("/geostreams/api/data/streams/")
@@ -327,8 +368,8 @@ class StreamApiTest(TestCase):
             "/geostreams/api/data/streams/", data=data, format="json"
         )
         self.assertEqual(response.status_code, 201)
-
-        stream_id = response.json().get("id")
+        stream_payload = response.json()
+        stream_id = stream_payload["stream"]["id"]
 
         # Update the stream
         updated_data = {
@@ -369,7 +410,7 @@ class StreamApiTest(TestCase):
         )
         self.assertEqual(create_response.status_code, 201)
 
-        stream_id = create_response.json().get("id")
+        stream_id = create_response.json()["stream"]["id"]
 
         # Delete the stream
         delete_response = self.client.delete(
@@ -403,8 +444,7 @@ class StreamApiTest(TestCase):
             "/geostreams/api/data/streams/", data=data, format="json"
         )
         self.assertEqual(response.status_code, 201)
-
-        stream_id = response.json().get("id")
+        stream_id = response.json()["stream"]["id"]
 
         # Update the stream
         updated_data = {
@@ -949,7 +989,7 @@ class DatapointsViewSetTestCase(TransactionTestCase):
             stream = self.client.post(
                 "/geostreams/api/data/streams/", data=stream, format="json"
             )
-            stream_ids.append(stream.data["id"])
+            stream_ids.append(stream.data["stream"]["id"])
         # Create datapoints
         datapoint_data = [
             {
@@ -1232,7 +1272,7 @@ class EdgeCaseDatapointTestCase(TransactionTestCase):
         stream = self.client.post(
             "/geostreams/api/data/streams/", data=stream_data, format="json"
         )
-        stream_id = stream.data["id"]
+        stream_id = stream.data["stream"]["id"]
 
         # Create multiple datapoints in the same hour
         base_time = "2024-01-01T10:00:00Z"

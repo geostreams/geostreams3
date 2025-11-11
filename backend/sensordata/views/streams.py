@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework import status
+from django.db import transaction
 from ..models import Stream
 from ..serializers import StreamSerializer
 from .auth_base import AuthEnforcedModelViewSet
@@ -26,12 +27,34 @@ class StreamsViewSet(AuthEnforcedModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """Create new stream."""
-        serializer = StreamSerializer(data=request.data)
-        if serializer.is_valid():
+        payload = request.data
+        is_many = isinstance(payload, list)
+
+        if is_many and not payload:
+            return Response(
+                {"message": "At least one stream payload is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = StreamSerializer(data=payload, many=is_many)
+        if not serializer.is_valid():
+            response = {"message": serializer.errors}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        response = {"message": serializer.errors}
-        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        if is_many:
+            response = {
+                "message": "Streams created successfully",
+                "streams": serializer.data,
+            }
+        else:
+            response = {
+                "message": "Stream created successfully",
+                "stream": serializer.data,
+            }
+        return Response(response, status=status.HTTP_201_CREATED)
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
