@@ -641,6 +641,7 @@ class ParameterApiTest(TestCase):
             "unit": "Celsius",
             "search_view": True,
             "explore_view": False,
+            "properties": {"measurement": "ambient temperature"},
             "visualization": "line_chart",
             "category": "environment",
         }
@@ -659,6 +660,9 @@ class ParameterApiTest(TestCase):
         parameter = get_response.json()
         self.assertEqual(parameter["name"], "temperature")
         self.assertEqual(parameter["unit"], "Celsius")
+        self.assertEqual(
+            parameter["properties"], {"measurement": "ambient temperature"}
+        )
         # Verify the parameter now includes categories
         self.assertIn("categories", parameter)
         self.assertIsInstance(parameter["categories"], list)
@@ -681,6 +685,10 @@ class ParameterApiTest(TestCase):
         self.assertIn("name", first_parameter)
         self.assertIn("categories", first_parameter)
         self.assertIsInstance(first_parameter["categories"], list)
+        self.assertIn("properties", first_parameter)
+        self.assertEqual(
+            first_parameter["properties"], {"measurement": "ambient temperature"}
+        )
 
     def test_get_all_parameters_with_filtering(self):
         # Create a parameter to ensure there's at least one in the database
@@ -706,6 +714,10 @@ class ParameterApiTest(TestCase):
             self.assertIn("name", category)
             self.assertIn("description", category)
             self.assertEqual(category["name"], "environment")
+        self.assertIn("properties", parameters[0])
+        self.assertEqual(
+            parameters[0]["properties"], {"measurement": "ambient temperature"}
+        )
 
     def test_update_parameter(self):
         # Create a parameter first
@@ -717,6 +729,7 @@ class ParameterApiTest(TestCase):
             "explore_view": True,
             "scale_names": ["Low", "Medium", "High"],
             "scale_colors": ["#FF0000", "#00FF00", "#0000FF"],
+            "properties": {"threshold": [0, 150]},
             "category": "environment",
             "visualization": "line_chart",
         }
@@ -737,6 +750,7 @@ class ParameterApiTest(TestCase):
             "explore_view": True,
             "scale_names": ["Low", "Medium", "High"],
             "scale_colors": ["#FF0000", "#00FF00", "#0000FF"],
+            "properties": {"threshold": [0, 200]},
             "visualization": "bar_chart",
         }
 
@@ -757,6 +771,7 @@ class ParameterApiTest(TestCase):
         parameter = get_response.json()
         self.assertEqual(parameter["title"], "Pressure Level")
         self.assertEqual(parameter["unit"], "Pa")
+        self.assertEqual(parameter["properties"], {"threshold": [0, 200]})
 
         # Verify categories are still embedded
         self.assertIn("categories", parameter)

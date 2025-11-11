@@ -42,7 +42,15 @@ class ParameterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Parameter
-        fields = ["id", "name", "title", "unit", "visualization", "categories"]
+        fields = [
+            "id",
+            "name",
+            "title",
+            "unit",
+            "properties",
+            "visualization",
+            "categories",
+        ]
 
     def get_categories(self, obj):
         # Get the categories for the parameter

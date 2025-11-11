@@ -32,6 +32,7 @@ class Parameter(models.Model):
     name = models.CharField(unique=True, max_length=200, null=False)
     title = models.CharField(max_length=200, blank=True, null=False)
     unit = models.CharField(max_length=20, blank=True, null=True)
+    properties = models.JSONField(blank=True, null=True)
     visualization = models.ForeignKey(
         "Visualization", models.DO_NOTHING, blank=True, null=True
     )
