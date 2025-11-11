@@ -36,13 +36,15 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path(
-        "swagger<format>/", schema_view.without_ui(cache_timeout=0), name="schema-json"
+        "geostreams/api/swagger<format>/",
+        schema_view.without_ui(cache_timeout=0),
+        name="schema-json",
     ),
     path(
-        "swagger/",
+        "geostreams/api/swagger/",
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
-    path("data/", include("sensordata.urls")),
-    path("auth/", include("authentication.urls")),
+    path("geostreams/api/data/", include("sensordata.urls")),
+    path("geostreams/api/auth/", include("authentication.urls")),
 ]

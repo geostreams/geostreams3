@@ -254,15 +254,15 @@
                 "manage-users",
                 "view-clients",
                 "manage-events",
-                "view-authorization",
                 "manage-identity-providers",
+                "view-authorization",
                 "manage-authorization",
-                "manage-clients",
                 "impersonation",
+                "manage-clients",
                 "create-client",
                 "query-users",
-                "view-realm",
                 "view-events",
+                "view-realm",
                 "query-clients",
                 "manage-realm",
                 "query-groups",
@@ -617,7 +617,7 @@
       "clientId": "geostreams",
       "name": "Geostreams Auth",
       "description": "Geostreams Auth for user management",
-      "rootUrl": "http://localhost",
+      "rootUrl": "http://localhost:3000",
       "adminUrl": "",
       "baseUrl": "",
       "surrogateAuthRequired": false,
@@ -626,10 +626,12 @@
       "clientAuthenticatorType": "client-secret",
       "secret": "**********",
       "redirectUris": [
+        "http://localhost:3000/*",
         "http://localhost/*"
       ],
       "webOrigins": [
-        "http://localhost/"
+        "http://localhost/",
+        "http://localhost:3000"
       ],
       "notBefore": 0,
       "bearerOnly": false,
@@ -643,8 +645,9 @@
       "protocol": "openid-connect",
       "attributes": {
         "oidc.ciba.grant.enabled": "false",
-        "client.secret.creation.time": "1736905845",
+        "client.secret.creation.time": "1758574243",
         "backchannel.logout.session.required": "true",
+        "post.logout.redirect.uris": "+",
         "display.on.consent.screen": "false",
         "oauth2.device.authorization.grant.enabled": "false",
         "use.jwks.url": "false",
@@ -1423,13 +1426,13 @@
         "subComponents": {},
         "config": {
           "allowed-protocol-mapper-types": [
+            "oidc-usermodel-attribute-mapper",
+            "oidc-usermodel-property-mapper",
             "saml-role-list-mapper",
             "oidc-address-mapper",
-            "oidc-usermodel-attribute-mapper",
             "saml-user-attribute-mapper",
-            "saml-user-property-mapper",
-            "oidc-usermodel-property-mapper",
             "oidc-full-name-mapper",
+            "saml-user-property-mapper",
             "oidc-sha256-pairwise-sub-mapper"
           ]
         }
@@ -1462,14 +1465,14 @@
         "subComponents": {},
         "config": {
           "allowed-protocol-mapper-types": [
+            "saml-user-attribute-mapper",
             "oidc-usermodel-property-mapper",
-            "oidc-sha256-pairwise-sub-mapper",
             "oidc-usermodel-attribute-mapper",
-            "saml-user-property-mapper",
+            "oidc-sha256-pairwise-sub-mapper",
             "saml-role-list-mapper",
-            "oidc-full-name-mapper",
+            "saml-user-property-mapper",
             "oidc-address-mapper",
-            "saml-user-attribute-mapper"
+            "oidc-full-name-mapper"
           ]
         }
       }
@@ -2187,7 +2190,7 @@
     "oauth2DeviceCodeLifespan": "600",
     "parRequestUriLifespan": "60",
     "clientSessionMaxLifespan": "0",
-    "frontendUrl": "http://localhost/keycloak",
+    "frontendUrl": "http://localhost/geostreams/keycloak",
     "organizationsEnabled": "false",
     "acr.loa.map": "{}"
   },

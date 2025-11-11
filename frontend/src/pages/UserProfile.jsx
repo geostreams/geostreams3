@@ -272,15 +272,6 @@ function UserProfile() {
                                     ? "Generating..."
                                     : "Generate & Copy Token"}
                             </Button>
-
-                            {copyMessage && !showCopyMessage && (
-                                <Alert
-                                    severity={messageType}
-                                    sx={{ mt: 2, textAlign: "left" }}
-                                >
-                                    {copyMessage}
-                                </Alert>
-                            )}
                         </Box>
                     </Card>
                 </Grid>

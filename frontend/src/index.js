@@ -11,9 +11,9 @@ import theme from "./theme/theme";
 const oidcConfig = {
     authority: process.env.REACT_APP_KEYCLOAK_AUTH_URL,
     client_id: process.env.REACT_APP_KEYCLOAK_CLIENT_ID,
-    redirect_uri: window.location.origin,
+    redirect_uri: `${window.location.origin}/geostreams`,
     client_secret: process.env.REACT_APP_KEYCLOAK_CLIENT_SECRET,
-    post_logout_redirect_uri: window.location.origin,
+    post_logout_redirect_uri: `${window.location.origin}/geostreams`,
 };
 
 const root = ReactDOM.createRoot(document.getElementById("root"));

@@ -14,33 +14,42 @@ services:
     volumes:
       - timescaledb:/home/postgres/pgdata/data
     restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
 
   # Keycloak identity provider
+  # TODO: CHange password for production
   keycloak:
     image: quay.io/keycloak/keycloak:25.0.4
     networks:
       - geostreams
     command:
-      - start-dev
+      - start
       - --import-realm
-      - --http-relative-path=/keycloak
+      - --http-relative-path=/geostreams/keycloak
     environment:
       - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_PASSWORD}
       - KC_DB=postgres
       - KC_DB_URL_HOST=kc_postgres
       - KC_DB_URL_DATABASE=keycloak
       - KC_DB_USERNAME=keycloak
-      - KC_DB_PASSWORD=password
-      - KEYCLOAK_HOSTNAME=localhost
+      - KC_DB_PASSWORD=${KC_DB_PASSWORD}
+      - KC_HOSTNAME=${SITE_URL}
+      - KC_HOSTNAME_STRICT=false
+      - KC_HTTP_ENABLED=true
+      - KC_PROXY_HEADERS=xforwarded
+      - KC_FRONTEND_URL=https://${SITE_URL}/geostreams/keycloak
     volumes:
       - ./keycloak/geostreams-realm.json:/opt/keycloak/data/import/realm.json:ro
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.keycloak.rule=PathPrefix(`/keycloak`)"
+      - "traefik.http.routers.keycloak.rule=Host(`${SITE_URL}`) && PathPrefix(`/geostreams/keycloak`)"
       - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
       - "traefik.http.routers.keycloak.priority=10"
+      - "traefik.http.routers.keycloak.entrypoints=websecure"
+      - "traefik.http.routers.keycloak.tls.certresolver=letsencrypt"
     depends_on:
       - kc_postgres
 
@@ -52,10 +61,12 @@ services:
     environment:
       - POSTGRES_DB=keycloak
       - POSTGRES_USER=keycloak
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_PASSWORD=${KC_DB_PASSWORD}
     restart: unless-stopped
     volumes:
       - keycloak_postgres:/var/lib/postgresql/data
+    labels:
+      - "traefik.enable=false"
 
   # The containers we create for the backend and frontend
   backend:
@@ -73,11 +84,11 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
-      - "traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes=/api"
-      - "traefik.http.routers.backend.middlewares=strip-api-prefix@docker"
+      - "traefik.http.routers.backend.rule=Host(`${SITE_URL}`) && PathPrefix(`/geostreams/api`)"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
-      - "traefik.http.routers.backend.priority=5"
+      - "traefik.http.routers.backend.priority=10"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
 
   frontend:
     build:
@@ -89,31 +100,52 @@ services:
       - backend
     labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+        - "traefik.http.routers.frontend.rule=Host(`${SITE_URL}`) && PathPrefix(`/geostreams`)"
         - "traefik.http.services.frontend.loadbalancer.server.port=80"
-        - "traefik.http.routers.frontend.priority=1"
-        - "traefik.http.routers.frontend.entrypoints=web"
+        - "traefik.http.routers.frontend.priority=5"
+        - "traefik.http.routers.frontend.entrypoints=websecure"
+        - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
     restart: unless-stopped
     networks:
       - geostreams
 
+
+  # Production traefik
   traefik:
-    image: traefik:v2.5
+    image: traefik:v3.2
     restart: unless-stopped
     command:
-      - --api.insecure=true
-      - --providers.docker
-      - --entryPoints.web.address=:80
+        - '--log.level=${LOG_LEVEL:-INFO}'
+        - '--entrypoints.web.address=:80'
+        - '--entrypoints.websecure.address=:443'
+        - '--entrypoints.web.http.redirections.entryPoint.to=websecure'
+        - '--entrypoints.web.http.redirections.entryPoint.scheme=https'
+        - '--providers.docker=true'
+        - '--providers.docker.exposedByDefault=false'
+        - '--api=true'
+        - '--api.dashboard=true'
+        - '--certificatesresolvers.letsencrypt.acme.email=${EMAIL}'
+        - '--certificatesresolvers.letsencrypt.acme.storage=/acme.json'
+        - '--certificatesresolvers.letsencrypt.acme.httpchallenge=true'
+        - '--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web'
+        # Optional: Use staging server during testing
+        # - "--certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
     ports:
-      # The HTTP port
-      - "80:80"
-      # The Web UI (enabled by --api.insecure=true)
-      - "8081:8080"
+        # The HTTP port
+        - '80:80'
+        - '443:443'
     networks:
-      - geostreams
+        - geostreams
     volumes:
-      # So that Traefik can listen to the Docker events
-      - /var/run/docker.sock:/var/run/docker.sock
+        # So that Traefik can listen to the Docker events
+        - /var/run/docker.sock:/var/run/docker.sock
+        - ${LETSENCRYPT_DIR}/acme.json:/acme.json:rw
+        # Ensure that the acme.json file has restricted permissions (600) on the host system:
+        # chmod 600 ${LETSENCRYPT_DIR}/acme.json
+    depends_on:
+        - keycloak
+        - backend
+        - frontend
 
 
 networks:

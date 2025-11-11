@@ -96,7 +96,7 @@ function App() {
 
     // Redirect to profile if authenticated and trying to access the root
     return (
-        <Router>
+        <Router basename="/geostreams">
             <Navbar />
             <Routes>
                 {/* Redirect to profile if authenticated */}
