@@ -5,15 +5,13 @@ meta {
 }
 
 delete {
-  url: {{base_url}}/data/sensors/249/
+  url: {{base_url}}/geostreams/api/data/sensors/9/
   body: json
-  auth: none
+  auth: apikey
 }
 
-body:json {
-  {
-      "name": "canopy-height",
-      "title": "Canopy Height",
-      "unit": "m"
-  }
+auth:apikey {
+  key: Authorization
+  value: {{api_key}}
+  placement: header
 }
