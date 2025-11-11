@@ -421,12 +421,20 @@ class VisualizationApiTest(TestCase):
         self.assertEqual(visualization["title"], "A line chart visualization")
 
     def test_get_all_visualizations(self):
+        # Create a visualization first
+        data = {
+            "name": "Bar Chart",
+            "title": "A bar chart visualization",
+        }
+        self.client.post(
+            "/geostreams/api/data/visualizations/", data=data, format="json"
+        )
         response = self.client.get("/geostreams/api/data/visualizations/")
         self.assertEqual(
             response.status_code, 200
         )  # Expecting a successful retrieval status code
         visualizations = response.json()
-        self.assertIsInstance(visualizations, list)
+        self.assertIsInstance(visualizations["visualizations"], list)
 
     def test_update_visualization(self):
         # Create a visualization first
@@ -527,12 +535,18 @@ class CategoryApiTest(TestCase):
         self.assertEqual(category["description"], "Temperature data")
 
     def test_get_all_categories(self):
+        # Create a category first
+        data = {
+            "name": "Phosphorus",
+            "description": "Phosphorus data",
+        }
+        self.client.post("/geostreams/api/data/categories/", data=data, format="json")
         response = self.client.get("/geostreams/api/data/categories/")
         self.assertEqual(
             response.status_code, 200
         )  # Expecting a successful retrieval status code
         categories = response.json()
-        self.assertIsInstance(categories, list)
+        self.assertIsInstance(categories["categories"], list)
 
     def test_update_category(self):
         # Create a category first
