@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework import status
+from django.db import transaction
 from ..models import Sensor
 from ..serializers import SensorSerializer, GeoJSONSensorSerializer
 from .auth_base import AuthEnforcedModelViewSet
@@ -17,12 +18,37 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """Create new sensor."""
-        serializer = SensorSerializer(data=request.data)
-        if serializer.is_valid():
+        payload = request.data
+        is_many = isinstance(payload, list)
+
+        if is_many and not payload:
+            return Response(
+                {"message": "At least one sensor payload is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = SensorSerializer(data=payload, many=is_many)
+        # Validate the data using the serializer
+        if not serializer.is_valid():
+            response = {"message": serializer.errors}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        # serializer.save() opens a database transaction so every sensor is written atomically;
+        # if any save fails the whole batch rolls back.
+        with transaction.atomic():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        response = {"message": serializer.errors}
-        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        if is_many:
+            response = {
+                "message": "Sensors created successfully",
+                "sensors": serializer.data,
+            }
+        else:
+            response = {
+                "message": "Sensor created successfully",
+                "sensor": serializer.data,
+            }
+        return Response(response, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
         queryset = (
@@ -68,15 +94,16 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
             return Response({"sensors": serializer.data})
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
+        sensor = self.get_object()
+        sensor_id = sensor.id
         try:
-            sensor_id = instance.id
-            instance.delete()
-            response = {"message": f"Sensor {sensor_id} deleted successfully"}
-            return Response(response, status=status.HTTP_204_NO_CONTENT)
-        except Exception as e:
-            response = {"message": e}
-            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            sensor.delete()
+        except Exception as exc:
+            return Response({"message": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"message": f"Sensor {sensor_id} deleted successfully"},
+            status=status.HTTP_200_OK,
+        )
 
     # Custom method to get sensors in shape
     @action(detail=False, methods=["get"], url_path="sensors_in_shape")

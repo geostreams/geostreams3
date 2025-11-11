@@ -37,7 +37,7 @@ class SensorApiTest(TestCase):
     def test_create_sensor(self):
         data = {
             "name": "NCSA Sensor 1",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
@@ -46,7 +46,10 @@ class SensorApiTest(TestCase):
             "/geostreams/api/data/sensors/", data=data, format="json"
         )
         self.assertEqual(response.status_code, 201)
-        sensor_id = response.json().get("id")
+        payload = response.json()
+        self.assertEqual(payload["message"], "Sensor created successfully")
+        created_sensor = payload["sensor"]
+        sensor_id = created_sensor.get("id")
 
         # Verify the created sensor by fetching its details
         get_response = self.client.get(f"/geostreams/api/data/sensors/{sensor_id}/")
@@ -59,6 +62,43 @@ class SensorApiTest(TestCase):
         )
         self.assertEqual(sensor["min_start_time"], None)
 
+    def test_bulk_create_sensors(self):
+        data = [
+            {
+                "name": "Bulk Sensor 1",
+                "geoType": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-88.290075, 40.0062722, 0.0],
+                },
+                "properties": {},
+            },
+            {
+                "name": "Bulk Sensor 2",
+                "geoType": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-88.213772, 39.889292, 0.0],
+                },
+                "properties": {},
+            },
+        ]
+
+        response = self.client.post(
+            "/geostreams/api/data/sensors/", data=data, format="json"
+        )
+        self.assertEqual(response.status_code, 201)
+        payload = response.json()
+        self.assertEqual(payload["message"], "Sensors created successfully")
+        created_sensors = payload["sensors"]
+        self.assertEqual(len(created_sensors), 2)
+
+        for sensor in created_sensors:
+            get_response = self.client.get(
+                f"/geostreams/api/data/sensors/{sensor['id']}/"
+            )
+            self.assertEqual(get_response.status_code, 200)
+
     def test_get_all_sensors(self):
         # No sensors check
         response = self.client.get("/geostreams/api/data/sensors/")
@@ -68,7 +108,7 @@ class SensorApiTest(TestCase):
         # Create a sensor first
         data = {
             "name": "NCSA Sensor 1",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
@@ -84,7 +124,7 @@ class SensorApiTest(TestCase):
         # Create a sensor first
         data = {
             "name": "NCSA Sensor 2",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
@@ -92,13 +132,12 @@ class SensorApiTest(TestCase):
             "/geostreams/api/data/sensors/", data=data, format="json"
         )
         self.assertEqual(response.status_code, 201)
-
-        sensor_id = response.json().get("id")
+        sensor_id = response.json()["sensor"]["id"]
 
         # Update the sensor
         updated_data = {
             "name": "NCSA Sensor 3 ",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.213772, 39.889292, 0.0]},
             "properties": {},
         }
@@ -125,7 +164,7 @@ class SensorApiTest(TestCase):
         # Create a sensor first
         data = {
             "name": "NCSA Sensor 2",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
@@ -134,7 +173,7 @@ class SensorApiTest(TestCase):
         )
         self.assertEqual(response.status_code, 201)
 
-        sensor_id = response.json().get("id")
+        sensor_id = response.json()["sensor"]["id"]
 
         # Update the sensor
         updated_data = {
@@ -161,7 +200,7 @@ class SensorApiTest(TestCase):
         # Create a sensor first
         data = {
             "name": "NCSA Sensor 2",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
@@ -171,20 +210,20 @@ class SensorApiTest(TestCase):
         )
         self.assertEqual(create_response.status_code, 201)
 
-        sensor_id = create_response.json().get("id")
+        sensor_id = create_response.json()["sensor"]["id"]
 
         # Delete the sensor
         delete_response = self.client.delete(
             f"/geostreams/api/data/sensors/{sensor_id}/"
         )
-        self.assertEqual(delete_response.status_code, 204)
+        self.assertEqual(delete_response.status_code, 200)
 
     def test_get_sensor_geojson(self):
         # Create a sensor first
         data = {
             "name": "NCSA Sensor 1",
             "source": "NCSA",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
@@ -219,7 +258,7 @@ class StreamApiTest(TestCase):
         # Create a sensor first
         data = {
             "name": "NCSA Sensor 1",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {
                 "name": "NCSA Sensor 1",
@@ -232,12 +271,12 @@ class StreamApiTest(TestCase):
         response = self.client.post(
             "/geostreams/api/data/sensors/", data=data, format="json"
         )
-        self.sensor_id = response.json().get("id")
+        self.sensor_id = response.json()["sensor"]["id"]
 
     def test_create_stream(self):
         data = {
             "name": "NCSA Stream 1",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "sensor": self.sensor_id,
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
@@ -262,7 +301,7 @@ class StreamApiTest(TestCase):
         # Create a stream first
         data = {
             "name": "NCSA Stream 1",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "sensor": self.sensor_id,
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
@@ -279,7 +318,7 @@ class StreamApiTest(TestCase):
         # Create a stream first
         data = {
             "name": "NCSA Stream 1",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "sensor": self.sensor_id,
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
@@ -319,7 +358,7 @@ class StreamApiTest(TestCase):
         # Create a stream first
         data = {
             "name": "NCSA Stream 1",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "sensor": self.sensor_id,
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
@@ -342,7 +381,7 @@ class StreamApiTest(TestCase):
         # Create another sensor
         data = {
             "name": "NCSA Sensor 2",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
@@ -350,12 +389,12 @@ class StreamApiTest(TestCase):
         response = self.client.post(
             "/geostreams/api/data/sensors/", data=data, format="json"
         )
-        second_sensor = response.json().get("id")
+        second_sensor = response.json()["sensor"]["id"]
 
         # Create a stream first
         data = {
             "name": "NCSA Stream 1",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "sensor": self.sensor_id,
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
@@ -875,7 +914,7 @@ class DatapointsViewSetTestCase(TransactionTestCase):
         # Create a sensor
         sensor_data = {
             "name": "NCSA Sensor 1",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
@@ -886,8 +925,8 @@ class DatapointsViewSetTestCase(TransactionTestCase):
         stream_data = [
             {
                 "name": "NCSA Stream 1",
-                "geotype": "Feature",
-                "sensor": sensor_data.data["id"],
+                "geoType": "Feature",
+                "sensor": sensor_data.data["sensor"]["id"],
                 "geometry": {
                     "type": "Point",
                     "coordinates": [-88.290075, 40.0062722, 0.0],
@@ -896,8 +935,8 @@ class DatapointsViewSetTestCase(TransactionTestCase):
             },
             {
                 "name": "NCSA Stream 2",
-                "geotype": "Feature",
-                "sensor": sensor_data.data["id"],
+                "geoType": "Feature",
+                "sensor": sensor_data.data["sensor"]["id"],
                 "geometry": {
                     "type": "Point",
                     "coordinates": [-88.213772, 39.889292, 0.0],
@@ -1068,7 +1107,7 @@ class SensorInShapeTestCase(TestCase):
         # Create first sensor
         sensor_data = {
             "name": "NCSA Sensor 1",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
@@ -1079,7 +1118,7 @@ class SensorInShapeTestCase(TestCase):
         # Create second sensor
         sensor_data = {
             "name": "NCSA Sensor 2",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.154722, 39.883611, 0.0]},
             "properties": {},
         }
@@ -1091,7 +1130,7 @@ class SensorInShapeTestCase(TestCase):
         # Create third sensor
         sensor_data = {
             "name": "NCSA Sensor 3",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.213772, 39.889292, 0.0]},
             "properties": {},
         }
@@ -1171,18 +1210,18 @@ class EdgeCaseDatapointTestCase(TransactionTestCase):
         # Create a sensor
         sensor_data = {
             "name": "NCSA Sensor 1",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "geometry": {"type": "Point", "coordinates": [-88.290075, 40.0062722, 0.0]},
             "properties": {},
         }
         sensor_data = self.client.post(
             "/geostreams/api/data/sensors/", data=sensor_data, format="json"
         )
-        self.sensor_id = sensor_data.data["id"]
+        self.sensor_id = sensor_data.data["sensor"]["id"]
         # Create a stream
         stream_data = {
             "name": "NCSA Stream 1",
-            "geotype": "Feature",
+            "geoType": "Feature",
             "sensor": self.sensor_id,
             "geometry": {
                 "type": "Point",
