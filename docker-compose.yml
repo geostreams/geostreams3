@@ -48,7 +48,6 @@ services:
       - "traefik.http.routers.keycloak.rule=Host(`${SITE_URL}`) && PathPrefix(`/geostreams/keycloak`)"
       - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
       - "traefik.http.routers.keycloak.priority=10"
-      # Uncomment this for production
       - "traefik.http.routers.keycloak.entrypoints=websecure"
       - "traefik.http.routers.keycloak.tls.certresolver=letsencrypt"
     depends_on:
@@ -88,7 +87,6 @@ services:
       - "traefik.http.routers.backend.rule=Host(`${SITE_URL}`) && PathPrefix(`/geostreams/api`)"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
       - "traefik.http.routers.backend.priority=10"
-      # Uncomment this for production
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
 
@@ -105,7 +103,6 @@ services:
         - "traefik.http.routers.frontend.rule=Host(`${SITE_URL}`) && PathPrefix(`/geostreams`)"
         - "traefik.http.services.frontend.loadbalancer.server.port=80"
         - "traefik.http.routers.frontend.priority=5"
-        # Uncomment this for production
         - "traefik.http.routers.frontend.entrypoints=websecure"
         - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
     restart: unless-stopped
