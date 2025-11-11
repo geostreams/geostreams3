@@ -13,7 +13,7 @@ class Category(models.Model):
     """
 
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=50, blank=True, null=False)
+    name = models.CharField(max_length=50, blank=True, null=False, unique=True)
     description = models.CharField(max_length=500, blank=True, null=True)
 
     class Meta:

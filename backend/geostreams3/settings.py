@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "sensordata.apps.SensordataConfig",
     "authentication.apps.AuthConfig",
-    # "django_extensions",
+    "django_extensions",
 ]
 
 MIDDLEWARE = [
