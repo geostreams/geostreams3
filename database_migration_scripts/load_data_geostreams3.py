@@ -87,7 +87,7 @@ def post_sensors():
         data = {
             "name": sensor["name"],
             "geometry": sensor["geometry"],
-            "geotype": sensor["geoType"],
+            "geoType": sensor["geoType"],
             "parameters": sensor["parameters"],
             "properties": sensor["properties"],
         }
@@ -112,7 +112,7 @@ def post_streams():
 
         data = {
             "name": stream["name"],
-            "geotype": stream["geoType"],
+            "geoType": stream["geoType"],
             "sensor": sensor["id"],
             "geometry": stream["geometry"],
             "properties": {},

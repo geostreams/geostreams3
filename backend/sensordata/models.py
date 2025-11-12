@@ -13,7 +13,7 @@ class Category(models.Model):
     """
 
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=50, blank=True, null=False)
+    name = models.CharField(max_length=100, blank=True, null=False, unique=True)
     description = models.CharField(max_length=500, blank=True, null=True)
 
     class Meta:
@@ -32,6 +32,7 @@ class Parameter(models.Model):
     name = models.CharField(unique=True, max_length=200, null=False)
     title = models.CharField(max_length=200, blank=True, null=False)
     unit = models.CharField(max_length=20, blank=True, null=True)
+    properties = models.JSONField(blank=True, null=True)
     visualization = models.ForeignKey(
         "Visualization", models.DO_NOTHING, blank=True, null=True
     )
@@ -79,8 +80,8 @@ class Region(models.Model):
 
 class Sensor(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255, blank=True, null=True)
-    geotype = models.CharField(max_length=50, blank=False, null=True)
+    name = models.CharField(max_length=255, blank=True, null=True, unique=True)
+    geoType = models.CharField(max_length=50, blank=False, null=True)
     geog = geomodels.GeometryField(dim=3, blank=False, null=False)
     created = models.DateTimeField(blank=True, null=True, default=timezone.now)
     source = models.CharField(max_length=255, blank=True, null=True, db_index=True)
@@ -96,7 +97,7 @@ class Stream(models.Model):
         Sensor, related_name="streams", on_delete=models.DO_NOTHING
     )
     name = models.CharField(max_length=255, blank=True, null=True)
-    geotype = models.CharField(max_length=50, blank=False, null=True)
+    geoType = models.CharField(max_length=50, blank=False, null=True)
     geog = geomodels.GeometryField(dim=3, blank=False, null=False)
     created = models.DateTimeField(blank=True, null=True, default=timezone.now)
     parameters = ArrayField(models.CharField(max_length=200), blank=True, default=list)

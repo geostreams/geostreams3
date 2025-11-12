@@ -42,7 +42,15 @@ class ParameterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Parameter
-        fields = ["id", "name", "title", "unit", "visualization", "categories"]
+        fields = [
+            "id",
+            "name",
+            "title",
+            "unit",
+            "properties",
+            "visualization",
+            "categories",
+        ]
 
     def get_categories(self, obj):
         # Get the categories for the parameter
@@ -68,7 +76,7 @@ class SensorSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "source",
-            "geotype",
+            "geoType",
             "created",
             "geometry",
             "properties",
@@ -117,7 +125,7 @@ class StreamSerializer(serializers.ModelSerializer):
             "id",
             "sensor",
             "name",
-            "geotype",
+            "geoType",
             "created",
             "parameters",
             "properties",
@@ -178,7 +186,7 @@ class GeoJSONSensorSerializer(serializers.ModelSerializer):
         fields = ["type", "geometry", "properties"]
 
     def get_type(self, obj):
-        return obj.geotype
+        return obj.geoType
 
     def get_geometry(self, obj):
         # Convert the GEOSGeometry object to a GeoJSON dict

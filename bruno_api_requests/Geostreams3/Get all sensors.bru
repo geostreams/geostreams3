@@ -5,7 +5,11 @@ meta {
 }
 
 get {
-  url: {{base_url}}/data/sensors/
+  url: {{base_url}}/geostreams/api/data/sensors/?type=geojson
   body: none
   auth: none
+}
+
+params:query {
+  type: geojson
 }

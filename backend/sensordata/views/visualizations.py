@@ -12,6 +12,27 @@ class VisualizationsViewSet(AuthEnforcedModelViewSet):
 
     # permission_classes = [IsAuthenticated]
 
+    # Overwrite get queryset to allow filtering by name
+    def get_queryset(self):
+        name_filter = self.request.query_params.get("name", None)
+        queryset = self.queryset
+
+        if name_filter:
+            queryset = queryset.filter(name=name_filter)
+
+        return queryset
+
+    # Serialize listing of visualizations
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        # Check if queryset is empty
+        if not queryset.exists():
+            return Response(
+                {"message": "No visualizations found"}, status=status.HTTP_404_NOT_FOUND
+            )
+        serializer = VisualizationSerializer(queryset, many=True)
+        return Response({"visualizations": serializer.data})
+
     # Delete visualization by name
     @action(detail=False, methods=["DELETE"])
     def delete_by_name(self, request):
