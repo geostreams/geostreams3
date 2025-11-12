@@ -73,15 +73,6 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        source_filters = request.query_params.getlist("source")
-        if not source_filters:
-            raw_source = request.query_params.get("source")
-            if raw_source:
-                source_filters = [
-                    source.strip() for source in raw_source.split(",") if source.strip()
-                ]
-        if source_filters:
-            queryset = queryset.filter(source__in=source_filters)
 
         if not queryset:
             return Response(
