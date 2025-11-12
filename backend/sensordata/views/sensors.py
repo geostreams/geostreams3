@@ -33,21 +33,22 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
             response = {"message": serializer.errors}
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
-        # serializer.save() opens a database transaction so every sensor is written atomically;
-        # if any save fails the whole batch rolls back.
+        # The transaction.atomic() block ensures that all sensors in the batch are saved atomically as a unit;
+        # if any save fails, the entire batch is rolled back.
         with transaction.atomic():
             serializer.save()
 
-        if is_many:
-            response = {
-                "message": "Sensors created successfully",
-                "sensors": serializer.data,
-            }
-        else:
-            response = {
-                "message": "Sensor created successfully",
-                "sensor": serializer.data,
-            }
+        serialized_data = serializer.data
+        sensors_payload = serialized_data if is_many else [serialized_data]
+        message = (
+            "Sensors created successfully" if is_many else "Sensor created successfully"
+        )
+
+        response = {
+            "message": message,
+            "sensors": sensors_payload,
+            "count": len(sensors_payload),
+        }
         return Response(response, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
@@ -102,7 +103,7 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
             return Response({"message": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(
             {"message": f"Sensor {sensor_id} deleted successfully"},
-            status=status.HTTP_200_OK,
+            status=status.HTTP_204_NO_CONTENT,
         )
 
     # Custom method to get sensors in shape

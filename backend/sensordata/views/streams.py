@@ -44,16 +44,17 @@ class StreamsViewSet(AuthEnforcedModelViewSet):
         with transaction.atomic():
             serializer.save()
 
-        if is_many:
-            response = {
-                "message": "Streams created successfully",
-                "streams": serializer.data,
-            }
-        else:
-            response = {
-                "message": "Stream created successfully",
-                "stream": serializer.data,
-            }
+        serialized_data = serializer.data
+        streams_payload = serialized_data if is_many else [serialized_data]
+        message = (
+            "Streams created successfully" if is_many else "Stream created successfully"
+        )
+
+        response = {
+            "message": message,
+            "streams": streams_payload,
+            "count": len(streams_payload),
+        }
         return Response(response, status=status.HTTP_201_CREATED)
 
     def list(self, request, *args, **kwargs):
