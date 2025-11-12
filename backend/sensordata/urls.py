@@ -23,6 +23,11 @@ router.register("visualizations", VisualizationsViewSet, basename="visualization
 urlpatterns = [
     path("", include(router.urls)),
     path(
+        "sources/",
+        SensorsViewSet.as_view({"get": "list_sources"}),
+        name="sensor_sources",
+    ),
+    path(
         "cache/hour/",
         DatapointsViewSet.as_view(
             {"get": "get_hourly_average_datapoints_by_parameter"}
