@@ -73,6 +73,15 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
+        source_filters = request.query_params.getlist("source")
+        if not source_filters:
+            raw_source = request.query_params.get("source")
+            if raw_source:
+                source_filters = [
+                    source.strip() for source in raw_source.split(",") if source.strip()
+                ]
+        if source_filters:
+            queryset = queryset.filter(source__in=source_filters)
 
         if not queryset:
             return Response(
@@ -93,6 +102,21 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
             # Return data in default format
             serializer = SensorSerializer(queryset, many=True)
             return Response({"sensors": serializer.data})
+
+    def list_sources(self, request, *args, **kwargs):
+        """Return a sorted list of unique sensor sources."""
+        queryset = Sensor.objects.exclude(source__isnull=True).exclude(source__exact="")
+
+        if not queryset.exists():
+            return Response(
+                {"sources": [], "message": "No sensor sources available"},
+                status=status.HTTP_200_OK,
+            )
+
+        sources = (
+            queryset.values_list("source", flat=True).distinct().order_by("source")
+        )
+        return Response({"sources": list(sources)}, status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
         sensor = self.get_object()

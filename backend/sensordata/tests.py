@@ -253,6 +253,33 @@ class SensorApiTest(TestCase):
         self.assertEqual(first_feature["properties"]["name"], "NCSA Sensor 1")
         self.assertEqual(first_feature["properties"]["source"], "NCSA")
 
+    def test_list_sensor_sources(self):
+        sensor_payloads = [
+            {
+                "name": f"NCSA Sensor {index}",
+                "source": source,
+                "geoType": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-88.290075 + index, 40.0062722, 0.0],
+                },
+                "properties": {},
+            }
+            for index, source in enumerate(["EPA", "NCSA", "EPA"])
+        ]
+
+        for payload in sensor_payloads:
+            response = self.client.post(
+                "/geostreams/api/data/sensors/", data=payload, format="json"
+            )
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.get("/geostreams/api/data/sources/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        payload = response.json()
+        self.assertEqual(payload["sources"], ["EPA", "NCSA"])
+        self.assertNotIn("message", payload)
+
 
 class StreamApiTest(TestCase):
     def setUp(self):
