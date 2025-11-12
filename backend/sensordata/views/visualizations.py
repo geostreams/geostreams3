@@ -26,7 +26,7 @@ class VisualizationsViewSet(AuthEnforcedModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         # Check if queryset is empty
-        if not queryset:
+        if not queryset.exists():
             return Response(
                 {"message": "No visualizations found"}, status=status.HTTP_404_NOT_FOUND
             )
