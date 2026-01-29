@@ -2,11 +2,15 @@ name: Geostreams3 Tests
 
 on:
   push:
-
+    branches:
+      - main
+    paths:
+      - 'backend/**'
   pull_request:
-    types:
-      - opened
-      - reopened
+    branches:
+      - main
+    paths:
+      - 'backend/**'
 
 jobs:
   test:
