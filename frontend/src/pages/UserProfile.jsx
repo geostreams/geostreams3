@@ -1,18 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "react-oidc-context";
 import axios from "axios";
 import {
     Typography,
-    Container,
     Box,
-    Paper,
     Button,
     Grid,
     Chip,
     Divider,
     Stack,
     Avatar,
-    Alert,
 } from "@mui/material";
 import {
     Person as PersonIcon,
@@ -41,7 +38,6 @@ function UserProfile() {
 
     const getAPIKey = async () => {
         const token = auth.user?.access_token;
-        console.log("auth.user", auth.user);
         if (token) {
             try {
                 setIsGeneratingKey(true);
@@ -57,7 +53,7 @@ function UserProfile() {
                 );
                 return response.data.key;
             } catch (err) {
-                console.error("API key error:", err);
+                // API key error - surface to user below
                 setCopyMessage("Failed to generate API key. Please try again.");
                 setMessageType("error");
                 setShowCopyMessage(true);
@@ -86,7 +82,6 @@ function UserProfile() {
             setCopyMessage("Failed to copy token. Please try again.");
             setMessageType("error");
             setShowCopyMessage(true);
-            console.error("Copy error:", err);
         }
     };
 

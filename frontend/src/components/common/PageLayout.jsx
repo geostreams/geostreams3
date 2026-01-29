@@ -1,4 +1,3 @@
-import React from "react";
 import { Container, Box, Typography, Fade } from "@mui/material";
 
 const PageLayout = ({

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
     AppBar,
     Toolbar,
@@ -24,19 +24,20 @@ import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 import { useNavigate } from "react-router-dom";
 
-function HideOnScroll({ children }) {
-    const trigger = useScrollTrigger();
-    return (
-        <Slide appear={false} direction="down" in={!trigger}>
-            {children}
-        </Slide>
-    );
-}
-
 function Navbar() {
     const auth = useAuth();
     const navigate = useNavigate();
     const theme = useTheme();
+
+    // eslint-disable-next-line react/no-multi-comp
+    const HideOnScroll = ({ children }) => {
+        const trigger = useScrollTrigger();
+        return (
+            <Slide appear={false} direction="down" in={!trigger}>
+                {children}
+            </Slide>
+        );
+    };
 
     const isAuthenticated = auth.isAuthenticated;
     const [anchorEl, setAnchorEl] = useState(null);
@@ -64,6 +65,7 @@ function Navbar() {
             auth.removeUser();
             await auth.signoutRedirect(); // Redirects to the identity provider's logout
         } catch (error) {
+            // eslint-disable-next-line no-console
             console.error("Error during logout:", error);
         }
     };
