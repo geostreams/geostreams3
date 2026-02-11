@@ -34,6 +34,7 @@ services:
       - KC_DB_PASSWORD=${KC_DB_PASSWORD}
     volumes:
       - ./keycloak/geostreams-realm.json:/opt/keycloak/data/import/realm.json:ro
+      - ./keycloak/themes/geostreams:/opt/keycloak/themes/geostreams:ro
     depends_on:
         - kc_postgres
     labels:

@@ -1,0 +1,740 @@
+/* ==========================================================================
+   Geostreams3 Custom Keycloak Login Theme
+
+   Follows the raincatcher-keycloak-theme approach:
+   Full visual override of Keycloak 25 login page to match
+   the Geostreams3 frontend design system.
+
+   Reference: https://github.com/austincunningham/raincatcher-keycloak-theme
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ==========================================================================
+   1. BACKGROUND - Remove default Keycloak geometric pattern
+   Target every possible selector that carries the background
+   ========================================================================== */
+
+html,
+html.login-pf,
+body,
+body.login-pf {
+  background: #f8fafc !important;
+  background-color: #f8fafc !important;
+  background-image: none !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Helvetica Neue', Arial, sans-serif !important;
+  color: #1e293b !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.login-pf-page,
+div.login-pf-page,
+.login-pf .login-pf-page,
+.login-pf .container-fluid,
+.login-pf .container {
+  margin: 0 !important;
+  padding-top: 0 !important;
+}
+
+.login-pf-page,
+div.login-pf-page,
+.login-pf .login-pf-page {
+  background: #f8fafc !important;
+  background-color: #f8fafc !important;
+  background-image: none !important;
+}
+
+/* Override PatternFly login backgrounds */
+.pf-c-login,
+.pf-v5-c-login,
+.pf-c-background-image,
+.pf-v5-c-background-image {
+  background: #f8fafc !important;
+  background-color: #f8fafc !important;
+  background-image: none !important;
+}
+
+.pf-c-background-image::before,
+.pf-v5-c-background-image::before,
+.pf-c-background-image::after,
+.pf-v5-c-background-image::after {
+  display: none !important;
+}
+
+/* ==========================================================================
+   2. HEADER BANNER - Geostreams gradient matching the frontend Navbar
+   ========================================================================== */
+
+div#kc-header,
+#kc-header,
+.login-pf-page-header,
+.login-pf-page .login-pf-page-header {
+  width: 100% !important;
+  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%) !important;
+  background-color: #1976d2 !important;
+  margin: 0 !important;
+  margin-top: 0 !important;
+  padding-top: 2.5em !important;
+  padding-bottom: 2.5em !important;
+  padding-right: 2em !important;
+  padding-left: 2em !important;
+  text-align: center !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0px 4px 12px rgba(25, 118, 210, 0.15) !important;
+}
+
+/* Hide ALL default Keycloak header content (logo, realm name, everything) */
+div#kc-header-wrapper,
+#kc-header-wrapper {
+  font-size: 0 !important;
+  color: transparent !important;
+  line-height: 0 !important;
+  text-indent: -9999px !important;
+}
+
+/* Nuclear hide: every child element inside the header wrapper */
+div#kc-header-wrapper *,
+#kc-header-wrapper * {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* SVG logo above title (raincatcher ::before approach) */
+div#kc-header-wrapper::before,
+#kc-header-wrapper::before {
+  content: '' !important;
+  display: block !important;
+  visibility: visible !important;
+  width: 56px !important;
+  height: 56px !important;
+  margin: 0 auto 1rem auto !important;
+  background-image: url('../img/logo.svg') !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  text-indent: 0 !important;
+  overflow: visible !important;
+}
+
+/* "Geostreams 3" title text (raincatcher ::after approach) */
+div#kc-header-wrapper::after,
+#kc-header-wrapper::after {
+  content: 'Geostreams 3' !important;
+  display: block !important;
+  visibility: visible !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 1.75rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  letter-spacing: 1.5px !important;
+  text-shadow: none !important;
+  line-height: 1.3 !important;
+  text-indent: 0 !important;
+  overflow: visible !important;
+}
+
+/* ==========================================================================
+   3. LOGIN CARD - White card with rounded corners and shadow
+   ========================================================================== */
+
+.card-pf,
+div.card-pf,
+.login-pf .card-pf,
+.login-pf-page .card-pf {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  box-shadow: 0px 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0px 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  padding: 2rem !important;
+  margin: 2rem auto !important;
+  max-width: 460px !important;
+  transition: box-shadow 0.3s ease-in-out !important;
+}
+
+.card-pf:hover,
+.login-pf .card-pf:hover {
+  box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ==========================================================================
+   4. PAGE TITLE - "Sign in to Geostreams"
+   ========================================================================== */
+
+#kc-page-title,
+.login-pf-header h1,
+.login-pf .card-pf .card-title {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  margin-bottom: 1.5rem !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.4 !important;
+  text-align: center !important;
+}
+
+/* ==========================================================================
+   5. FORM LABELS
+   ========================================================================== */
+
+label,
+.login-pf label,
+.control-label,
+.pf-c-form__label-text,
+.pf-v5-c-form__label-text,
+div#kc-form label {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: #1e293b !important;
+  margin-bottom: 0.5rem !important;
+  display: block !important;
+}
+
+/* ==========================================================================
+   6. FORM INPUTS
+   ========================================================================== */
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+.pf-c-form-control,
+.pf-v5-c-form-control,
+div#kc-form input[type="text"],
+div#kc-form input[type="password"],
+div#kc-form input[type="email"] {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 1rem !important;
+  color: #1e293b !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 0.75rem 1rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease-in-out !important;
+  outline: none !important;
+  line-height: 1.5 !important;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+.pf-c-form-control:focus,
+.pf-v5-c-form-control:focus {
+  border-color: #1976d2 !important;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.15) !important;
+}
+
+input::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 400 !important;
+}
+
+/* ==========================================================================
+   7. PRIMARY BUTTON (Sign In)
+   ========================================================================== */
+
+input[type="submit"],
+.btn-primary,
+.pf-c-button.pf-m-primary,
+.pf-v5-c-button.pf-m-primary,
+#kc-login,
+#kc-form-buttons input[type="submit"],
+#kc-form-buttons .btn-primary {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%) !important;
+  background-color: #1976d2 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 0.75rem 1.5rem !important;
+  width: 100% !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease-in-out !important;
+  text-transform: none !important;
+  letter-spacing: 0.3px !important;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1), 0px 1px 2px rgba(0, 0, 0, 0.06) !important;
+  line-height: 1.5 !important;
+}
+
+input[type="submit"]:hover,
+.btn-primary:hover,
+.pf-c-button.pf-m-primary:hover,
+.pf-v5-c-button.pf-m-primary:hover,
+#kc-login:hover {
+  background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%) !important;
+  background-color: #1565c0 !important;
+  box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-1px) !important;
+}
+
+input[type="submit"]:active,
+.btn-primary:active,
+.pf-c-button.pf-m-primary:active {
+  transform: translateY(0) !important;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+input[type="submit"]:focus,
+.btn-primary:focus,
+.pf-c-button.pf-m-primary:focus {
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.3) !important;
+}
+
+/* ==========================================================================
+   8. SECONDARY / DEFAULT BUTTONS
+   ========================================================================== */
+
+.btn-default,
+.pf-c-button.pf-m-secondary,
+.pf-v5-c-button.pf-m-secondary {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: #1976d2 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 0.625rem 1.25rem !important;
+  transition: all 0.2s ease-in-out !important;
+  text-transform: none !important;
+}
+
+.btn-default:hover,
+.pf-c-button.pf-m-secondary:hover,
+.pf-v5-c-button.pf-m-secondary:hover {
+  border-color: #1976d2 !important;
+  background-color: rgba(25, 118, 210, 0.04) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* ==========================================================================
+   9. LINKS
+   ========================================================================== */
+
+a,
+.login-pf a,
+.kc-form-options a,
+#kc-registration a {
+  color: #1976d2 !important;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  transition: color 0.2s ease-in-out !important;
+}
+
+a:hover,
+.login-pf a:hover,
+.kc-form-options a:hover,
+#kc-registration a:hover {
+  color: #1565c0 !important;
+  text-decoration: underline !important;
+}
+
+/* ==========================================================================
+   10. FORGOT PASSWORD & FORM OPTIONS
+   ========================================================================== */
+
+.kc-form-options,
+.kc-form-options .checkbox label {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.875rem !important;
+  color: #64748b !important;
+}
+
+/* ==========================================================================
+   11. REGISTRATION LINK ("New user? Register")
+   ========================================================================== */
+
+#kc-registration {
+  margin-top: 1.5rem !important;
+  padding-top: 1.5rem !important;
+  border-top: 1px solid #e2e8f0 !important;
+  text-align: center !important;
+}
+
+#kc-registration span {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.875rem !important;
+  color: #64748b !important;
+}
+
+/* ==========================================================================
+   12. FOOTER
+   ========================================================================== */
+
+.login-pf-page-footer,
+.login-pf-page .login-pf-page-footer {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+#kc-info,
+#kc-info-wrapper {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.8125rem !important;
+  color: #64748b !important;
+  text-align: center !important;
+  margin-top: 1.5rem !important;
+  background: transparent !important;
+}
+
+/* ==========================================================================
+   13. ALERT MESSAGES
+   ========================================================================== */
+
+.alert,
+.pf-c-alert,
+.pf-v5-c-alert {
+  border-radius: 8px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.875rem !important;
+  padding: 0.75rem 1rem !important;
+  margin-bottom: 1rem !important;
+  border-width: 1px !important;
+}
+
+.alert-error,
+.alert-danger,
+.pf-c-alert.pf-m-danger,
+.pf-v5-c-alert.pf-m-danger {
+  background-color: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #dc2626 !important;
+}
+
+.alert-success,
+.pf-c-alert.pf-m-success,
+.pf-v5-c-alert.pf-m-success {
+  background-color: #f0fdf4 !important;
+  border-color: #bbf7d0 !important;
+  color: #059669 !important;
+}
+
+.alert-warning,
+.pf-c-alert.pf-m-warning,
+.pf-v5-c-alert.pf-m-warning {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #d97706 !important;
+}
+
+.alert-info,
+.pf-c-alert.pf-m-info,
+.pf-v5-c-alert.pf-m-info {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #2563eb !important;
+}
+
+/* ==========================================================================
+   14. CHECKBOXES
+   ========================================================================== */
+
+input[type="checkbox"] {
+  accent-color: #1976d2 !important;
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 4px !important;
+}
+
+.checkbox label,
+.pf-c-check__label,
+.pf-v5-c-check__label {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.875rem !important;
+  color: #64748b !important;
+}
+
+/* ==========================================================================
+   15. PASSWORD INPUT GROUP (input + eye toggle merged seamlessly)
+
+   Keycloak 25 / PatternFly 5 nests __item wrappers between the
+   input-group and the actual input/button, so we use attribute
+   selectors [class*="input-group"] to match any depth.
+   ========================================================================== */
+
+/* The input-group container: shared outer border */
+[class*="input-group"],
+.pf-c-input-group,
+.pf-v5-c-input-group,
+.input-group {
+  display: flex !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  background-color: #ffffff !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+/* Focus ring on the whole group */
+[class*="input-group"]:focus-within {
+  border-color: #1976d2 !important;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.15) !important;
+}
+
+/* Strip border + radius from EVERYTHING inside the group.
+   Include #kc-form to beat the ID-level specificity from section 6. */
+[class*="input-group"] input,
+[class*="input-group"] input[type="text"],
+[class*="input-group"] input[type="password"],
+[class*="input-group"] [class*="form-control"],
+[class*="input-group"] .pf-c-form-control,
+[class*="input-group"] .pf-v5-c-form-control,
+#kc-form [class*="input-group"] input,
+#kc-form [class*="input-group"] input[type="text"],
+#kc-form [class*="input-group"] input[type="password"],
+div#kc-form [class*="input-group"] input[type="text"],
+div#kc-form [class*="input-group"] input[type="password"],
+#password {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+[class*="input-group"] input:focus,
+[class*="input-group"] [class*="form-control"]:focus,
+#kc-form [class*="input-group"] input:focus,
+div#kc-form [class*="input-group"] input:focus,
+#password:focus {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Intermediate __item wrappers: transparent, no border */
+[class*="input-group__item"],
+[class*="input-group"] > div {
+  border: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Eye toggle button: flush against the input */
+[class*="input-group"] button,
+[class*="input-group"] .pf-c-button,
+[class*="input-group"] .pf-v5-c-button,
+.pf-c-button.pf-m-control,
+.pf-v5-c-button.pf-m-control {
+  border: none !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-left: 1px solid #e2e8f0 !important;
+  border-radius: 0 !important;
+  background-color: #f8fafc !important;
+  color: #64748b !important;
+  box-shadow: none !important;
+  padding: 0.5rem 0.75rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease-in-out !important;
+  flex-shrink: 0 !important;
+}
+
+[class*="input-group"] button:hover,
+.pf-c-button.pf-m-control:hover,
+.pf-v5-c-button.pf-m-control:hover {
+  background-color: #f1f5f9 !important;
+  color: #1976d2 !important;
+}
+
+[class*="input-group"] button:focus,
+.pf-c-button.pf-m-control:focus,
+.pf-v5-c-button.pf-m-control:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Remove any borders/lines from everything inside the toggle button */
+.pf-c-button.pf-m-control *,
+.pf-v5-c-button.pf-m-control *,
+[class*="input-group"] button * {
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+
+/* ==========================================================================
+   16. SOCIAL LOGIN
+   ========================================================================== */
+
+.kc-social-links,
+.kc-social-section {
+  margin-top: 1.5rem !important;
+  padding-top: 1.5rem !important;
+  border-top: 1px solid #e2e8f0 !important;
+}
+
+.kc-social-links .zocial {
+  border-radius: 8px !important;
+  padding: 0.625rem 1rem !important;
+  border: 1px solid #e2e8f0 !important;
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  font-family: 'Inter', sans-serif !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.kc-social-links .zocial:hover {
+  border-color: #1976d2 !important;
+  background-color: rgba(25, 118, 210, 0.04) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* ==========================================================================
+   17. LOCALE DROPDOWN
+   ========================================================================== */
+
+#kc-locale ul {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+  overflow: hidden !important;
+}
+
+#kc-locale ul li a {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.875rem !important;
+  padding: 0.5rem 1rem !important;
+  color: #1e293b !important;
+}
+
+#kc-locale ul li a:hover {
+  background-color: rgba(25, 118, 210, 0.08) !important;
+  color: #1976d2 !important;
+}
+
+#kc-locale-dropdown > a {
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+#kc-locale-dropdown > a:hover {
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   18. FORM GROUP SPACING
+   ========================================================================== */
+
+.form-group,
+.pf-c-form__group,
+.pf-v5-c-form__group {
+  margin-bottom: 1.25rem !important;
+}
+
+/* ==========================================================================
+   19. HELP TEXT / INSTRUCTIONS
+   ========================================================================== */
+
+.kc-feedback-text,
+.instruction {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.875rem !important;
+  color: #64748b !important;
+  line-height: 1.5 !important;
+}
+
+/* ==========================================================================
+   20. RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  div#kc-header,
+  #kc-header,
+  .login-pf-page-header {
+    padding: 1.5rem 1rem !important;
+  }
+
+  div#kc-header-wrapper,
+  #kc-header-wrapper {
+    font-size: 1.375rem !important;
+  }
+
+  #kc-header-wrapper::before {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .card-pf,
+  .login-pf .card-pf,
+  .login-pf-page .card-pf {
+    padding: 1.5rem !important;
+    border-radius: 12px !important;
+    margin: 1.5rem 0.5rem !important;
+  }
+
+  #kc-page-title {
+    font-size: 1.25rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  div#kc-header,
+  #kc-header,
+  .login-pf-page-header {
+    padding: 1.25rem 0.75rem !important;
+  }
+
+  div#kc-header-wrapper,
+  #kc-header-wrapper {
+    font-size: 1.125rem !important;
+  }
+
+  .card-pf,
+  .login-pf .card-pf {
+    padding: 1.25rem !important;
+    border-radius: 8px !important;
+  }
+}
+
+/* ==========================================================================
+   21. SCROLLBAR & SELECTION
+   ========================================================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+::selection {
+  background-color: rgba(25, 118, 210, 0.2);
+  color: #1e293b;
+}

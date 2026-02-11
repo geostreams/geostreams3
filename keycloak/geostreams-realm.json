@@ -1,8 +1,9 @@
 {
   "id": "69b88f63-7976-4a27-be38-fa85bb6c710b",
   "realm": "geostreams",
-  "displayName": "",
-  "displayNameHtml": "",
+  "displayName": "Geostreams",
+  "displayNameHtml": "<strong>Geostreams</strong>",
+  "loginTheme": "geostreams",
   "notBefore": 1725305617,
   "defaultSignatureAlgorithm": "RS256",
   "revokeRefreshToken": false,
