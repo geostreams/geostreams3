@@ -17,6 +17,7 @@ import {
 import {
     Home as HomeIcon,
     MenuBook as MenuBookIcon,
+    Dashboard as DashboardIcon,
     Person as PersonIcon,
     Logout as LogoutIcon,
     Login as LoginIcon,
@@ -180,6 +181,32 @@ function Navbar() {
                             API Docs
                         </Button>
 
+                        {isAuthenticated && (
+                            <Button
+                                color="inherit"
+                                component={RouterLink}
+                                to="/dashboard"
+                                startIcon={<DashboardIcon />}
+                                sx={{
+                                    color: "white",
+                                    fontWeight: 600,
+                                    px: 2,
+                                    py: 1,
+                                    borderRadius: 2,
+                                    transition: "all 0.2s ease-in-out",
+                                    "&:hover": {
+                                        backgroundColor: alpha(
+                                            theme.palette.common.white,
+                                            0.1,
+                                        ),
+                                        transform: "translateY(-1px)",
+                                    },
+                                }}
+                            >
+                                Dashboard
+                            </Button>
+                        )}
+
                         {!isAuthenticated ? (
                             <Button
                                 color="inherit"
@@ -296,6 +323,36 @@ function Navbar() {
                                                     .preferred_username}
                                         </Typography>
                                     </Box>
+
+                                    <MenuItem
+                                        onClick={() => {
+                                            handleMenuClose();
+                                            navigate("/dashboard");
+                                        }}
+                                        sx={{
+                                            py: 1.25,
+                                            gap: 1.5,
+                                            mx: 0.75,
+                                            borderRadius: 1.5,
+                                            "&:hover": {
+                                                backgroundColor: alpha(
+                                                    theme.palette.primary.main,
+                                                    0.08,
+                                                ),
+                                            },
+                                        }}
+                                    >
+                                        <DashboardIcon
+                                            fontSize="small"
+                                            color="primary"
+                                        />
+                                        <Typography
+                                            variant="body2"
+                                            sx={{ fontWeight: 500 }}
+                                        >
+                                            Dashboard
+                                        </Typography>
+                                    </MenuItem>
 
                                     <MenuItem
                                         onClick={() => {

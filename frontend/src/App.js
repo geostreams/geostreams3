@@ -11,6 +11,7 @@ import { useAuth } from "react-oidc-context";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import UserProfile from "./pages/UserProfile";
+import Dashboard from "./pages/Dashboard";
 import LoadingSpinner from "./components/ui/LoadingSpinner";
 
 function App() {
@@ -96,14 +97,25 @@ function App() {
         <Router basename="/geostreams">
             <Navbar />
             <Routes>
-                {/* Redirect to profile if authenticated */}
+                {/* Redirect to dashboard if authenticated */}
                 <Route
                     path="/"
                     element={
                         auth.isAuthenticated ? (
-                            <Navigate to="/profile" />
+                            <Navigate to="/dashboard" />
                         ) : (
                             <Home />
+                        )
+                    }
+                />
+                {/* Protected Dashboard Route */}
+                <Route
+                    path="/dashboard"
+                    element={
+                        auth.isAuthenticated ? (
+                            <Dashboard />
+                        ) : (
+                            <Navigate to="/" />
                         )
                     }
                 />
