@@ -70,8 +70,7 @@ services:
 
   # The containers we create for the backend and frontend
   backend:
-    build:
-      context: ./backend
+    image: hub.ncsa.illinois.edu/geostreams3/backend:latest
     container_name: geostreams-backend
     env_file:
       #      TODO: Fix the env configuration
@@ -91,11 +90,8 @@ services:
       - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
 
   frontend:
-    build:
-      context: ./frontend
+    image: hub.ncsa.illinois.edu/geostreams3/frontend:latest
     container_name: geostreams-frontend
-    env_file:
-      - ./frontend/.env
     depends_on:
       - backend
     labels:

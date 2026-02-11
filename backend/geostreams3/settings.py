@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
+    "django.contrib.postgres",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
@@ -116,6 +117,10 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "authentication.authentication.APIKeyAuthentication",
     ),
+}
+
+SWAGGER_SETTINGS = {
+    "DEFAULT_AUTO_SCHEMA_CLASS": "geostreams3.swagger.GroupedTagsAutoSchema",
 }
 
 

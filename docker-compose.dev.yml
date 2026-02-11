@@ -23,7 +23,7 @@ services:
     command:
       - start-dev
       - --import-realm
-      - --http-relative-path=/keycloak
+      - --http-relative-path=/geostreams/keycloak
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_PASSWORD}
@@ -38,7 +38,7 @@ services:
         - kc_postgres
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.keycloak.rule=PathPrefix(`/keycloak`)"
+      - "traefik.http.routers.keycloak.rule=PathPrefix(`/geostreams/keycloak`)"
       - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
       - "traefik.http.routers.keycloak.priority=10"
       - "traefik.http.routers.keycloak.entrypoints=web"

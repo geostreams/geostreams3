@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
 import {
     BrowserRouter as Router,
     Routes,
     Route,
     Navigate,
 } from "react-router-dom";
-import { Box, Container, Typography, Button } from "@mui/material";
+import { Container, Typography, Button } from "@mui/material";
 
 import { useAuth } from "react-oidc-context";
 
@@ -63,8 +62,6 @@ function App() {
     }
 
     if (auth.error) {
-        console.log(auth.error);
-
         return (
             <Container
                 sx={{

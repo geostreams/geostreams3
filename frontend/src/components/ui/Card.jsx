@@ -1,4 +1,3 @@
-import React from "react";
 import { Card as MuiCard, CardContent, Typography, Box } from "@mui/material";
 
 const Card = ({
