@@ -61,83 +61,73 @@ The system is divided into 4 main components:
 
 ## Setup Guide for Developers
 ### Prerequisites
-- Docker and Docker Compose installed
-- Node.js and npm installed for the frontend
-- Python 3.10 or higher for the backend
+- Docker and Docker Compose
+- Node.js + npm (for frontend)
+- Conda (Miniconda or Anaconda)
 
-
-### 1. Clone the Repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/geostreams/geostreams3.git
 cd geostreams3
 ```
 
-### 2. Setup Environment Variables
-Create .env files for the backend and frontend by copying the provided .env-example files:
+### 2. Create environment files
+Copy the current env templates:
 
-    ```bash
-    cp backend/geostreams3/.env_example backend/geostreams3/.env
-    cp frontend/.env_example frontend/.env
-    ```
+```bash
+cp .env.example .env
+cp backend/.env-example backend/.env
+cp frontend/.env-example frontend/.env
+```
 
-Update the values in the .env files to match your environment setup, including API URLs,
-database settings, and Keycloak configurations and secrets.
+### 3. Start development infrastructure (database + Keycloak + Traefik)
+For local development, start the infrastructure services from `docker-compose.dev.yml`:
 
-### 3. Start the
+```bash
+docker-compose -f docker-compose.dev.yml up -d
+```
 
+This starts:
+- TimescaleDB on `localhost:5433`
+- Keycloak behind Traefik at `http://localhost/keycloak`
 
+If you run backend locally (outside Docker), update `backend/.env` to point to local ports/hosts, for example:
+- `POSTGRES_HOST=localhost`
+- `POSTGRES_PORT=5433`
+- `KEYCLOAK_SERVER_URL=http://localhost/keycloak/`
 
+### 4. Run backend locally
 
-### Docker-compose
+```bash
+cd backend
+conda create -n geostreams3 python=3.12 -y
+conda activate geostreams3
+python -m pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver 9007
+```
 
-The easiest way to set up the stack is to use [docker-compose](https://docs.docker.com/compose/).
+Backend will be available at `http://localhost:8000`.
+
+### 5. Run frontend locally
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+Frontend will be available at `http://localhost:3000`.
+
+### Optional: run full stack via production compose
+`docker-compose.yml` starts a production-style stack and pulls prebuilt backend/frontend images:
 
 ```bash
 docker-compose up -d
 ```
 
-This will start the PostgreSQL and Keycloak. Make sure Keycloak is running on port 8080.
-
-### Keycloak Configuration
-
-1. Access the Keycloak admin console at `http://localhost:8080` to configure the realm and client if necessary.
-
-### Environment Setup
-
-Make a copy of `.env_example` in both the frontend and `backend/geostreams3` directories and update them with appropriate values:
-
-```bash
-cp frontend/.env_example frontend/.env
-cp backend/geostreams3/.env_example backend/geostreams3/.env
-```
-
-Update the values to match your environment setup, including API URLs, database settings, and Keycloak configurations and secrets.
-
-### Frontend Setup
-
-Navigate to the frontend directory and install dependencies:
-
-```bash
-cd frontend
-npm install
-npm run start
-```
-
-This will start the React frontend server, accessible at `http://localhost:3000`.
-
-### Backend Setup
-
-For the backend, change to the `backend` directory, install the requirements, and run the migrations if necessary:
-
-```bash
-cd backend
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver 8000
-```
-
-The backend will be running at `http://localhost:8000`. This port number can be modified but make sure to update keycloak and other required configurations accordingly.
+Use this mode when you want to run published images rather than local frontend/backend source code.
 
 ### Pre-commit Setup
 
@@ -151,10 +141,10 @@ This will automatically run checks such as Black formatting on every commit.
 
 ### Swagger Documentation
 
-To access the API documentation, open the Swagger page by appending `/swagger` to the base URL. For example, if the backend is running on `http://localhost:8000`, access the Swagger UI at:
+To access API documentation when running backend locally, open:
 
 ```
-http://localhost:8000/swagger
+http://localhost:9007/geostreams/api/swagger/
 ```
 
 ## API Testing with Bruno

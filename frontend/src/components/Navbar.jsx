@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import {
     Home as HomeIcon,
+    MenuBook as MenuBookIcon,
     Person as PersonIcon,
     Logout as LogoutIcon,
     Login as LoginIcon,
@@ -41,6 +42,19 @@ function Navbar() {
 
     const isAuthenticated = auth.isAuthenticated;
     const [anchorEl, setAnchorEl] = useState(null);
+    const backendUrl = process.env.REACT_APP_BACKEND_URL;
+    const apiDocsUrl = (() => {
+        if (!backendUrl) {
+            return "/geostreams/api/swagger/";
+        }
+
+        try {
+            const origin = new URL(backendUrl).origin;
+            return `${origin}/geostreams/api/swagger/`;
+        } catch (_error) {
+            return "/geostreams/api/swagger/";
+        }
+    })();
 
     const getInitials = (name) => {
         if (!name) return "U";
@@ -140,6 +154,31 @@ function Navbar() {
                             }}
                         >
                             Home
+                        </Button>
+                        <Button
+                            color="inherit"
+                            component="a"
+                            href={apiDocsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            startIcon={<MenuBookIcon />}
+                            sx={{
+                                color: "white",
+                                fontWeight: 600,
+                                px: 2,
+                                py: 1,
+                                borderRadius: 2,
+                                transition: "all 0.2s ease-in-out",
+                                "&:hover": {
+                                    backgroundColor: alpha(
+                                        theme.palette.common.white,
+                                        0.1,
+                                    ),
+                                    transform: "translateY(-1px)",
+                                },
+                            }}
+                        >
+                            API Docs
                         </Button>
 
                         {!isAuthenticated ? (
