@@ -25,20 +25,19 @@ import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 import { useNavigate } from "react-router-dom";
 
+const HideOnScroll = ({ children }) => {
+    const trigger = useScrollTrigger();
+    return (
+        <Slide appear={false} direction="down" in={!trigger}>
+            {children}
+        </Slide>
+    );
+};
+
 function Navbar() {
     const auth = useAuth();
     const navigate = useNavigate();
     const theme = useTheme();
-
-    // eslint-disable-next-line react/no-multi-comp
-    const HideOnScroll = ({ children }) => {
-        const trigger = useScrollTrigger();
-        return (
-            <Slide appear={false} direction="down" in={!trigger}>
-                {children}
-            </Slide>
-        );
-    };
 
     const isAuthenticated = auth.isAuthenticated;
     const [anchorEl, setAnchorEl] = useState(null);
@@ -127,7 +126,7 @@ function Navbar() {
                             },
                         }}
                     >
-                        🌊 Geostreams
+                        Geostreams3
                     </Typography>
 
                     {/* Navigation */}
@@ -251,12 +250,18 @@ function Navbar() {
                                     open={Boolean(anchorEl)}
                                     onClose={handleMenuClose}
                                     sx={{
-                                        mt: 1,
+                                        mt: 0.75,
                                         "& .MuiPaper-root": {
-                                            borderRadius: 2,
-                                            minWidth: 200,
-                                            boxShadow: theme.shadows[4],
+                                            borderRadius: 3,
+                                            minWidth: 220,
+                                            boxShadow: theme.shadows[8],
                                             border: `1px solid ${theme.palette.divider}`,
+                                            overflow: "hidden",
+                                        },
+                                    }}
+                                    MenuListProps={{
+                                        sx: {
+                                            py: 0.75,
                                         },
                                     }}
                                     transformOrigin={{
@@ -271,7 +276,7 @@ function Navbar() {
                                     <Box
                                         sx={{
                                             px: 2,
-                                            py: 1.5,
+                                            py: 1.25,
                                             borderBottom: `1px solid ${theme.palette.divider}`,
                                         }}
                                     >
@@ -298,12 +303,14 @@ function Navbar() {
                                             navigate("/profile");
                                         }}
                                         sx={{
-                                            py: 1.5,
+                                            py: 1.25,
                                             gap: 1.5,
+                                            mx: 0.75,
+                                            borderRadius: 1.5,
                                             "&:hover": {
                                                 backgroundColor: alpha(
                                                     theme.palette.primary.main,
-                                                    0.1,
+                                                    0.08,
                                                 ),
                                             },
                                         }}
@@ -326,13 +333,16 @@ function Navbar() {
                                             handleLogout();
                                         }}
                                         sx={{
-                                            py: 1.5,
+                                            py: 1.25,
                                             gap: 1.5,
-                                            borderTop: `1px solid ${theme.palette.divider}`,
+                                            mt: 0.5,
+                                            mx: 0.75,
+                                            borderRadius: 1.5,
+                                            borderTop: `1px solid ${alpha(theme.palette.error.main, 0.15)}`,
                                             "&:hover": {
                                                 backgroundColor: alpha(
                                                     theme.palette.error.main,
-                                                    0.1,
+                                                    0.08,
                                                 ),
                                             },
                                         }}
