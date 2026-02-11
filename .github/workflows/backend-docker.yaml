@@ -28,12 +28,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Only run if triggered manually, by a tag push, or if the test workflow succeeded
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      startsWith(github.ref, 'refs/tags/') ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
