@@ -90,12 +90,12 @@ docker-compose -f docker-compose.dev.yml up -d
 
 This starts:
 - TimescaleDB on `localhost:5433`
-- Keycloak behind Traefik at `http://localhost/keycloak`
+- Keycloak behind Traefik at `http://localhost/geostreams/keycloak`
 
 If you run backend locally (outside Docker), update `backend/.env` to point to local ports/hosts, for example:
 - `POSTGRES_HOST=localhost`
 - `POSTGRES_PORT=5433`
-- `KEYCLOAK_SERVER_URL=http://localhost/keycloak/`
+- `KEYCLOAK_SERVER_URL=http://localhost/geostreams/keycloak/`
 
 ### 4. Run backend locally
 
@@ -108,7 +108,7 @@ python manage.py migrate
 python manage.py runserver 9007
 ```
 
-Backend will be available at `http://localhost:8000`.
+Backend will be available at `http://localhost:9007/geostreams/api/`.
 
 ### 5. Run frontend locally
 
