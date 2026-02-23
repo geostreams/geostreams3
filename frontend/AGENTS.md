@@ -44,6 +44,7 @@ Env vars (see `.env-example`):
 | `REACT_APP_KEYCLOAK_AUTH_URL` | Keycloak realm URL |
 | `REACT_APP_KEYCLOAK_CLIENT_ID` | OIDC client ID |
 | `REACT_APP_BACKEND_URL` | Backend origin for API calls |
+| `REACT_APP_KEYCLOAK_CLIENT_SECRET` | OIDC client secret (if required) |
 
 ## Routing
 
@@ -53,7 +54,7 @@ Routes are defined in `App.js`. Protected routes check OIDC auth state before re
 ## Constraints
 
 - Use MUI components for all UI — do not introduce Tailwind or other CSS frameworks.
-- JSX files use the `.jsx` extension.
+- New JSX component files should use the `.jsx` extension (existing entry files like `App.js` and `index.js` may remain `.js`).
 - Functional components only — no class components.
 - ESLint rules enforced: `no-var` (error), `no-console` (warn), `prefer-const` (warn).
 - Prettier formats on commit via pre-commit hook.
