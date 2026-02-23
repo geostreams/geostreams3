@@ -18,12 +18,7 @@ src/
 ├── components/
 │   ├── common/         # Shared layout (PageLayout)
 │   └── ui/             # Reusable presentational (Card, LoadingSpinner, …)
-├── features/           # Feature modules (auth, dashboard, data, map, sensors, settings) — scaffolded, mostly empty
-├── theme/              # MUI theme config (theme.js)
-├── services/           # API service layer (empty, to be built)
-├── contexts/           # React contexts (empty)
-├── layouts/            # Layout wrappers (empty)
-└── utils/              # Helpers (empty)
+└── theme/              # MUI theme config (theme.js)
 ```
 
 ## Commands
@@ -57,5 +52,4 @@ Routes are defined in `App.js`. Protected routes check OIDC auth state before re
 - Functional components only — no class components.
 - ESLint rules enforced: `no-var` (error), `no-console` (warn), `prefer-const` (warn).
 - Prettier formats on commit via pre-commit hook.
-- `features/` directories are scaffolded but mostly empty — place new feature code there.
 - Proxy config lives in `setupProxy.js` (not in `package.json`).
