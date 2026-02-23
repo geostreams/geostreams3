@@ -172,4 +172,4 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Disable authentication for all methods, set to False for production
-DISABLE_AUTH = False
+DISABLE_AUTH = os.getenv("DISABLE_AUTH", False)

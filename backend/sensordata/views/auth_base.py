@@ -21,7 +21,7 @@ class AuthEnforcedModelViewSet(viewsets.ModelViewSet):
         # Check if authentication is disabled via environment variable
         if getattr(settings, "DISABLE_AUTH", False):
             self.permission_classes = [AllowAny]
-        elif self.request.method in ["POST", "DELETE"]:
+        elif self.request.method in ["POST", "DELETE", "PUT", "PATCH"]:
             self.permission_classes = [IsAuthenticated]
         else:
             self.permission_classes = [AllowAny]
