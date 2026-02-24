@@ -58,5 +58,4 @@ Routes are defined in `App.js`. Protected routes check OIDC auth state before re
 - Functional components only — no class components.
 - ESLint rules enforced: `no-var` (error), `no-console` (warn), `prefer-const` (warn).
 - Prettier formats on commit via pre-commit hook.
-- `features/` directories are scaffolded but mostly empty — place new feature code there.
 - Proxy config lives in `setupProxy.js` (not in `package.json`).

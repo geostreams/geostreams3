@@ -5,7 +5,9 @@ on:
     branches:
       - main
     paths:
-      - 'backend/**'
+      - 'backend/sensordata/**'
+      - 'backend/authentication/**'
+      - 'backend/geostreams3/**'
   pull_request:
     branches:
       - main
