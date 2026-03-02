@@ -27,5 +27,5 @@ cd database_migration_scripts
 Step 4: Go back to the root directory and install the dependencies, please ensure you have a .env file in the geostreams3 directory. Refer to the .env.example file for the required environment variables.
 
 ```bash
-python3 manage.py runserver
+python manage.py runserver
 ```
