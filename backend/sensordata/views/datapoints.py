@@ -31,6 +31,10 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         total_count = queryset.count()
+        if total_count == 0:
+            return Response(
+                {"message": "No datapoints found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         try:
             limit, offset = parse_limit_offset(request.query_params, default_limit=100)
