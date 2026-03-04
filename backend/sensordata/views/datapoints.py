@@ -1,6 +1,7 @@
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from collections import defaultdict
 
 import json
@@ -11,6 +12,7 @@ from django.db import connection
 from ..models import Datapoint, Stream, Parameter, Sensor
 from ..serializers import DatapointSerializer
 from .auth_base import AuthEnforcedModelViewSet
+from ..utils.pagination import parse_limit_offset, apply_limit_offset
 
 
 class DatapointsViewSet(AuthEnforcedModelViewSet):
@@ -20,9 +22,38 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
     serializer_class = DatapointSerializer
 
     def get_queryset(self):
-        return Datapoint.objects.select_related(
-            "stream__sensor", "parameter"
-        ).prefetch_related("stream__sensor__streams")
+        return (
+            Datapoint.objects.select_related("stream__sensor", "parameter")
+            .prefetch_related("stream__sensor__streams")
+            .order_by("id")
+        )
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        total_count = queryset.count()
+        if total_count == 0:
+            return Response(
+                {"message": "No datapoints found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            limit, offset = parse_limit_offset(request.query_params, default_limit=100)
+        except ValidationError as exc:
+            return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+
+        paginated_queryset = apply_limit_offset(queryset, limit, offset)
+        serializer = self.get_serializer(paginated_queryset, many=True)
+        return Response(
+            {
+                "datapoints": serializer.data,
+                "pagination": {
+                    "count": total_count,
+                    "limit": limit,
+                    "offset": offset,
+                    "returned": len(serializer.data),
+                },
+            }
+        )
 
     def _parse_datapoint_parameters(self, datapoint):
         """

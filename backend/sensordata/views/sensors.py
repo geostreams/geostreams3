@@ -1,9 +1,11 @@
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from django.db import transaction
 from ..models import Sensor
 from ..serializers import SensorSerializer, GeoJSONSensorSerializer
 from .auth_base import AuthEnforcedModelViewSet
+from ..utils.pagination import parse_limit_offset, apply_limit_offset
 from rest_framework.decorators import action
 from django.contrib.gis.geos import Point, Polygon, GEOSGeometry
 from django.contrib.gis.measure import D
@@ -59,6 +61,7 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
                 min_start_time=Min("streams__start_time"),
                 max_end_time=Max("streams__end_time"),
             )
+            .order_by("id")
         )
         name_filter = self.request.query_params.get("name", None)
         source_filter = self.request.query_params.get("source", None)
@@ -74,25 +77,49 @@ class SensorsViewSet(AuthEnforcedModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
 
-        if not queryset:
+        total_count = queryset.count()
+        if total_count == 0:
             return Response(
                 {"message": "No sensors found"}, status=status.HTTP_404_NOT_FOUND
             )
+
+        try:
+            limit, offset = parse_limit_offset(request.query_params, default_limit=20)
+        except ValidationError as exc:
+            return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+
+        paginated_queryset = apply_limit_offset(queryset, limit, offset)
         # Check if format parameter is provided
         type_param = request.query_params.get("type", "").lower()
 
         if type_param == "geojson":
             # Wrap array of GeoJSON Features in a proper GeoJSON FeatureCollection
-            serializer = GeoJSONSensorSerializer(queryset, many=True)
+            serializer = GeoJSONSensorSerializer(paginated_queryset, many=True)
             geojson_response = {
                 "type": "FeatureCollection",
                 "features": serializer.data,
+                "pagination": {
+                    "count": total_count,
+                    "limit": limit,
+                    "offset": offset,
+                    "returned": len(serializer.data),
+                },
             }
             return Response(geojson_response)
         else:
             # Return data in default format
-            serializer = SensorSerializer(queryset, many=True)
-            return Response({"sensors": serializer.data})
+            serializer = SensorSerializer(paginated_queryset, many=True)
+            return Response(
+                {
+                    "sensors": serializer.data,
+                    "pagination": {
+                        "count": total_count,
+                        "limit": limit,
+                        "offset": offset,
+                        "returned": len(serializer.data),
+                    },
+                }
+            )
 
     def list_sources(self, request, *args, **kwargs):
         """Return a sorted list of unique sensor sources."""
