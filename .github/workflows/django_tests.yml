@@ -61,6 +61,8 @@ jobs:
           echo "POSTGRES_DB=postgres" >> .env
           echo "POSTGRES_HOST=localhost" >> .env
           echo "POSTGRES_PORT=5433" >> .env
+          echo "SECRET_KEY=test" >> .env
+
 
       - name: Run Database Migrations
         run: |

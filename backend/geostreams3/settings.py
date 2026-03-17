@@ -23,7 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 SECRET_KEY = os.getenv("SECRET_KEY")
-DEBUG = os.getenv("DEBUG")
+if not SECRET_KEY:
+    raise ValueError(
+        "SECRET_KEY environment variable must be set. "
+        "See backend/.env-example for local development."
+    )
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = (
     os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else []
@@ -83,14 +88,33 @@ WSGI_APPLICATION = "geostreams3.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+POSTGRES_DB = os.getenv("POSTGRES_DB")
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+
+if (
+    not POSTGRES_DB
+    or not POSTGRES_USER
+    or not POSTGRES_PASSWORD
+    or not POSTGRES_HOST
+    or not POSTGRES_PORT
+):
+    raise ValueError(
+        "POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, and POSTGRES_PORT "
+        "environment variables must be set. "
+        "See backend/.env-example for local development."
+    )
+
 DATABASES = {
     "default": {
         "ENGINE": "timescale.db.backends.postgis",
-        "NAME": os.getenv("POSTGRES_DB"),
-        "USER": os.getenv("POSTGRES_USER"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-        "HOST": os.getenv("POSTGRES_HOST"),
-        "PORT": os.getenv("POSTGRES_PORT"),
+        "NAME": POSTGRES_DB,
+        "USER": POSTGRES_USER,
+        "PASSWORD": POSTGRES_PASSWORD,
+        "HOST": POSTGRES_HOST,
+        "PORT": POSTGRES_PORT,
     }
 }
 
@@ -139,9 +163,29 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Keycloak settings
 KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL")
+if not KEYCLOAK_SERVER_URL:
+    raise ValueError(
+        "KEYCLOAK_SERVER_URL environment variable must be set. "
+        "See backend/.env-example for local development."
+    )
 KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM")
+if not KEYCLOAK_REALM:
+    raise ValueError(
+        "KEYCLOAK_REALM environment variable must be set. "
+        "See backend/.env-example for local development."
+    )
 KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID")
+if not KEYCLOAK_CLIENT_ID:
+    raise ValueError(
+        "KEYCLOAK_CLIENT_ID environment variable must be set. "
+        "See backend/.env-example for local development."
+    )
 KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET")
+if not KEYCLOAK_CLIENT_SECRET:
+    raise ValueError(
+        "KEYCLOAK_CLIENT_SECRET environment variable must be set. "
+        "See backend/.env-example for local development."
+    )
 
 # API KEY EXPIRATION DAYS
 API_KEY_JWT_EXPIRY_DAYS = int(os.getenv("API_KEY_JWT_EXPIRY_DAYS", "30"))
