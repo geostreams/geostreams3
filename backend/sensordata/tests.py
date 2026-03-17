@@ -433,6 +433,12 @@ class SensorCascadeDeleteTestCase(TestCase):
         get_stream_after = self.client.get(f"/geostreams/api/data/streams/{stream_id}/")
         self.assertEqual(get_stream_after.status_code, status.HTTP_404_NOT_FOUND)
 
+        # Datapoints for the deleted stream should also be gone
+        datapoints_after = self.client.get(
+            "/geostreams/api/data/datapoints/", {"stream": stream_id}
+        )
+        self.assertEqual(datapoints_after.status_code, status.HTTP_404_NOT_FOUND)
+
 
 class StreamApiTest(TestCase):
     def setUp(self):
