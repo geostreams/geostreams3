@@ -161,31 +161,41 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Disable authentication for all methods, set to False for production
+DISABLE_AUTH = os.getenv("DISABLE_AUTH", False)
+
 # Keycloak settings
-KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL")
-if not KEYCLOAK_SERVER_URL:
-    raise ValueError(
-        "KEYCLOAK_SERVER_URL environment variable must be set. "
-        "See backend/.env-example for local development."
-    )
-KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM")
-if not KEYCLOAK_REALM:
-    raise ValueError(
-        "KEYCLOAK_REALM environment variable must be set. "
-        "See backend/.env-example for local development."
-    )
-KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID")
-if not KEYCLOAK_CLIENT_ID:
-    raise ValueError(
-        "KEYCLOAK_CLIENT_ID environment variable must be set. "
-        "See backend/.env-example for local development."
-    )
-KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET")
-if not KEYCLOAK_CLIENT_SECRET:
-    raise ValueError(
-        "KEYCLOAK_CLIENT_SECRET environment variable must be set. "
-        "See backend/.env-example for local development."
-    )
+if not DISABLE_AUTH:
+    KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL")
+    if not KEYCLOAK_SERVER_URL:
+        raise ValueError(
+            "KEYCLOAK_SERVER_URL environment variable must be set. "
+            "See backend/.env-example for local development."
+        )
+    KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM")
+    if not KEYCLOAK_REALM:
+        raise ValueError(
+            "KEYCLOAK_REALM environment variable must be set. "
+            "See backend/.env-example for local development."
+        )
+    KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID")
+    if not KEYCLOAK_CLIENT_ID:
+        raise ValueError(
+            "KEYCLOAK_CLIENT_ID environment variable must be set. "
+            "See backend/.env-example for local development."
+        )
+    KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET")
+    if not KEYCLOAK_CLIENT_SECRET:
+        raise ValueError(
+            "KEYCLOAK_CLIENT_SECRET environment variable must be set. "
+            "See backend/.env-example for local development."
+        )
+else:
+    # When authentication is disabled, load Keycloak settings without enforcing them
+    KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL")
+    KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM")
+    KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID")
+    KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET")
 
 # API KEY EXPIRATION DAYS
 API_KEY_JWT_EXPIRY_DAYS = int(os.getenv("API_KEY_JWT_EXPIRY_DAYS", "30"))
@@ -212,6 +222,3 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# Disable authentication for all methods, set to False for production
-DISABLE_AUTH = os.getenv("DISABLE_AUTH", False)
