@@ -93,9 +93,7 @@ class Sensor(models.Model):
 
 class Stream(models.Model):
     id = models.AutoField(primary_key=True)
-    sensor = models.ForeignKey(
-        Sensor, related_name="streams", on_delete=models.DO_NOTHING
-    )
+    sensor = models.ForeignKey(Sensor, related_name="streams", on_delete=models.CASCADE)
     name = models.CharField(max_length=255, blank=True, null=True)
     geoType = models.CharField(max_length=50, blank=False, null=True)
     geog = geomodels.GeometryField(dim=3, blank=False, null=False)
@@ -111,7 +109,7 @@ class Stream(models.Model):
 
 class Datapoint(TimescaleModel):
     id = models.AutoField(primary_key=True)
-    stream = models.ForeignKey(Stream, models.DO_NOTHING)
+    stream = models.ForeignKey(Stream, models.CASCADE)
     created = models.DateTimeField(blank=True, null=True, default=timezone.now)
     type = models.CharField(max_length=50, blank=True, null=True)
     # geog = geomodels.GeometryField(

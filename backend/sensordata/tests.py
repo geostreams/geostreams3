@@ -342,6 +342,98 @@ class SensorApiTest(TestCase):
         self.assertNotIn("message", payload)
 
 
+class SensorCascadeDeleteTestCase(TestCase):
+    """Verify that deleting a Sensor cascades to its Streams and Datapoints."""
+
+    def setUp(self):
+        self.client = get_authenticated_client()
+        # Create visualization, category, and parameter (required for datapoints)
+        self.client.post(
+            "/geostreams/api/data/visualizations/",
+            data={"name": "line_chart", "title": "Line chart"},
+            format="json",
+        )
+        self.client.post(
+            "/geostreams/api/data/categories/",
+            data={"name": "cascade_cat", "description": "Cascade category"},
+            format="json",
+        )
+        self.client.post(
+            "/geostreams/api/data/parameters/",
+            data={
+                "name": "cascade_param",
+                "title": "Cascade Param",
+                "unit": "%",
+                "visualization": "line_chart",
+                "category": "cascade_cat",
+            },
+            format="json",
+        )
+
+    def test_deleting_sensor_cascades_to_streams_and_datapoints(self):
+        # Create sensor
+        sensor_response = self.client.post(
+            "/geostreams/api/data/sensors/",
+            data={
+                "name": "Cascade Sensor",
+                "geoType": "Feature",
+                "geometry": {"type": "Point", "coordinates": [-88.29, 40.0, 0.0]},
+                "properties": {},
+            },
+            format="json",
+        )
+        self.assertEqual(sensor_response.status_code, status.HTTP_201_CREATED)
+        sensor_id = sensor_response.json()["sensors"][0]["id"]
+
+        # Create stream for that sensor
+        stream_response = self.client.post(
+            "/geostreams/api/data/streams/",
+            data={
+                "name": "Cascade Stream",
+                "geoType": "Feature",
+                "sensor": sensor_id,
+                "geometry": {"type": "Point", "coordinates": [-88.29, 40.0, 0.0]},
+                "properties": {},
+            },
+            format="json",
+        )
+        self.assertEqual(stream_response.status_code, status.HTTP_201_CREATED)
+        stream_id = stream_response.json()["streams"][0]["id"]
+
+        # Create datapoints for that stream
+        self.client.post(
+            "/geostreams/api/data/datapoints/",
+            data=[
+                {
+                    "stream": stream_id,
+                    "time": "2023-06-01T09:00:00Z",
+                    "data": {"cascade_param": 1.23},
+                },
+            ],
+            format="json",
+        )
+
+        # Verify sensor and stream exist
+        get_sensor = self.client.get(f"/geostreams/api/data/sensors/{sensor_id}/")
+        self.assertEqual(get_sensor.status_code, status.HTTP_200_OK)
+        get_stream = self.client.get(f"/geostreams/api/data/streams/{stream_id}/")
+        self.assertEqual(get_stream.status_code, status.HTTP_200_OK)
+
+        # Delete the sensor (cascade should remove stream and datapoints)
+        delete_response = self.client.delete(
+            f"/geostreams/api/data/sensors/{sensor_id}/"
+        )
+        self.assertEqual(delete_response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Sensor should be gone
+        get_sensor_after = self.client.get(f"/geostreams/api/data/sensors/{sensor_id}/")
+        self.assertEqual(get_sensor_after.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Stream should be cascade-deleted
+        get_stream_after = self.client.get(f"/geostreams/api/data/streams/{stream_id}/")
+        self.assertEqual(get_stream_after.status_code, status.HTTP_404_NOT_FOUND)
+
+
 class StreamApiTest(TestCase):
     def setUp(self):
         self.client = get_authenticated_client()
