@@ -25,7 +25,7 @@ def get_authenticated_client(user=None):
     response = client.post("/geostreams/api/auth/generate-api-key/")
     api_key = response.json().get("key")
 
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {api_key}")
+    client.credentials(HTTP_AUTHORIZATION=f"{api_key}")
 
     return client
 

@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 from keycloak import KeycloakOpenID
 import jwt
 from django.conf import settings
@@ -72,9 +74,17 @@ class GenerateAPIKeyView(APIView):
         # Generate a new raw key and hash it before saving
         raw_key = secrets.token_urlsafe(32)
 
-        # Include the user's username in a JWT token with the raw key
+        # Include the user's username in a JWT token with the raw key and expiry
+        now = datetime.now(timezone.utc)
+        expiry_days = settings.API_KEY_JWT_EXPIRY_DAYS
+        payload = {
+            "username": user.username,
+            "api_key": raw_key,
+            "iat": now,
+            "exp": now + timedelta(days=expiry_days),
+        }
         token = jwt.encode(
-            {"username": user.username, "api_key": raw_key},
+            payload,
             settings.SECRET_KEY,
             algorithm="HS256",
         )
