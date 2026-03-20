@@ -1,9 +1,11 @@
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from django.db import transaction
 from ..models import Stream
 from ..serializers import StreamSerializer
 from .auth_base import AuthEnforcedModelViewSet
+from ..utils.pagination import parse_limit_offset, apply_limit_offset
 
 
 class StreamsViewSet(AuthEnforcedModelViewSet):
@@ -13,7 +15,7 @@ class StreamsViewSet(AuthEnforcedModelViewSet):
     # permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = Stream.objects.all()
+        queryset = Stream.objects.all().order_by("id")
         name_filter = self.request.query_params.get("name", None)
         sensor_filter = self.request.query_params.get("sensor", None)
 
@@ -59,16 +61,30 @@ class StreamsViewSet(AuthEnforcedModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        if not queryset:
+        total_count = queryset.count()
+        if total_count == 0:
             return Response(
                 {"message": "No streams found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        if self.request.query_params.get("name", None):
-            serializer = StreamSerializer(queryset, many=True)
-            return Response({"streams": serializer.data})
-        serializer = StreamSerializer(queryset, many=True)
-        return Response({"streams": serializer.data})
+        try:
+            limit, offset = parse_limit_offset(request.query_params, default_limit=20)
+        except ValidationError as exc:
+            return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+
+        paginated_queryset = apply_limit_offset(queryset, limit, offset)
+        serializer = StreamSerializer(paginated_queryset, many=True)
+        return Response(
+            {
+                "streams": serializer.data,
+                "pagination": {
+                    "count": total_count,
+                    "limit": limit,
+                    "offset": offset,
+                    "returned": len(serializer.data),
+                },
+            }
+        )
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()

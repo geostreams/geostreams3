@@ -109,7 +109,7 @@ services:
 
   # Production traefik
   traefik:
-    image: traefik:v3.2
+    image: traefik:v3.6
     restart: unless-stopped
     command:
         - '--log.level=${LOG_LEVEL:-INFO}'

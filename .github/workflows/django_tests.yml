@@ -5,7 +5,9 @@ on:
     branches:
       - main
     paths:
-      - 'backend/**'
+      - 'backend/sensordata/**'
+      - 'backend/authentication/**'
+      - 'backend/geostreams3/**'
   pull_request:
     branches:
       - main
@@ -59,6 +61,11 @@ jobs:
           echo "POSTGRES_DB=postgres" >> .env
           echo "POSTGRES_HOST=localhost" >> .env
           echo "POSTGRES_PORT=5433" >> .env
+          echo "SECRET_KEY=test" >> .env
+          echo "KEYCLOAK_SERVER_URL=http://dummy-keycloak" >> .env
+          echo "KEYCLOAK_REALM=dummy-realm" >> .env
+          echo "KEYCLOAK_CLIENT_ID=dummy-client-id" >> .env
+          echo "KEYCLOAK_CLIENT_SECRET=dummy-client-secret" >> .env
 
       - name: Run Database Migrations
         run: |

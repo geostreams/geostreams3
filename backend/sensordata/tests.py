@@ -25,7 +25,7 @@ def get_authenticated_client(user=None):
     response = client.post("/geostreams/api/auth/generate-api-key/")
     api_key = response.json().get("key")
 
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {api_key}")
+    client.credentials(HTTP_AUTHORIZATION=f"{api_key}")
 
     return client
 
@@ -121,6 +121,67 @@ class SensorApiTest(TestCase):
         self.assertEqual(response.status_code, 200)
         sensors = response.json()
         self.assertIsInstance(sensors["sensors"], list)
+
+    def test_get_all_sensors_default_limit(self):
+        for index in range(25):
+            payload = {
+                "name": f"Sensor {index}",
+                "geoType": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-88.290075 + (index * 0.001), 40.0062722, 0.0],
+                },
+                "properties": {},
+            }
+            self.client.post(
+                "/geostreams/api/data/sensors/", data=payload, format="json"
+            )
+
+        response = self.client.get("/geostreams/api/data/sensors/")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["pagination"]["count"], 25)
+        self.assertEqual(payload["pagination"]["limit"], 20)
+        self.assertEqual(payload["pagination"]["offset"], 0)
+        self.assertEqual(payload["pagination"]["returned"], 20)
+        self.assertEqual(len(payload["sensors"]), 20)
+
+    def test_get_all_sensors_with_offset_and_negative_limit(self):
+        for index in range(5):
+            payload = {
+                "name": f"Offset Sensor {index}",
+                "geoType": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-88.390075 + (index * 0.001), 40.1062722, 0.0],
+                },
+                "properties": {},
+            }
+            self.client.post(
+                "/geostreams/api/data/sensors/", data=payload, format="json"
+            )
+
+        offset_response = self.client.get(
+            "/geostreams/api/data/sensors/?limit=2&offset=1"
+        )
+        self.assertEqual(offset_response.status_code, 200)
+        offset_payload = offset_response.json()
+        self.assertEqual(offset_payload["pagination"]["count"], 5)
+        self.assertEqual(offset_payload["pagination"]["limit"], 2)
+        self.assertEqual(offset_payload["pagination"]["offset"], 1)
+        self.assertEqual(offset_payload["pagination"]["returned"], 2)
+        self.assertEqual(len(offset_payload["sensors"]), 2)
+
+        all_response = self.client.get(
+            "/geostreams/api/data/sensors/?limit=-1&offset=3"
+        )
+        self.assertEqual(all_response.status_code, 200)
+        all_payload = all_response.json()
+        self.assertEqual(all_payload["pagination"]["count"], 5)
+        self.assertEqual(all_payload["pagination"]["limit"], -1)
+        self.assertEqual(all_payload["pagination"]["offset"], 0)
+        self.assertEqual(all_payload["pagination"]["returned"], 5)
+        self.assertEqual(len(all_payload["sensors"]), 5)
 
     def test_update_sensor(self):
         # Create a sensor first
@@ -281,6 +342,104 @@ class SensorApiTest(TestCase):
         self.assertNotIn("message", payload)
 
 
+class SensorCascadeDeleteTestCase(TestCase):
+    """Verify that deleting a Sensor cascades to its Streams and Datapoints."""
+
+    def setUp(self):
+        self.client = get_authenticated_client()
+        # Create visualization, category, and parameter (required for datapoints)
+        self.client.post(
+            "/geostreams/api/data/visualizations/",
+            data={"name": "line_chart", "title": "Line chart"},
+            format="json",
+        )
+        self.client.post(
+            "/geostreams/api/data/categories/",
+            data={"name": "cascade_cat", "description": "Cascade category"},
+            format="json",
+        )
+        self.client.post(
+            "/geostreams/api/data/parameters/",
+            data={
+                "name": "cascade_param",
+                "title": "Cascade Param",
+                "unit": "%",
+                "visualization": "line_chart",
+                "category": "cascade_cat",
+            },
+            format="json",
+        )
+
+    def test_deleting_sensor_cascades_to_streams_and_datapoints(self):
+        # Create sensor
+        sensor_response = self.client.post(
+            "/geostreams/api/data/sensors/",
+            data={
+                "name": "Cascade Sensor",
+                "geoType": "Feature",
+                "geometry": {"type": "Point", "coordinates": [-88.29, 40.0, 0.0]},
+                "properties": {},
+            },
+            format="json",
+        )
+        self.assertEqual(sensor_response.status_code, status.HTTP_201_CREATED)
+        sensor_id = sensor_response.json()["sensors"][0]["id"]
+
+        # Create stream for that sensor
+        stream_response = self.client.post(
+            "/geostreams/api/data/streams/",
+            data={
+                "name": "Cascade Stream",
+                "geoType": "Feature",
+                "sensor": sensor_id,
+                "geometry": {"type": "Point", "coordinates": [-88.29, 40.0, 0.0]},
+                "properties": {},
+            },
+            format="json",
+        )
+        self.assertEqual(stream_response.status_code, status.HTTP_201_CREATED)
+        stream_id = stream_response.json()["streams"][0]["id"]
+
+        # Create datapoints for that stream
+        self.client.post(
+            "/geostreams/api/data/datapoints/",
+            data=[
+                {
+                    "stream": stream_id,
+                    "time": "2023-06-01T09:00:00Z",
+                    "data": {"cascade_param": 1.23},
+                },
+            ],
+            format="json",
+        )
+
+        # Verify sensor and stream exist
+        get_sensor = self.client.get(f"/geostreams/api/data/sensors/{sensor_id}/")
+        self.assertEqual(get_sensor.status_code, status.HTTP_200_OK)
+        get_stream = self.client.get(f"/geostreams/api/data/streams/{stream_id}/")
+        self.assertEqual(get_stream.status_code, status.HTTP_200_OK)
+
+        # Delete the sensor (cascade should remove stream and datapoints)
+        delete_response = self.client.delete(
+            f"/geostreams/api/data/sensors/{sensor_id}/"
+        )
+        self.assertEqual(delete_response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Sensor should be gone
+        get_sensor_after = self.client.get(f"/geostreams/api/data/sensors/{sensor_id}/")
+        self.assertEqual(get_sensor_after.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Stream should be cascade-deleted
+        get_stream_after = self.client.get(f"/geostreams/api/data/streams/{stream_id}/")
+        self.assertEqual(get_stream_after.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Datapoints for the deleted stream should also be gone
+        datapoints_after = self.client.get(
+            "/geostreams/api/data/datapoints/", {"stream": stream_id}
+        )
+        self.assertEqual(datapoints_after.status_code, status.HTTP_404_NOT_FOUND)
+
+
 class StreamApiTest(TestCase):
     def setUp(self):
         self.client = get_authenticated_client()
@@ -385,6 +544,69 @@ class StreamApiTest(TestCase):
         self.assertEqual(response.status_code, 200)
         streams = response.json()
         self.assertIsInstance(streams["streams"], list)
+
+    def test_get_all_streams_default_limit(self):
+        for index in range(25):
+            payload = {
+                "name": f"Stream {index}",
+                "geoType": "Feature",
+                "sensor": self.sensor_id,
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-88.290075 + (index * 0.001), 40.0062722, 0.0],
+                },
+                "properties": {},
+            }
+            self.client.post(
+                "/geostreams/api/data/streams/", data=payload, format="json"
+            )
+
+        response = self.client.get("/geostreams/api/data/streams/")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["pagination"]["count"], 25)
+        self.assertEqual(payload["pagination"]["limit"], 20)
+        self.assertEqual(payload["pagination"]["offset"], 0)
+        self.assertEqual(payload["pagination"]["returned"], 20)
+        self.assertEqual(len(payload["streams"]), 20)
+
+    def test_get_all_streams_with_offset_and_negative_limit(self):
+        for index in range(5):
+            payload = {
+                "name": f"Offset Stream {index}",
+                "geoType": "Feature",
+                "sensor": self.sensor_id,
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-88.390075 + (index * 0.001), 40.1062722, 0.0],
+                },
+                "properties": {},
+            }
+            self.client.post(
+                "/geostreams/api/data/streams/", data=payload, format="json"
+            )
+
+        offset_response = self.client.get(
+            "/geostreams/api/data/streams/?limit=2&offset=1"
+        )
+        self.assertEqual(offset_response.status_code, 200)
+        offset_payload = offset_response.json()
+        self.assertEqual(offset_payload["pagination"]["count"], 5)
+        self.assertEqual(offset_payload["pagination"]["limit"], 2)
+        self.assertEqual(offset_payload["pagination"]["offset"], 1)
+        self.assertEqual(offset_payload["pagination"]["returned"], 2)
+        self.assertEqual(len(offset_payload["streams"]), 2)
+
+        all_response = self.client.get(
+            "/geostreams/api/data/streams/?limit=-1&offset=3"
+        )
+        self.assertEqual(all_response.status_code, 200)
+        all_payload = all_response.json()
+        self.assertEqual(all_payload["pagination"]["count"], 5)
+        self.assertEqual(all_payload["pagination"]["limit"], -1)
+        self.assertEqual(all_payload["pagination"]["offset"], 0)
+        self.assertEqual(all_payload["pagination"]["returned"], 5)
+        self.assertEqual(len(all_payload["streams"]), 5)
 
     def test_update_stream(self):
         # Create a stream first
@@ -1082,6 +1304,56 @@ class DatapointsViewSetTestCase(TransactionTestCase):
             data={"time_period": "all"},
             format="json",
         )
+
+    def test_get_all_datapoints_default_limit(self):
+        streams_response = self.client.get("/geostreams/api/data/streams/")
+        stream_id = streams_response.json()["streams"][0]["id"]
+
+        extra_datapoints = []
+        for index in range(110):
+            hour = index // 60
+            minute = index % 60
+            extra_datapoints.append(
+                {
+                    "stream": stream_id,
+                    "time": f"2023-07-01T{hour:02d}:{minute:02d}:00Z",
+                    "data": {"nitrogen": 0.5 + (index * 0.01)},
+                }
+            )
+
+        self.client.post(
+            "/geostreams/api/data/datapoints/", data=extra_datapoints, format="json"
+        )
+
+        response = self.client.get("/geostreams/api/data/datapoints/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        payload = response.json()
+        self.assertEqual(payload["pagination"]["count"], 130)
+        self.assertEqual(payload["pagination"]["limit"], 100)
+        self.assertEqual(payload["pagination"]["offset"], 0)
+        self.assertEqual(payload["pagination"]["returned"], 100)
+        self.assertEqual(len(payload["datapoints"]), 100)
+
+    def test_get_all_datapoints_with_offset_and_negative_limit(self):
+        response = self.client.get("/geostreams/api/data/datapoints/?limit=5&offset=3")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        payload = response.json()
+        self.assertEqual(payload["pagination"]["count"], 20)
+        self.assertEqual(payload["pagination"]["limit"], 5)
+        self.assertEqual(payload["pagination"]["offset"], 3)
+        self.assertEqual(payload["pagination"]["returned"], 5)
+        self.assertEqual(len(payload["datapoints"]), 5)
+
+        all_response = self.client.get(
+            "/geostreams/api/data/datapoints/?limit=-1&offset=3"
+        )
+        self.assertEqual(all_response.status_code, status.HTTP_200_OK)
+        all_payload = all_response.json()
+        self.assertEqual(all_payload["pagination"]["count"], 20)
+        self.assertEqual(all_payload["pagination"]["limit"], -1)
+        self.assertEqual(all_payload["pagination"]["offset"], 0)
+        self.assertEqual(all_payload["pagination"]["returned"], 20)
+        self.assertEqual(len(all_payload["datapoints"]), 20)
 
     def test_get_hourly_average_datapoints_by_parameter(self):
         sensor = self.client.get("/geostreams/api/data/sensors/").data["sensors"][0]

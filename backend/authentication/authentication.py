@@ -30,11 +30,20 @@ class KeycloakAuthentication(BaseAuthentication):
         if not auth_header:
             return None
 
+        parts = auth_header.split(" ")
+        if len(parts) != 2 or parts[0].lower() != "bearer":
+            # Not a Bearer token, try APIKeyAuthentication
+            return None
+        token = parts[1]
+
+        # Peek at the iss claim without verifying the signature to avoid a Keycloak network call
         try:
-            # Extract the token from the "Bearer <token>" format
-            token = auth_header.split(" ")[1]
-        except IndexError:
-            raise AuthenticationFailed("Invalid token header. No credentials provided.")
+            unverified = jwt.decode(token, options={"verify_signature": False})
+        except jwt.DecodeError:
+            return None
+
+        if not unverified.get("iss", "").startswith(settings.KEYCLOAK_SERVER_URL):
+            return None
 
         keycloak_openid = KeycloakOpenID(
             server_url=settings.KEYCLOAK_SERVER_URL,
@@ -66,7 +75,7 @@ class APIKeyAuthentication(BaseAuthentication):
         if not jwt_token:
             return None
 
-        # Decode the JWT token
+        # Decode the JWT token and also checks if it has expired
         try:
             payload = jwt.decode(jwt_token, settings.SECRET_KEY, algorithms=["HS256"])
         except jwt.ExpiredSignatureError:

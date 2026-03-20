@@ -22,14 +22,13 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "test"
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError(
+        "SECRET_KEY environment variable must be set. "
+        "See backend/.env-example for local development."
+    )
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = (
     os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else []
@@ -89,14 +88,33 @@ WSGI_APPLICATION = "geostreams3.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+POSTGRES_DB = os.getenv("POSTGRES_DB")
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+
+if (
+    not POSTGRES_DB
+    or not POSTGRES_USER
+    or not POSTGRES_PASSWORD
+    or not POSTGRES_HOST
+    or not POSTGRES_PORT
+):
+    raise ValueError(
+        "POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, and POSTGRES_PORT "
+        "environment variables must be set. "
+        "See backend/.env-example for local development."
+    )
+
 DATABASES = {
     "default": {
         "ENGINE": "timescale.db.backends.postgis",
-        "NAME": os.getenv("POSTGRES_DB"),
-        "USER": os.getenv("POSTGRES_USER"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-        "HOST": os.getenv("POSTGRES_HOST"),
-        "PORT": os.getenv("POSTGRES_PORT"),
+        "NAME": POSTGRES_DB,
+        "USER": POSTGRES_USER,
+        "PASSWORD": POSTGRES_PASSWORD,
+        "HOST": POSTGRES_HOST,
+        "PORT": POSTGRES_PORT,
     }
 }
 
@@ -115,6 +133,7 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
     "DEFAULT_PARSER_CLASSES": ("rest_framework.parsers.JSONParser",),
     "DEFAULT_AUTHENTICATION_CLASSES": (
+        "authentication.authentication.KeycloakAuthentication",
         "authentication.authentication.APIKeyAuthentication",
     ),
 }
@@ -142,11 +161,44 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Disable authentication for all methods, set to False for production
+DISABLE_AUTH = os.getenv("DISABLE_AUTH", False)
+
 # Keycloak settings
-KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL")
-KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM")
-KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID")
-KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET")
+if not DISABLE_AUTH:
+    KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL")
+    if not KEYCLOAK_SERVER_URL:
+        raise ValueError(
+            "KEYCLOAK_SERVER_URL environment variable must be set. "
+            "See backend/.env-example for local development."
+        )
+    KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM")
+    if not KEYCLOAK_REALM:
+        raise ValueError(
+            "KEYCLOAK_REALM environment variable must be set. "
+            "See backend/.env-example for local development."
+        )
+    KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID")
+    if not KEYCLOAK_CLIENT_ID:
+        raise ValueError(
+            "KEYCLOAK_CLIENT_ID environment variable must be set. "
+            "See backend/.env-example for local development."
+        )
+    KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET")
+    if not KEYCLOAK_CLIENT_SECRET:
+        raise ValueError(
+            "KEYCLOAK_CLIENT_SECRET environment variable must be set. "
+            "See backend/.env-example for local development."
+        )
+else:
+    # When authentication is disabled, load Keycloak settings without enforcing them
+    KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL")
+    KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM")
+    KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID")
+    KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET")
+
+# API KEY EXPIRATION DAYS
+API_KEY_JWT_EXPIRY_DAYS = int(os.getenv("API_KEY_JWT_EXPIRY_DAYS", "30"))
 
 
 # Internationalization
@@ -170,6 +222,3 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# Disable authentication for all methods, set to False for production
-DISABLE_AUTH = False
