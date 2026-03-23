@@ -7,6 +7,7 @@ import {
     TableCell,
     TableContainer,
     TableHead,
+    TablePagination,
     TableRow,
     Paper,
     IconButton,
@@ -24,9 +25,20 @@ import LoadingSpinner from "../ui/LoadingSpinner";
 import StatusMessage from "../ui/StatusMessage";
 import SensorForm from "../forms/SensorForm";
 
+const ROWS_PER_PAGE_OPTIONS = [10, 20, 50, 100];
+
 const SensorsTab = () => {
-    const { sensors, isLoading, error, createSensor, deleteSensor } =
-        useSensors();
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(20);
+    const {
+        sensors,
+        pagination,
+        isLoading,
+        error,
+        createSensor,
+        deleteSensor,
+    } = useSensors(page, rowsPerPage);
+
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [statusMsg, setStatusMsg] = useState({
@@ -63,6 +75,17 @@ const SensorsTab = () => {
         setDeleteTarget(null);
     };
 
+    const handlePageChange = (_, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleRowsPerPageChange = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
+    const totalCount = pagination?.count ?? 0;
+
     if (isLoading) return <LoadingSpinner message="Loading sensors..." />;
 
     return (
@@ -76,7 +99,7 @@ const SensorsTab = () => {
                 }}
             >
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    Sensors ({sensors.length})
+                    Sensors ({totalCount})
                 </Typography>
                 <Button
                     variant="contained"
@@ -172,6 +195,17 @@ const SensorsTab = () => {
                         )}
                     </TableBody>
                 </Table>
+                {totalCount > 0 && (
+                    <TablePagination
+                        component="div"
+                        count={totalCount}
+                        page={page}
+                        onPageChange={handlePageChange}
+                        rowsPerPage={rowsPerPage}
+                        onRowsPerPageChange={handleRowsPerPageChange}
+                        rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+                    />
+                )}
             </TableContainer>
 
             {/* Create Form Dialog */}

@@ -5,11 +5,15 @@ import useApiClient from "./useApiClient";
 /**
  * Hook for fetching, creating, and deleting sensors.
  * GET is public (no auth needed). POST/DELETE require auth.
- * @returns {{ sensors: Array, isLoading: boolean, error: string|null, refetch: Function, createSensor: Function, deleteSensor: Function }}
+ *
+ * @param {number} page - 0-based page index (default 0)
+ * @param {number} rowsPerPage - rows per page; use -1 to fetch all records (default -1)
+ * @returns {{ sensors: Array, pagination: object|null, isLoading: boolean, error: string|null, refetch: Function, createSensor: Function, deleteSensor: Function }}
  */
-const useSensors = () => {
+const useSensors = (page = 0, rowsPerPage = -1) => {
     const authApi = useApiClient();
     const [sensors, setSensors] = useState([]);
+    const [pagination, setPagination] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -17,12 +21,22 @@ const useSensors = () => {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await publicApi.get("data/sensors/");
+            const params = { limit: rowsPerPage };
+            if (rowsPerPage > 0) {
+                params.offset = page * rowsPerPage;
+            }
+            const response = await publicApi.get("data/sensors/", { params });
             setSensors(response.data?.sensors || []);
+            setPagination(response.data?.pagination ?? null);
         } catch (err) {
-            // 404 means "no sensors found" -- treat as empty list
             if (err.response?.status === 404) {
                 setSensors([]);
+                setPagination({
+                    count: 0,
+                    limit: rowsPerPage,
+                    offset: 0,
+                    returned: 0,
+                });
             } else {
                 setError(
                     err.response?.data?.message || "Failed to fetch sensors",
@@ -31,7 +45,7 @@ const useSensors = () => {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [page, rowsPerPage]);
 
     const createSensor = useCallback(
         async (sensorData) => {
@@ -56,6 +70,7 @@ const useSensors = () => {
 
     return {
         sensors,
+        pagination,
         isLoading,
         error,
         refetch: fetchSensors,

@@ -7,6 +7,7 @@ import {
     TableCell,
     TableContainer,
     TableHead,
+    TablePagination,
     TableRow,
     Paper,
     IconButton,
@@ -28,12 +29,26 @@ import LoadingSpinner from "../ui/LoadingSpinner";
 import StatusMessage from "../ui/StatusMessage";
 import StreamForm from "../forms/StreamForm";
 
+const ROWS_PER_PAGE_OPTIONS = [10, 20, 50, 100];
+
 const StreamsTab = () => {
+    // Fetch all sensors (no limit) for the filter dropdown
     const { sensors } = useSensors();
     const { parameters } = useParameters();
+
     const [filterSensor, setFilterSensor] = useState(null);
-    const { streams, isLoading, error, createStream, deleteStream } =
-        useStreams(filterSensor?.id || null);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(20);
+
+    const {
+        streams,
+        pagination,
+        isLoading,
+        error,
+        createStream,
+        deleteStream,
+    } = useStreams(filterSensor?.id || null, page, rowsPerPage);
+
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [statusMsg, setStatusMsg] = useState({
@@ -70,10 +85,27 @@ const StreamsTab = () => {
         setDeleteTarget(null);
     };
 
+    const handleFilterSensorChange = (_, newVal) => {
+        // Batch both updates so only one fetch is triggered
+        setFilterSensor(newVal);
+        setPage(0);
+    };
+
+    const handlePageChange = (_, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleRowsPerPageChange = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
     const getSensorName = (sensorId) => {
         const sensor = sensors.find((s) => s.id === sensorId);
         return sensor ? sensor.name : sensorId;
     };
+
+    const totalCount = pagination?.count ?? 0;
 
     if (isLoading) return <LoadingSpinner message="Loading streams..." />;
 
@@ -92,14 +124,14 @@ const StreamsTab = () => {
                     variant="h6"
                     sx={{ fontWeight: 600, flexShrink: 0 }}
                 >
-                    Streams ({streams.length})
+                    Streams ({totalCount})
                 </Typography>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                     <Autocomplete
                         options={sensors}
                         getOptionLabel={(option) => option.name || ""}
                         value={filterSensor}
-                        onChange={(_e, newVal) => setFilterSensor(newVal)}
+                        onChange={handleFilterSensorChange}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
@@ -243,6 +275,17 @@ const StreamsTab = () => {
                         )}
                     </TableBody>
                 </Table>
+                {totalCount > 0 && (
+                    <TablePagination
+                        component="div"
+                        count={totalCount}
+                        page={page}
+                        onPageChange={handlePageChange}
+                        rowsPerPage={rowsPerPage}
+                        onRowsPerPageChange={handleRowsPerPageChange}
+                        rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+                    />
+                )}
             </TableContainer>
 
             {/* Create Form Dialog */}
