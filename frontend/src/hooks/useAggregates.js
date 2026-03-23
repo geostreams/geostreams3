@@ -20,8 +20,9 @@ const useAggregates = () => {
     const [error, setError] = useState(null);
 
     /**
-     * @param {{ sensorId?: number, parameter?: string, timePeriod: string, since?: string, until?: string }} params
+     * @param {{ sensorId?: number, parameter?: string|string[], timePeriod: string, since?: string, until?: string, shortened?: boolean }} params
      */
+    // useCallback used just in case child components use fetchAggregates as a dependency.
     const fetchAggregates = useCallback(async (params) => {
         const {
             timePeriod = "day",
@@ -29,6 +30,7 @@ const useAggregates = () => {
             parameter,
             since,
             until,
+            shortened = true,
         } = params;
         const path = TIME_PERIOD_PATHS[timePeriod];
         if (!path) {
@@ -39,14 +41,40 @@ const useAggregates = () => {
         setIsLoading(true);
         setError(null);
         try {
-            const queryParams = {};
+            const queryParams = { shortened };
             if (sensorId) queryParams.sensor_id = sensorId;
-            if (parameter) queryParams.parameter = parameter;
             if (since) queryParams.since = since;
             if (until) queryParams.until = until;
 
-            const response = await publicApi.get(path, { params: queryParams });
-            setData(response.data || []);
+            const serializer = new URLSearchParams();
+            Object.entries(queryParams).forEach(([k, v]) =>
+                serializer.append(k, v),
+            );
+
+            if (parameter) {
+                const params = Array.isArray(parameter)
+                    ? parameter
+                    : [parameter];
+                params.forEach((p) => serializer.append("parameter", p));
+            }
+
+            const response = await publicApi.get(path, {
+                params: serializer,
+            });
+            // Response shape: { sensor_name, streams, properties: { [paramName]: [{stream_id, average, date, ...}] } }
+            // Flatten into [{parameter, stream_id, average, date, label, ...}] for the chart builder.
+            const raw = response.data;
+            const flattened = [];
+            if (raw && raw.properties && typeof raw.properties === "object") {
+                Object.entries(raw.properties).forEach(([paramName, rows]) => {
+                    if (Array.isArray(rows)) {
+                        rows.forEach((row) =>
+                            flattened.push({ parameter: paramName, ...row }),
+                        );
+                    }
+                });
+            }
+            setData(flattened);
         } catch (err) {
             setError(
                 err.response?.data?.message ||

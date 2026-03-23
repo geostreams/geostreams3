@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Dialog,
     DialogTitle,
@@ -28,7 +28,7 @@ const INITIAL_STATE = {
 
 /**
  * Dialog form for creating a new stream.
- * @param {{ open: boolean, onClose: Function, onSubmit: Function, sensors: Array, parameterOptions: Array }} props
+ * @param {{ open: boolean, onClose: Function, onSubmit: Function, sensors: Array, parameterOptions: Array, lockedSensor?: object }} props
  */
 const StreamForm = ({
     open,
@@ -36,8 +36,18 @@ const StreamForm = ({
     onSubmit,
     sensors = [],
     parameterOptions = [],
+    lockedSensor = null,
 }) => {
-    const [formData, setFormData] = useState(INITIAL_STATE);
+    const [formData, setFormData] = useState({
+        ...INITIAL_STATE,
+        sensor: lockedSensor ?? null,
+    });
+
+    useEffect(() => {
+        if (lockedSensor) {
+            setFormData((prev) => ({ ...prev, sensor: lockedSensor }));
+        }
+    }, [lockedSensor]);
     const [error, setError] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -96,7 +106,7 @@ const StreamForm = ({
     };
 
     const handleClose = () => {
-        setFormData(INITIAL_STATE);
+        setFormData({ ...INITIAL_STATE, sensor: lockedSensor ?? null });
         setError(null);
         onClose();
     };
@@ -126,28 +136,38 @@ const StreamForm = ({
                         />
                     </Grid>
                     <Grid item xs={12}>
-                        <Autocomplete
-                            options={sensors}
-                            getOptionLabel={(option) => option.name || ""}
-                            value={formData.sensor}
-                            onChange={(_e, newVal) =>
-                                setFormData((prev) => ({
-                                    ...prev,
-                                    sensor: newVal,
-                                }))
-                            }
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    label="Sensor"
-                                    required
-                                    size="small"
-                                />
-                            )}
-                            isOptionEqualToValue={(opt, val) =>
-                                opt.id === val?.id
-                            }
-                        />
+                        {lockedSensor ? (
+                            <TextField
+                                label="Sensor"
+                                value={lockedSensor.name}
+                                fullWidth
+                                size="small"
+                                disabled
+                            />
+                        ) : (
+                            <Autocomplete
+                                options={sensors}
+                                getOptionLabel={(option) => option.name || ""}
+                                value={formData.sensor}
+                                onChange={(_e, newVal) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        sensor: newVal,
+                                    }))
+                                }
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="Sensor"
+                                        required
+                                        size="small"
+                                    />
+                                )}
+                                isOptionEqualToValue={(opt, val) =>
+                                    opt.id === val?.id
+                                }
+                            />
+                        )}
                     </Grid>
                     <Grid item xs={12}>
                         <TextField

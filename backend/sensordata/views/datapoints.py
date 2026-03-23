@@ -428,8 +428,20 @@ class DatapointsViewSet(AuthEnforcedModelViewSet):
                 parameter_list=parameter_list
             )
 
+        # Trunaction is necessary only for since because of the nature of the continuous aggregates.
+        # The aggregates start from the beginning of earliest datapoint in the stream.
+        # So we need to truncate the since to the nearest unit of the time period.
+        trunc_map = {
+            "hourly": "hour",
+            "daily": "day",
+            "monthly": "month",
+            "yearly": "year",
+        }
+        trunc_unit = trunc_map[time_period]
         if since:
-            query += "AND bucket >= '{since}'::timestamp ".format(since=since)
+            query += "AND bucket >= date_trunc('{trunc_unit}', '{since}'::timestamp) ".format(
+                trunc_unit=trunc_unit, since=since
+            )
         if until:
             query += "AND bucket <= '{until}'::timestamp ".format(until=until)
 

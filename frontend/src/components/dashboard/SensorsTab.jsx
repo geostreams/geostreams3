@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
+import { useParamNames } from "../../contexts/ParametersContext";
 import {
     Box,
     Button,
+    Link,
     Table,
     TableBody,
     TableCell,
@@ -10,16 +13,10 @@ import {
     TablePagination,
     TableRow,
     Paper,
-    IconButton,
-    Tooltip,
     Typography,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     Chip,
 } from "@mui/material";
-import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import { Add as AddIcon } from "@mui/icons-material";
 import useSensors from "../../hooks/useSensors";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import StatusMessage from "../ui/StatusMessage";
@@ -28,19 +25,15 @@ import SensorForm from "../forms/SensorForm";
 const ROWS_PER_PAGE_OPTIONS = [10, 20, 50, 100];
 
 const SensorsTab = () => {
+    const paramNameMap = useParamNames();
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(20);
-    const {
-        sensors,
-        pagination,
-        isLoading,
-        error,
-        createSensor,
-        deleteSensor,
-    } = useSensors(page, rowsPerPage);
+    const { sensors, pagination, isLoading, error, createSensor } = useSensors(
+        page,
+        rowsPerPage,
+    );
 
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [deleteTarget, setDeleteTarget] = useState(null);
     const [statusMsg, setStatusMsg] = useState({
         open: false,
         message: "",
@@ -54,25 +47,6 @@ const SensorsTab = () => {
             message: "Sensor created successfully",
             severity: "success",
         });
-    };
-
-    const handleDelete = async () => {
-        if (!deleteTarget) return;
-        try {
-            await deleteSensor(deleteTarget.id);
-            setStatusMsg({
-                open: true,
-                message: "Sensor deleted successfully",
-                severity: "success",
-            });
-        } catch {
-            setStatusMsg({
-                open: true,
-                message: "Failed to delete sensor",
-                severity: "error",
-            });
-        }
-        setDeleteTarget(null);
     };
 
     const handlePageChange = (_, newPage) => {
@@ -126,13 +100,10 @@ const SensorsTab = () => {
                                 Source
                             </TableCell>
                             <TableCell sx={{ fontWeight: 600 }}>
-                                Geo Type
+                                Parameters
                             </TableCell>
                             <TableCell sx={{ fontWeight: 600 }}>
                                 Created
-                            </TableCell>
-                            <TableCell sx={{ fontWeight: 600 }} align="right">
-                                Actions
                             </TableCell>
                         </TableRow>
                     </TableHead>
@@ -140,7 +111,7 @@ const SensorsTab = () => {
                         {sensors.length === 0 ? (
                             <TableRow>
                                 <TableCell
-                                    colSpan={6}
+                                    colSpan={5}
                                     align="center"
                                     sx={{ py: 4 }}
                                 >
@@ -155,12 +126,18 @@ const SensorsTab = () => {
                                 <TableRow key={sensor.id} hover>
                                     <TableCell>{sensor.id}</TableCell>
                                     <TableCell>
-                                        <Typography
-                                            variant="body2"
-                                            sx={{ fontWeight: 500 }}
+                                        <Link
+                                            component={RouterLink}
+                                            to={`/dashboard/sensors/${sensor.id}`}
+                                            underline="hover"
+                                            color="primary"
+                                            sx={{
+                                                fontWeight: 500,
+                                                textAlign: "left",
+                                            }}
                                         >
                                             {sensor.name}
-                                        </Typography>
+                                        </Link>
                                     </TableCell>
                                     <TableCell>
                                         <Chip
@@ -169,26 +146,42 @@ const SensorsTab = () => {
                                             variant="outlined"
                                         />
                                     </TableCell>
-                                    <TableCell>{sensor.geoType}</TableCell>
+                                    <TableCell>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                gap: 0.5,
+                                                flexWrap: "wrap",
+                                            }}
+                                        >
+                                            {(sensor.parameters || [])
+                                                .slice(0, 2)
+                                                .map((p) => (
+                                                    <Chip
+                                                        key={p}
+                                                        label={
+                                                            paramNameMap[p] || p
+                                                        }
+                                                        title={p}
+                                                        size="small"
+                                                        variant="outlined"
+                                                    />
+                                                ))}
+                                            {(sensor.parameters || []).length >
+                                                2 && (
+                                                <Chip
+                                                    label={`+${sensor.parameters.length - 2}`}
+                                                    size="small"
+                                                />
+                                            )}
+                                        </Box>
+                                    </TableCell>
                                     <TableCell>
                                         {sensor.created
                                             ? new Date(
                                                   sensor.created,
                                               ).toLocaleDateString()
                                             : "N/A"}
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <Tooltip title="Delete sensor">
-                                            <IconButton
-                                                size="small"
-                                                color="error"
-                                                onClick={() =>
-                                                    setDeleteTarget(sensor)
-                                                }
-                                            >
-                                                <DeleteIcon fontSize="small" />
-                                            </IconButton>
-                                        </Tooltip>
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -214,33 +207,6 @@ const SensorsTab = () => {
                 onClose={() => setIsFormOpen(false)}
                 onSubmit={handleCreate}
             />
-
-            {/* Delete Confirmation Dialog */}
-            <Dialog
-                open={Boolean(deleteTarget)}
-                onClose={() => setDeleteTarget(null)}
-            >
-                <DialogTitle>Confirm Delete</DialogTitle>
-                <DialogContent>
-                    <Typography>
-                        Are you sure you want to delete sensor &quot;
-                        {deleteTarget?.name}&quot;? This action cannot be
-                        undone.
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDeleteTarget(null)}>
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="error"
-                        onClick={handleDelete}
-                    >
-                        Delete
-                    </Button>
-                </DialogActions>
-            </Dialog>
 
             <StatusMessage
                 open={statusMsg.open}

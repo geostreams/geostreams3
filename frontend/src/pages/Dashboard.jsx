@@ -3,26 +3,17 @@ import { useSearchParams } from "react-router-dom";
 import { Tabs, Tab, Box } from "@mui/material";
 import {
     Sensors as SensorsIcon,
-    Stream as StreamIcon,
     Tune as TuneIcon,
-    ScatterPlot as ScatterPlotIcon,
-    BarChart as BarChartIcon,
     VpnKey as VpnKeyIcon,
 } from "@mui/icons-material";
 import PageLayout from "../components/common/PageLayout";
 import SensorsTab from "../components/dashboard/SensorsTab";
-import StreamsTab from "../components/dashboard/StreamsTab";
 import ParametersTab from "../components/dashboard/ParametersTab";
-import DatapointsTab from "../components/dashboard/DatapointsTab";
-import VisualizationTab from "../components/dashboard/VisualizationTab";
 import ApiAccessTab from "../components/dashboard/ApiAccessTab";
 
 const TAB_CONFIG = [
     { label: "Sensors", icon: <SensorsIcon /> },
-    { label: "Streams", icon: <StreamIcon /> },
-    { label: "Parameters", icon: <TuneIcon /> },
-    { label: "Datapoints", icon: <ScatterPlotIcon /> },
-    { label: "Visualization", icon: <BarChartIcon /> },
+    { label: "Data Properties", icon: <TuneIcon /> },
     { label: "API Access", icon: <VpnKeyIcon /> },
 ];
 
@@ -41,7 +32,7 @@ function Dashboard() {
     return (
         <PageLayout
             title="Dashboard"
-            subtitle="Manage sensors, streams, parameters, and visualize your data"
+            subtitle="Manage sensors, parameters, and get API Key"
             maxWidth="xl"
         >
             <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
@@ -72,11 +63,8 @@ function Dashboard() {
 
             <Box sx={{ mt: 2 }}>
                 {activeTab === 0 && <SensorsTab />}
-                {activeTab === 1 && <StreamsTab />}
-                {activeTab === 2 && <ParametersTab />}
-                {activeTab === 3 && <DatapointsTab />}
-                {activeTab === 4 && <VisualizationTab />}
-                {activeTab === 5 && <ApiAccessTab />}
+                {activeTab === 1 && <ParametersTab />}
+                {activeTab === 2 && <ApiAccessTab />}
             </Box>
         </PageLayout>
     );

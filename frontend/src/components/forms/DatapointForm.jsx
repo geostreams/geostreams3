@@ -9,6 +9,7 @@ import {
     Grid,
     Alert,
     Autocomplete,
+    Typography,
 } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -25,7 +26,7 @@ const INITIAL_STATE = {
 
 /**
  * Dialog form for creating a new datapoint.
- * @param {{ open: boolean, onClose: Function, onSubmit: Function, sensors: Array, streams: Array, parameters: Array, onSensorChange: Function }} props
+ * @param {{ open: boolean, onClose: Function, onSubmit: Function, sensors: Array, streams: Array, parameters: Array, onSensorChange?: Function, lockedSensor?: { id: number, name: string } | null }} props
  */
 const DatapointForm = ({
     open,
@@ -35,10 +36,12 @@ const DatapointForm = ({
     streams = [],
     parameters = [],
     onSensorChange,
+    lockedSensor = null,
 }) => {
     const [formData, setFormData] = useState(INITIAL_STATE);
     const [error, setError] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const lockedSensorId = lockedSensor?.id ?? null;
 
     const handleSubmit = async () => {
         if (!formData.stream) {
@@ -88,7 +91,9 @@ const DatapointForm = ({
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
                 <DialogTitle sx={{ fontWeight: 600 }}>
-                    Add New Datapoint
+                    {lockedSensorId
+                        ? "Add Datapoint to Sensor"
+                        : "Add New Datapoint"}
                 </DialogTitle>
                 <DialogContent>
                     {error && (
@@ -97,32 +102,55 @@ const DatapointForm = ({
                         </Alert>
                     )}
                     <Grid container spacing={2} sx={{ mt: 0.5 }}>
-                        <Grid item xs={12}>
-                            <Autocomplete
-                                options={sensors}
-                                getOptionLabel={(option) => option.name || ""}
-                                value={formData.sensor}
-                                onChange={(_e, newVal) => {
-                                    setFormData((prev) => ({
-                                        ...prev,
-                                        sensor: newVal,
-                                        stream: null,
-                                    }));
-                                    if (onSensorChange)
-                                        onSensorChange(newVal?.id || null);
-                                }}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        label="Sensor (to filter streams)"
-                                        size="small"
-                                    />
-                                )}
-                                isOptionEqualToValue={(opt, val) =>
-                                    opt.id === val?.id
-                                }
-                            />
-                        </Grid>
+                        {lockedSensorId && (
+                            <Grid item xs={12}>
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                >
+                                    Sensor:{" "}
+                                    <Typography
+                                        component="span"
+                                        variant="body2"
+                                        color="text.primary"
+                                        sx={{ fontWeight: 600 }}
+                                    >
+                                        {lockedSensor?.name ||
+                                            "Name not available"}
+                                    </Typography>
+                                </Typography>
+                            </Grid>
+                        )}
+                        {!lockedSensorId && (
+                            <Grid item xs={12}>
+                                <Autocomplete
+                                    options={sensors}
+                                    getOptionLabel={(option) =>
+                                        option.name || ""
+                                    }
+                                    value={formData.sensor}
+                                    onChange={(_e, newVal) => {
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            sensor: newVal,
+                                            stream: null,
+                                        }));
+                                        if (onSensorChange)
+                                            onSensorChange(newVal?.id || null);
+                                    }}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Sensor (to filter streams)"
+                                            size="small"
+                                        />
+                                    )}
+                                    isOptionEqualToValue={(opt, val) =>
+                                        opt.id === val?.id
+                                    }
+                                />
+                            </Grid>
+                        )}
                         <Grid item xs={12}>
                             <Autocomplete
                                 options={streams}
@@ -150,11 +178,16 @@ const DatapointForm = ({
                         <Grid item xs={12}>
                             <Autocomplete
                                 options={parameters}
-                                getOptionLabel={(option) =>
-                                    option.unit
-                                        ? `${option.name} (${option.unit})`
-                                        : option.name
-                                }
+                                getOptionLabel={(option) => {
+                                    const displayTitle = option.title || "";
+                                    const displayName = option.name || "";
+
+                                    if (displayTitle && displayName) {
+                                        return `${displayTitle} (${displayName})`;
+                                    }
+
+                                    return displayTitle || displayName;
+                                }}
                                 value={formData.parameter}
                                 onChange={(_e, newVal) =>
                                     setFormData((prev) => ({
