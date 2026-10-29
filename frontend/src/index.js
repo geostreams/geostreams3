@@ -3,6 +3,7 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { AuthProvider } from "react-oidc-context";
+import { WebStorageStateStore } from "oidc-client-ts";
 import { ThemeProvider } from "@mui/material/styles";
 import { CssBaseline } from "@mui/material";
 import theme from "./theme/theme";
@@ -13,6 +14,9 @@ const oidcConfig = {
     redirect_uri: `${window.location.origin}/geostreams`,
     client_secret: process.env.REACT_APP_KEYCLOAK_CLIENT_SECRET,
     post_logout_redirect_uri: `${window.location.origin}/geostreams`,
+    userStore: new WebStorageStateStore({
+        store: window.localStorage,
+    }),
 };
 
 const root = ReactDOM.createRoot(document.getElementById("root"));

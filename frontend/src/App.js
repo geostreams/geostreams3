@@ -11,7 +11,10 @@ import { useAuth } from "react-oidc-context";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import UserProfile from "./pages/UserProfile";
+import Dashboard from "./pages/Dashboard";
+import SensorDetail from "./pages/SensorDetail";
 import LoadingSpinner from "./components/ui/LoadingSpinner";
+import { ParametersProvider } from "./contexts/ParametersContext";
 
 function App() {
     const auth = useAuth();
@@ -93,33 +96,57 @@ function App() {
 
     // Redirect to profile if authenticated and trying to access the root
     return (
-        <Router basename="/geostreams">
-            <Navbar />
-            <Routes>
-                {/* Redirect to profile if authenticated */}
-                <Route
-                    path="/"
-                    element={
-                        auth.isAuthenticated ? (
-                            <Navigate to="/profile" />
-                        ) : (
-                            <Home />
-                        )
-                    }
-                />
-                {/* Protected Profile Route */}
-                <Route
-                    path="/profile"
-                    element={
-                        auth.isAuthenticated ? (
-                            <UserProfile />
-                        ) : (
-                            <Navigate to="/" />
-                        )
-                    }
-                />
-            </Routes>
-        </Router>
+        <ParametersProvider>
+            <Router basename="/geostreams">
+                <Navbar />
+                <Routes>
+                    {/* Redirect to dashboard if authenticated */}
+                    <Route
+                        path="/"
+                        element={
+                            auth.isAuthenticated ? (
+                                <Navigate to="/dashboard" />
+                            ) : (
+                                <Home />
+                            )
+                        }
+                    />
+                    {/* Protected Dashboard Route */}
+                    <Route
+                        path="/dashboard"
+                        element={
+                            auth.isAuthenticated ? (
+                                <Dashboard />
+                            ) : (
+                                <Navigate to="/" />
+                            )
+                        }
+                    />
+                    {/* Protected Sensor Detail Route */}
+                    <Route
+                        path="/dashboard/sensors/:id"
+                        element={
+                            auth.isAuthenticated ? (
+                                <SensorDetail />
+                            ) : (
+                                <Navigate to="/" />
+                            )
+                        }
+                    />
+                    {/* Protected Profile Route */}
+                    <Route
+                        path="/profile"
+                        element={
+                            auth.isAuthenticated ? (
+                                <UserProfile />
+                            ) : (
+                                <Navigate to="/" />
+                            )
+                        }
+                    />
+                </Routes>
+            </Router>
+        </ParametersProvider>
     );
 }
 
