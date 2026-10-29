@@ -1,0 +1,23 @@
+info:
+  name: Create user
+  type: http
+  seq: 27
+
+http:
+  method: POST
+  url: "{{base_url}}/geostreams/api/auth/auth/createuser/"
+  body:
+    type: json
+    data: |-
+      {
+          "username":"Visu",
+          "email": "mohanar2@illinois.edu",
+          "password": "Visu1234!"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

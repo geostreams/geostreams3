@@ -1,0 +1,15 @@
+info:
+  name: Get all visualizations
+  type: http
+  seq: 37
+
+http:
+  method: GET
+  url: "{{base_url}}/data/sensors/"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

@@ -1,0 +1,15 @@
+opencollection: 1.0.0
+
+info:
+  name: Geostreams3
+
+request:
+  variables:
+    - name: base_url
+      value: http://localhost:9007
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git
