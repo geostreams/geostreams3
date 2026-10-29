@@ -1,0 +1,40 @@
+info:
+  name: Get sensors in circle
+  type: http
+  seq: 33
+
+http:
+  method: GET
+  url: "{{base_url}}/data/sensors/sensors_in_shape/?shape=circle&wkt=POINT(-88.290075 40.0062722)"
+  params:
+    - name: shape
+      value: circle
+      type: query
+    - name: wkt
+      value: POINT(-88.290075 40.0062722)
+      type: query
+    - name: buffer
+      value: "5"
+      type: query
+      disabled: true
+  body:
+    type: json
+    data: |+
+      {
+          "shape": "polygon",
+          "coordinates": [
+           [-88.4584808, 40.0034239],
+          [-88.4646606, 39.4255858],
+          [-87.3275757, 39.4998022],
+          [-87.3577881, 40.4657559],
+          [-88.3850098, 40.4553072]
+           ]
+      }
+
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

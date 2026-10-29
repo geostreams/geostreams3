@@ -1,0 +1,39 @@
+info:
+  name: Get sensors in polygon
+  type: http
+  seq: 34
+
+http:
+  method: GET
+  url: "{{base_url}}/data/sensors/sensors_in_shape/?shape=polygon&wkt=POLYGON((-88.4584808 40.0034239, -88.4646606 39.4255858, -87.3275757 39.4998022, -88.4584808 40.0034239))"
+  params:
+    - name: shape
+      value: polygon
+      type: query
+    - name: wkt
+      value: POLYGON((-88.4584808 40.0034239, -88.4646606 39.4255858, -87.3275757 39.4998022, -88.4584808 40.0034239))
+      type: query
+    - name: buffer
+      value: ""
+      type: query
+      disabled: true
+  body:
+    type: json
+    data: |
+      {
+          "shape": "polygon",
+          "coordinates": [
+           [-88.4584808, 40.0034239],
+          [-88.4646606, 39.4255858],
+          [-87.3275757, 39.4998022],
+          [-87.3577881, 40.4657559],
+          [-88.3850098, 40.4553072]
+           ]
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

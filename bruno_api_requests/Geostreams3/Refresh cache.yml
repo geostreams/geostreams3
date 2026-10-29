@@ -1,0 +1,26 @@
+info:
+  name: Refresh cache
+  type: http
+  seq: 26
+
+http:
+  method: POST
+  url: "{{base_url}}/geostreams/api/data/cache/refresh/"
+  body:
+    type: json
+    data: |-
+      {
+        "time_period": "all"
+      }
+  auth:
+    type: apikey
+    key: Authorization
+    value: "{{api_key}}"
+    placement: header
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

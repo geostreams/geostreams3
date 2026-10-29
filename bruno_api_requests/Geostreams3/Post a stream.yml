@@ -1,0 +1,31 @@
+info:
+  name: Post a stream
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{base_url}}/data/streams/"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "RS-2",
+        "geog": "POINT(35.6895 139.6917)",
+        "created": "2023-07-24T17:14:47.783Z",
+        "parameters": [
+          "nitrogen",
+          "phosphorus"
+        ],
+        "properties": {},
+        "min_start_time": "2023-04-24T17:14:47.783Z",
+        "max_end_time": "2024-04-24T17:14:47.783Z",
+        "sensor":1
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
