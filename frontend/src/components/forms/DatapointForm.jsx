@@ -60,14 +60,11 @@ const DatapointForm = ({
         setIsSubmitting(true);
         try {
             const payload = {
-                stream_id: formData.stream.id,
-                type: "Feature",
-                properties: {
+                stream: formData.stream.id,
+                data: {
                     [formData.parameter.name]: parseFloat(formData.value),
                 },
-                geometry: null,
-                start_time: formData.time.toISOString(),
-                end_time: formData.time.toISOString(),
+                time: formData.time.toISOString(),
             };
             await onSubmit(payload);
             setFormData(INITIAL_STATE);
