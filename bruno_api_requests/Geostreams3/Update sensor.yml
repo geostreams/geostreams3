@@ -1,0 +1,44 @@
+info:
+  name: Update sensor
+  type: http
+  seq: 2
+
+http:
+  method: PUT
+  url: "{{base_url}}/data/sensors/2/"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Pesotum",
+        "geotype": "Feature",
+        "created": "2025-01-12T19:36:32.070820Z",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -88.213772,
+            39.889292,
+            0
+          ]
+        },
+        "properties": {
+          "name": "Pesotum",
+          "type": {
+            "id": "field",
+            "title": "Field Data"
+          },
+          "region": "Pesotum",
+          "popupContent": "Pesotum",
+          "source": "Pesotum"
+        },
+        "parameters": [],
+        "min_start_time": null,
+        "max_end_time": null
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

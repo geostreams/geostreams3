@@ -1,0 +1,38 @@
+info:
+  name: Login User
+  type: http
+  seq: 30
+
+http:
+  method: POST
+  url: "{{base_url}}/geostreams/api/auth/login/"
+  body:
+    type: json
+    data: |-
+      {
+          "username":"mohanar2@illinois.edu",
+          "password": "password"
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        const response = res.getBody();
+        bru.setGlobalEnvVar("kc_token", response["token"]["access_token"]);
+  actions:
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: res.body.token.access_token
+        method: jsonq
+      variable:
+        name: access_token
+        scope: runtime
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
