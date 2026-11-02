@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { config as appConfig } from "@/config";
 import { useAuth } from "react-oidc-context";
 import axios from "axios";
 import {
@@ -47,7 +48,7 @@ function UserProfile() {
                     },
                 };
                 const response = await axios.post(
-                    `${import.meta.env.VITE_BACKEND_URL}/auth/generate-api-key/`,
+                    `${appConfig.backendUrl}/auth/generate-api-key/`,
                     null,
                     config,
                 );

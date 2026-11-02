@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { config as appConfig } from "@/config";
 import { useAuth } from "react-oidc-context";
 import axios from "axios";
 import {
@@ -29,7 +30,7 @@ const ApiAccessTab = () => {
         severity: "success",
     });
 
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || "";
+    const backendUrl = appConfig.backendUrl || "";
     const baseApiUrl = (() => {
         if (!backendUrl) return "/geostreams/api/";
         try {
@@ -51,7 +52,7 @@ const ApiAccessTab = () => {
                 headers: { Authorization: `Bearer ${token}` },
             };
             const response = await axios.post(
-                `${import.meta.env.VITE_BACKEND_URL}/auth/generate-api-key/`,
+                `${appConfig.backendUrl}/auth/generate-api-key/`,
                 null,
                 config,
             );
