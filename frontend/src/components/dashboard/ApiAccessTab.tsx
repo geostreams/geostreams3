@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { getApiBaseUrl, getApiDocsUrl } from "@/lib/apiDocs";
 import ApiKeyCard from "./ApiKeyCard";
 import Card from "../ui/Card";
+import CopyButton from "../ui/CopyButton";
 
 const getCurlExamples = (baseApiUrl: string) => [
     {
@@ -74,9 +75,17 @@ const ApiAccessTab = () => {
                         >
                             <AccordionTrigger>{example.title}</AccordionTrigger>
                             <AccordionContent>
-                                <pre className="whitespace-pre-wrap break-all rounded-md bg-muted p-3 font-mono text-xs">
-                                    {example.cmd}
-                                </pre>
+                                <div className="relative">
+                                    <pre className="whitespace-pre-wrap break-all rounded-md bg-muted p-3 pr-11 font-mono text-xs">
+                                        {example.cmd}
+                                    </pre>
+                                    <div className="absolute top-1 right-1">
+                                        <CopyButton
+                                            text={example.cmd}
+                                            label={`Copy ${example.title} command`}
+                                        />
+                                    </div>
+                                </div>
                             </AccordionContent>
                         </AccordionItem>
                     ))}
