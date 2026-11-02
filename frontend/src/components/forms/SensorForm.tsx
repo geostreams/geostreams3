@@ -76,6 +76,10 @@ interface SensorFormProps {
  */
 const SensorForm = ({ open, onClose, onSubmit, sensor }: SensorFormProps) => {
     const isEdit = Boolean(sensor);
+    // Only single-point geometries can be edited here; others are kept as stored.
+    const keepGeometry =
+        sensor != null &&
+        (sensor.geoType ?? sensor.geometry?.type ?? "Point") !== "Point";
     const [formData, setFormData] = useState(INITIAL_STATE);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,7 +102,7 @@ const SensorForm = ({ open, onClose, onSubmit, sensor }: SensorFormProps) => {
             setError("Name is required");
             return;
         }
-        if (!formData.latitude || !formData.longitude) {
+        if (!keepGeometry && (!formData.latitude || !formData.longitude)) {
             setError("Latitude and longitude are required");
             return;
         }
@@ -124,15 +128,17 @@ const SensorForm = ({ open, onClose, onSubmit, sensor }: SensorFormProps) => {
             await onSubmit({
                 name: formData.name.trim(),
                 source: formData.source.trim(),
-                geoType: formData.geoType,
-                geometry: {
-                    type: formData.geoType,
-                    coordinates: [
-                        parseFloat(formData.longitude),
-                        parseFloat(formData.latitude),
-                        parseFloat(formData.altitude || "0"),
-                    ],
-                },
+                geoType: keepGeometry ? sensor.geoType : formData.geoType,
+                geometry: keepGeometry
+                    ? sensor.geometry
+                    : {
+                          type: formData.geoType,
+                          coordinates: [
+                              parseFloat(formData.longitude),
+                              parseFloat(formData.latitude),
+                              parseFloat(formData.altitude || "0"),
+                          ],
+                      },
                 properties,
             });
             onClose();
@@ -191,6 +197,7 @@ const SensorForm = ({ open, onClose, onSubmit, sensor }: SensorFormProps) => {
                         <Select
                             value={formData.geoType}
                             onValueChange={(v) => setField("geoType", v)}
+                            disabled={isEdit}
                         >
                             <SelectTrigger
                                 id="sensor-geotype"
@@ -212,19 +219,21 @@ const SensorForm = ({ open, onClose, onSubmit, sensor }: SensorFormProps) => {
                             <Label htmlFor="sensor-lat">Latitude *</Label>
                             <Input
                                 id="sensor-lat"
+                                disabled={keepGeometry}
                                 type="number"
                                 step="any"
                                 value={formData.latitude}
                                 onChange={(e) =>
                                     setField("latitude", e.target.value)
                                 }
-                                required
+                                required={!keepGeometry}
                             />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="sensor-lon">Longitude *</Label>
                             <Input
                                 id="sensor-lon"
+                                disabled={keepGeometry}
                                 type="number"
                                 step="any"
                                 value={formData.longitude}
@@ -238,6 +247,7 @@ const SensorForm = ({ open, onClose, onSubmit, sensor }: SensorFormProps) => {
                             <Label htmlFor="sensor-alt">Altitude</Label>
                             <Input
                                 id="sensor-alt"
+                                disabled={keepGeometry}
                                 type="number"
                                 step="any"
                                 value={formData.altitude}
@@ -247,6 +257,12 @@ const SensorForm = ({ open, onClose, onSubmit, sensor }: SensorFormProps) => {
                             />
                         </div>
                     </div>
+                    {keepGeometry && (
+                        <p className="text-sm text-muted-foreground">
+                            This sensor&apos;s {sensor?.geoType} geometry
+                            can&apos;t be edited here and is kept as stored.
+                        </p>
+                    )}
                     <div className="grid gap-2">
                         <Label htmlFor="sensor-props">Properties (JSON)</Label>
                         <Textarea

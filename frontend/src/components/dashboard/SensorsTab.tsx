@@ -1,5 +1,4 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
 
@@ -62,6 +61,13 @@ const SensorsTab = () => {
     const pageCount = Math.max(1, Math.ceil(totalCount / rowsPerPage));
     const firstRow = totalCount === 0 ? 0 : page * rowsPerPage + 1;
     const lastRow = page * rowsPerPage + sensors.length;
+
+    // Deleting the last row of a later page leaves it empty: step back.
+    useEffect(() => {
+        if (!isLoading && sensors.length === 0 && totalCount > 0 && page > 0) {
+            setPage(Math.min(page, pageCount) - 1);
+        }
+    }, [isLoading, sensors.length, totalCount, page, pageCount]);
 
     // The API only filters on exact names, so search narrows the loaded page.
     const visibleSensors = useMemo(() => {
@@ -168,7 +174,9 @@ const SensorsTab = () => {
                                 >
                                     {query.trim()
                                         ? "No sensors on this page match your search."
-                                        : "No sensors found. Create your first sensor to get started."}
+                                        : totalCount === 0
+                                          ? "No sensors found. Create your first sensor to get started."
+                                          : "No sensors on this page."}
                                 </TableCell>
                             </TableRow>
                         ) : (

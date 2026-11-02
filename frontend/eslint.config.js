@@ -72,9 +72,16 @@ export default tseslint.config(
     },
     {
         // the base rule flags parameter names in TypeScript function types;
-        // @typescript-eslint/no-unused-vars covers real unused variables
+        // the typescript-eslint rule replaces it for real unused variables
         files: ["**/*.ts", "**/*.tsx"],
-        rules: { "no-unused-vars": "off" },
+        plugins: { "@typescript-eslint": tseslint.plugin },
+        rules: {
+            "no-unused-vars": "off",
+            "@typescript-eslint/no-unused-vars": [
+                "warn",
+                { caughtErrors: "none" },
+            ],
+        },
     },
     {
         files: ["**/*.d.ts"],
