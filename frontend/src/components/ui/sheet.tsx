@@ -7,11 +7,15 @@ function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
 }
 
-function SheetTrigger({
-  ...props
-}: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
-  return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
-}
+// forwardRef so the trigger can sit under a Tooltip trigger on React 18.
+const SheetTrigger = React.forwardRef<
+  React.ComponentRef<typeof SheetPrimitive.Trigger>,
+  React.ComponentProps<typeof SheetPrimitive.Trigger>
+>(function SheetTrigger(props, ref) {
+  return (
+    <SheetPrimitive.Trigger ref={ref} data-slot="sheet-trigger" {...props} />
+  )
+})
 
 function SheetClose({
   ...props

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, Tab, Box } from "@mui/material";
 import {
@@ -19,13 +18,14 @@ const TAB_CONFIG = [
 
 function Dashboard() {
     const [searchParams, setSearchParams] = useSearchParams();
-    const initialTab = parseInt(searchParams.get("tab") || "0", 10);
-    const [activeTab, setActiveTab] = useState(
-        initialTab >= 0 && initialTab < TAB_CONFIG.length ? initialTab : 0,
-    );
+    // The URL is the source of truth so the rail's deep links switch tabs.
+    const requestedTab = parseInt(searchParams.get("tab") || "0", 10);
+    const activeTab =
+        requestedTab >= 0 && requestedTab < TAB_CONFIG.length
+            ? requestedTab
+            : 0;
 
     const handleTabChange = (_event, newValue) => {
-        setActiveTab(newValue);
         setSearchParams({ tab: newValue.toString() });
     };
 
