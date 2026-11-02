@@ -17,17 +17,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getErrorMessage } from "../../api/apiClient";
-import type {
-    DatapointInput,
-    Parameter,
-    Sensor,
-    Stream,
-} from "../../types/api";
+import type { DatapointInput, Parameter, Stream } from "../../types/api";
 
 dayjs.extend(utc);
 
 interface DatapointFormState {
-    sensor: string | null;
     stream: string | null;
     parameter: string | null;
     time: Dayjs | null;
@@ -35,7 +29,6 @@ interface DatapointFormState {
 }
 
 const initialState = (): DatapointFormState => ({
-    sensor: null,
     stream: null,
     parameter: null,
     time: dayjs.utc().second(0).millisecond(0),
@@ -49,11 +42,9 @@ interface DatapointFormProps {
     open: boolean;
     onClose: () => void;
     onSubmit: (payload: DatapointInput) => Promise<unknown>;
-    sensors?: Pick<Sensor, "id" | "name">[];
     streams?: Stream[];
     parameters?: Parameter[];
-    onSensorChange?: (sensorId: number | null) => void;
-    lockedSensor?: { id: number; name: string | null } | null;
+    lockedSensor: { id: number; name: string | null };
 }
 
 /**
@@ -63,16 +54,13 @@ const DatapointForm = ({
     open,
     onClose,
     onSubmit,
-    sensors = [],
     streams = [],
     parameters = [],
-    onSensorChange,
-    lockedSensor = null,
+    lockedSensor,
 }: DatapointFormProps) => {
     const [formData, setFormData] = useState(initialState);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const lockedSensorId = lockedSensor?.id ?? null;
 
     // A fresh form, with the time reset to now, each time the dialog opens.
     useEffect(() => {
@@ -139,11 +127,7 @@ const DatapointForm = ({
         <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
             <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>
-                        {lockedSensorId
-                            ? "Add datapoint to sensor"
-                            : "Add datapoint"}
-                    </DialogTitle>
+                    <DialogTitle>Add datapoint to sensor</DialogTitle>
                     <DialogDescription>
                         Fields marked * are required.
                     </DialogDescription>
@@ -154,39 +138,12 @@ const DatapointForm = ({
                             <AlertDescription>{error}</AlertDescription>
                         </Alert>
                     )}
-                    {lockedSensorId ? (
-                        <p className="text-sm text-muted-foreground">
-                            Sensor:{" "}
-                            <span className="font-semibold text-foreground">
-                                {lockedSensor?.name || "Name not available"}
-                            </span>
-                        </p>
-                    ) : (
-                        <div className="grid gap-2">
-                            <Label htmlFor="datapoint-sensor">
-                                Sensor (to filter streams)
-                            </Label>
-                            <Combobox
-                                id="datapoint-sensor"
-                                options={sensors.map((s) => ({
-                                    value: String(s.id),
-                                    label: s.name || `Sensor ${s.id}`,
-                                }))}
-                                value={formData.sensor}
-                                onChange={(next) => {
-                                    setFormData((prev) => ({
-                                        ...prev,
-                                        sensor: next,
-                                        stream: null,
-                                    }));
-                                    onSensorChange?.(
-                                        next ? Number(next) : null,
-                                    );
-                                }}
-                                placeholder="Select a sensor"
-                            />
-                        </div>
-                    )}
+                    <p className="text-sm text-muted-foreground">
+                        Sensor:{" "}
+                        <span className="font-semibold text-foreground">
+                            {lockedSensor.name || "Name not available"}
+                        </span>
+                    </p>
                     <div className="grid gap-2">
                         <Label htmlFor="datapoint-stream">Stream *</Label>
                         <Combobox
