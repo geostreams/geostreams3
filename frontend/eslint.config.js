@@ -66,6 +66,11 @@ export default tseslint.config(
         },
     },
     {
+        // shadcn primitives export several small components per file by design
+        files: ["src/components/ui/**/*.tsx"],
+        rules: { "react/no-multi-comp": "off" },
+    },
+    {
         files: ["**/*.d.ts"],
         rules: { "no-unused-vars": "off" },
     },

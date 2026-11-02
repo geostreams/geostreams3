@@ -4,7 +4,6 @@ import {
     Route,
     Navigate,
 } from "react-router-dom";
-import { Container, Typography, Button } from "@mui/material";
 
 import { useAuth } from "react-oidc-context";
 
@@ -14,6 +13,8 @@ import UserProfile from "./pages/UserProfile";
 import Dashboard from "./pages/Dashboard";
 import SensorDetail from "./pages/SensorDetail";
 import LoadingSpinner from "./components/ui/LoadingSpinner";
+import { AppShell } from "./components/layout/AppShell";
+import { Button } from "@/components/ui/button";
 import { ParametersProvider } from "./contexts/ParametersContext";
 
 function App() {
@@ -23,74 +24,39 @@ function App() {
     switch (auth.activeNavigator) {
         case "signinSilent":
             return (
-                <Container
-                    sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        minHeight: "100vh",
-                    }}
-                >
+                <div className="flex min-h-screen items-center justify-center px-4">
                     <LoadingSpinner message="Signing you in..." />
-                </Container>
+                </div>
             );
         case "signoutRedirect":
             return (
-                <Container
-                    sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        minHeight: "100vh",
-                    }}
-                >
+                <div className="flex min-h-screen items-center justify-center px-4">
                     <LoadingSpinner message="Signing you out..." />
-                </Container>
+                </div>
             );
     }
 
     if (auth.isLoading) {
         return (
-            <Container
-                sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    minHeight: "100vh",
-                }}
-            >
+            <div className="flex min-h-screen items-center justify-center px-4">
                 <LoadingSpinner message="Loading application..." />
-            </Container>
+            </div>
         );
     }
 
     if (auth.error) {
         return (
-            <Container
-                sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    minHeight: "100vh",
-                    textAlign: "center",
-                    gap: 3,
-                }}
-            >
-                <Typography variant="h4" color="error.main" fontWeight="600">
-                    Authentication Error
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
+            <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center">
+                <h1 className="font-heading text-3xl font-semibold text-destructive">
+                    Authentication error
+                </h1>
+                <p className="max-w-md text-muted-foreground">
                     {auth.error.message}
-                </Typography>
-                <Button
-                    variant="contained"
-                    onClick={() => window.location.reload()}
-                    sx={{ mt: 2 }}
-                >
-                    Reload Page
+                </p>
+                <Button onClick={() => window.location.reload()}>
+                    Reload page
                 </Button>
-            </Container>
+            </div>
         );
     }
 
@@ -98,53 +64,54 @@ function App() {
     return (
         <ParametersProvider>
             <Router basename="/geostreams">
-                <Navbar />
-                <Routes>
-                    {/* Redirect to dashboard if authenticated */}
-                    <Route
-                        path="/"
-                        element={
-                            auth.isAuthenticated ? (
-                                <Navigate to="/dashboard" />
-                            ) : (
-                                <Home />
-                            )
-                        }
-                    />
-                    {/* Protected Dashboard Route */}
-                    <Route
-                        path="/dashboard"
-                        element={
-                            auth.isAuthenticated ? (
-                                <Dashboard />
-                            ) : (
-                                <Navigate to="/" />
-                            )
-                        }
-                    />
-                    {/* Protected Sensor Detail Route */}
-                    <Route
-                        path="/dashboard/sensors/:id"
-                        element={
-                            auth.isAuthenticated ? (
-                                <SensorDetail />
-                            ) : (
-                                <Navigate to="/" />
-                            )
-                        }
-                    />
-                    {/* Protected Profile Route */}
-                    <Route
-                        path="/profile"
-                        element={
-                            auth.isAuthenticated ? (
-                                <UserProfile />
-                            ) : (
-                                <Navigate to="/" />
-                            )
-                        }
-                    />
-                </Routes>
+                <AppShell nav={<Navbar />}>
+                    <Routes>
+                        {/* Redirect to dashboard if authenticated */}
+                        <Route
+                            path="/"
+                            element={
+                                auth.isAuthenticated ? (
+                                    <Navigate to="/dashboard" />
+                                ) : (
+                                    <Home />
+                                )
+                            }
+                        />
+                        {/* Protected Dashboard Route */}
+                        <Route
+                            path="/dashboard"
+                            element={
+                                auth.isAuthenticated ? (
+                                    <Dashboard />
+                                ) : (
+                                    <Navigate to="/" />
+                                )
+                            }
+                        />
+                        {/* Protected Sensor Detail Route */}
+                        <Route
+                            path="/dashboard/sensors/:id"
+                            element={
+                                auth.isAuthenticated ? (
+                                    <SensorDetail />
+                                ) : (
+                                    <Navigate to="/" />
+                                )
+                            }
+                        />
+                        {/* Protected Profile Route */}
+                        <Route
+                            path="/profile"
+                            element={
+                                auth.isAuthenticated ? (
+                                    <UserProfile />
+                                ) : (
+                                    <Navigate to="/" />
+                                )
+                            }
+                        />
+                    </Routes>
+                </AppShell>
             </Router>
         </ParametersProvider>
     );
