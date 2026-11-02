@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { config } from "@/config";
 import {
     AppBar,
     Toolbar,
@@ -42,7 +43,7 @@ function Navbar() {
 
     const isAuthenticated = auth.isAuthenticated;
     const [anchorEl, setAnchorEl] = useState(null);
-    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+    const backendUrl = config.backendUrl;
     const apiDocsUrl = (() => {
         if (!backendUrl) {
             return "/geostreams/api/swagger/";

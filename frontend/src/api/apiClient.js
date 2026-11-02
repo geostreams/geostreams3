@@ -1,4 +1,5 @@
 import axios from "axios";
+import { config } from "../config";
 
 /**
  * Public (unauthenticated) axios instance for open GET endpoints.
@@ -6,7 +7,7 @@ import axios from "axios";
  * aggregated data are all publicly readable.
  */
 export const publicApi = axios.create({
-    baseURL: import.meta.env.VITE_BACKEND_URL,
+    baseURL: config.backendUrl,
 });
 
 /**
@@ -18,7 +19,7 @@ export const publicApi = axios.create({
  */
 export const createApiClient = (auth) => {
     const client = axios.create({
-        baseURL: import.meta.env.VITE_BACKEND_URL,
+        baseURL: config.backendUrl,
     });
 
     client.interceptors.request.use((config) => {
