@@ -17,7 +17,7 @@ import useApiClient from "./useApiClient";
  * @param rowsPerPage - rows per page; use -1 to fetch all records (default -1)
  */
 const useStreams = (
-    sensorId: number | null = null,
+    sensorId: number | string | null = null,
     page = 0,
     rowsPerPage = -1,
 ) => {
@@ -31,7 +31,9 @@ const useStreams = (
         setIsLoading(true);
         setError(null);
         try {
-            const params: Record<string, number> = { limit: rowsPerPage };
+            const params: Record<string, number | string> = {
+                limit: rowsPerPage,
+            };
             if (rowsPerPage > 0) {
                 params.offset = page * rowsPerPage;
             }

@@ -86,7 +86,8 @@ export interface Parameter {
     title: string;
     unit: string | null;
     properties: JsonObject | null;
-    visualization: string | null;
+    /** Visualization name; absent from the response when the parameter has none. */
+    visualization?: string | null;
     categories: ParameterCategory[];
 }
 
@@ -122,7 +123,7 @@ export interface Aggregate {
 export type TimePeriod = "hour" | "day" | "month" | "year";
 
 export interface AggregateParams {
-    sensorId?: number;
+    sensorId?: number | string;
     parameter?: string | string[];
     timePeriod?: TimePeriod;
     since?: string;
@@ -130,7 +131,7 @@ export interface AggregateParams {
     shortened?: boolean;
 }
 
-/** Response of `auth/generate-api-key/`; the raw key is only shown once. */
+/** Response of `auth/generate-api-key/`; `key` is a token issued for the user's API key. */
 export interface ApiKey {
     key: string;
 }
