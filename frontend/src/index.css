@@ -1,62 +1,195 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource/familjen-grotesk/400.css";
+@import "@fontsource/familjen-grotesk/500.css";
+@import "@fontsource/familjen-grotesk/600.css";
+@import "@fontsource/familjen-grotesk/700.css";
+@import "@fontsource/atkinson-hyperlegible/400.css";
+@import "@fontsource/atkinson-hyperlegible/700.css";
 
-* {
-    box-sizing: border-box;
+/*
+ * "Lake survey instrument" tokens. Light theme only.
+ * Contrast (WCAG AA): foreground on background 12.3:1, on card 13.5:1;
+ * primary-foreground on primary 6.0:1; destructive-foreground on destructive 5.8:1;
+ * muted-foreground on background 5.6:1, on card 6.2:1; accent-foreground on accent 6.0:1.
+ */
+:root {
+    --fog: #eef2f0;
+    --chart-paper: #fbfcfa;
+    --deep-water: #14303a;
+    --channel-teal: #1f6b73;
+    --buoy-ochre: #d9a21b;
+    --sediment-red: #a8432e;
+
+    --radius: 0.5rem;
+
+    --background: var(--fog);
+    --foreground: var(--deep-water);
+    --card: var(--chart-paper);
+    --card-foreground: var(--deep-water);
+    --popover: var(--chart-paper);
+    --popover-foreground: var(--deep-water);
+    --primary: var(--channel-teal);
+    --primary-foreground: var(--chart-paper);
+    --secondary: #dfe7e4;
+    --secondary-foreground: var(--deep-water);
+    --muted: #e3eae7;
+    --muted-foreground: #4b636b;
+    --accent: var(--buoy-ochre);
+    --accent-foreground: var(--deep-water);
+    --destructive: var(--sediment-red);
+    --destructive-foreground: var(--chart-paper);
+    --border: #c5d1ce;
+    --input: #758a90;
+    --ring: var(--channel-teal);
+
+    --chart-1: var(--channel-teal);
+    --chart-2: var(--buoy-ochre);
+    --chart-3: var(--deep-water);
+    --chart-4: var(--sediment-red);
+    --chart-5: #6f9aa0;
+
+    --sidebar: var(--deep-water);
+    --sidebar-foreground: #e6eeeb;
+    --sidebar-primary: var(--buoy-ochre);
+    --sidebar-primary-foreground: var(--deep-water);
+    --sidebar-accent: #20444f;
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: #2c5461;
+    --sidebar-ring: var(--buoy-ochre);
 }
 
-html {
-    scroll-behavior: smooth;
-}
-
-body {
-    margin: 0;
-    font-family:
-        "Inter",
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        "Roboto",
-        "Oxygen",
-        "Ubuntu",
-        "Cantarell",
-        "Fira Sans",
-        "Droid Sans",
-        "Helvetica Neue",
+@theme inline {
+    --font-sans:
+        "Atkinson Hyperlegible", ui-sans-serif, system-ui, -apple-system,
+        "Segoe UI", sans-serif;
+    --font-heading:
+        "Familjen Grotesk", "Atkinson Hyperlegible", ui-sans-serif, system-ui,
         sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    background-color: #f8fafc;
-    line-height: 1.6;
+    --font-mono:
+        ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
 }
 
-code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-        monospace;
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        @apply bg-background text-foreground font-sans antialiased;
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        @apply font-heading tracking-tight;
+    }
+
+    table,
+    .tabular {
+        font-variant-numeric: tabular-nums;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+    }
+
+    code {
+        @apply font-mono;
+    }
+
+    button,
+    a,
+    input,
+    textarea,
+    select {
+        transition: all 0.2s ease-in-out;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        html {
+            scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
 }
 
-/* Smooth transitions for all interactive elements */
-button,
-a,
-input,
-textarea,
-select {
-    transition: all 0.2s ease-in-out;
+/* Contour lines draw in once on load; reduced-motion users get them static. */
+@keyframes contour-draw {
+    from {
+        stroke-dashoffset: 1;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
+.contour-line {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    animation: contour-draw 2.4s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
+@media (prefers-reduced-motion: reduce) {
+    .contour-line {
+        animation: none;
+    }
 }
 
-::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #a1a1a1;
+/* Interim: MUI screens (until they are migrated) inherit the app fonts instead of MUI's default Roboto. */
+body [class*="Mui"] {
+    font-family: inherit;
 }

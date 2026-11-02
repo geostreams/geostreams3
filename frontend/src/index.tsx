@@ -3,9 +3,6 @@ import "./index.css";
 import App from "./App";
 import { AuthProvider } from "react-oidc-context";
 import { WebStorageStateStore } from "oidc-client-ts";
-import { ThemeProvider } from "@mui/material/styles";
-import { CssBaseline } from "@mui/material";
-import theme from "./theme/theme";
 import { config } from "./config";
 
 const oidcConfig = {
@@ -25,11 +22,8 @@ const root = ReactDOM.createRoot(
 root.render(
     // Removed React.StrictMode cos it breaks the react-oidc-context auth flow on a refresh
     // <React.StrictMode>
-    <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <AuthProvider {...oidcConfig}>
-            <App />
-        </AuthProvider>
-    </ThemeProvider>,
+    <AuthProvider {...oidcConfig}>
+        <App />
+    </AuthProvider>,
     // </React.StrictMode>,
 );
