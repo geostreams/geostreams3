@@ -18,7 +18,7 @@ Sub-project details live in [frontend/AGENTS.md](frontend/AGENTS.md) and [backen
 
 ## Architecture
 
-- **Frontend** — React 18 SPA served under `/geostreams/`.
+- **Frontend** — React 18 + TypeScript SPA (Vite, Tailwind, shadcn/ui) served under `/geostreams/`.
 - **Backend** — Django REST Framework API at `/geostreams/api/`.
 - **Database** — TimescaleDB + PostGIS for time-series/geospatial; a separate PostgreSQL backs Keycloak.
 - **Auth** — Keycloak OIDC (frontend tokens) plus backend API-key auth (`DISABLE_AUTH=True` in `backend/.env` skips auth for local dev).
@@ -49,12 +49,12 @@ Backend and frontend run locally (full setup in `README.md`):
 
 ```bash
 cd backend  && python manage.py migrate && python manage.py runserver   # README uses port 9007; Docker/entrypoint use 8000
-cd frontend && npm install && npm start                                 # CRA dev server on :3000
+cd frontend && npm install && npm start                                 # Vite dev server on :3000
 ```
 
 Gotchas:
 - Backend needs Python 3.11 (per `Dockerfile` and `backend/AGENTS.md`), `pip install -r requirements.txt`, and GDAL/GEOS system libs for PostGIS. Note: README suggests 3.12 and CI uses 3.10 — prefer 3.11.
-- Frontend dev proxy (`frontend/setupProxy.js`) targets `http://localhost` (Traefik :80). Traefik only has a backend route in the **production** compose, not dev compose — so `/api` requests from the CRA dev server won't reach a locally-run backend without adjusting the proxy target.
+- Frontend dev proxy (`server.proxy` in `frontend/vite.config.ts`) targets `http://localhost` (Traefik :80). Traefik only has a backend route in the **production** compose, not dev compose — so `/api` requests from the Vite dev server won't reach a locally-run backend without adjusting the proxy target.
 - Env templates use inconsistent names: root is `.env.example` (dot), sub-projects are `.env-example` (hyphen). Copy all three before first run.
 - Several dev-compose services pin `platform: linux/amd64` for Apple Silicon compatibility — expect slower startup on M-series Macs.
 
@@ -65,7 +65,7 @@ Pre-commit hooks (`.pre-commit-config.yaml`) enforce formatting on commit — in
 | Language | Tools |
 |---|---|
 | Python | black (default line length), flake8 (max-line-length 120, excludes `migrations/`) |
-| JS/JSX | eslint `--fix` then prettier `--write`, run on `frontend/src` |
+| TS/TSX | eslint `--fix` then prettier `--write`, run on `frontend/src` |
 
 ## CI / testing
 
@@ -77,11 +77,11 @@ Pre-commit hooks (`.pre-commit-config.yaml`) enforce formatting on commit — in
 ## PR norms
 
 1. Run backend tests before pushing: `cd backend && python manage.py test`.
-2. Run frontend lint before pushing: `cd frontend && npx eslint src`.
+2. Run frontend checks before pushing: `cd frontend && npm run lint && npm run typecheck && npm run build`.
 3. Never commit `.env` files — use the `*.env-example` templates (root: `.env.example`; backend/frontend: `.env-example`).
 4. Keep pre-commit hooks enabled (`pre-commit install`).
 
 ## Sub-project agents
 
-- [frontend/AGENTS.md](frontend/AGENTS.md) — React/MUI stack, commands, routing, constraints.
+- [frontend/AGENTS.md](frontend/AGENTS.md) — React/TypeScript/Tailwind/shadcn stack, commands, routing, constraints.
 - [backend/AGENTS.md](backend/AGENTS.md) — Django apps, API style, targeted testing, migration rules, constraints.
