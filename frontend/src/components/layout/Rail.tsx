@@ -15,7 +15,7 @@ import {
     type LucideIcon,
 } from "lucide-react";
 
-import { config } from "@/config";
+import { getApiDocsUrl } from "@/lib/apiDocs";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,16 +49,6 @@ interface RailItem {
     tab?: number;
     authOnly?: boolean;
 }
-
-const getApiDocsUrl = () => {
-    const fallback = "/geostreams/api/swagger/";
-    if (!config.backendUrl) return fallback;
-    try {
-        return `${new URL(config.backendUrl).origin}/geostreams/api/swagger/`;
-    } catch {
-        return fallback;
-    }
-};
 
 const ITEMS: RailItem[] = [
     {

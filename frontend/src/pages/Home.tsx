@@ -6,7 +6,7 @@ import { useAuth } from "react-oidc-context";
 
 import { ContourBackdrop } from "@/components/layout/ContourBackdrop";
 import { Button } from "@/components/ui/button";
-import { config } from "@/config";
+import { getApiDocsUrl } from "@/lib/apiDocs";
 
 interface HomeContent {
     title?: string;
@@ -34,15 +34,7 @@ const FEATURES = [
     },
 ];
 
-const apiDocsUrl = (() => {
-    const fallback = "/geostreams/api/swagger/";
-    if (!config.backendUrl) return fallback;
-    try {
-        return `${new URL(config.backendUrl).origin}/geostreams/api/swagger/`;
-    } catch {
-        return fallback;
-    }
-})();
+const apiDocsUrl = getApiDocsUrl();
 
 function Home() {
     const [content, setContent] = useState<HomeContent>({});
@@ -64,7 +56,7 @@ function Home() {
     }, []);
 
     return (
-        <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-10">
+        <div className="mx-auto w-full max-w-6xl px-4 pb-6 pt-20 md:px-8 md:pb-10">
             <section className="relative overflow-hidden rounded-xl border border-border bg-card px-6 py-14 md:px-12 md:py-24">
                 <ContourBackdrop className="absolute inset-0 h-full w-full opacity-30" />
                 <div className="relative max-w-2xl">
