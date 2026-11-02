@@ -14,7 +14,10 @@ const useApiKeyCopy = () => {
     const [isGenerating, setIsGenerating] = useState(false);
 
     const generateAndCopy = async () => {
-        if (!auth.user?.access_token) return;
+        if (!auth.user?.access_token) {
+            toast.error("Sign in to generate an API token.");
+            return;
+        }
         setIsGenerating(true);
         try {
             const response = await api.post<{ key: string }>(

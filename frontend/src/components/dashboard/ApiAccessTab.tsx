@@ -66,7 +66,7 @@ const ApiAccessTab = () => {
                         {baseApiUrl}
                     </code>
                 </p>
-                <Accordion type="single" collapsible>
+                <Accordion type="multiple">
                     {getCurlExamples(baseApiUrl).map((example) => (
                         <AccordionItem
                             key={example.title}
