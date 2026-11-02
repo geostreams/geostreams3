@@ -7,7 +7,7 @@ import {
 
 import { useAuth } from "react-oidc-context";
 
-import Navbar from "./components/Navbar";
+import { Rail } from "./components/layout/Rail";
 import Home from "./pages/Home";
 import UserProfile from "./pages/UserProfile";
 import Dashboard from "./pages/Dashboard";
@@ -64,7 +64,7 @@ function App() {
     return (
         <ParametersProvider>
             <Router basename="/geostreams">
-                <AppShell nav={<Navbar />}>
+                <AppShell nav={<Rail />}>
                     <Routes>
                         {/* Redirect to dashboard if authenticated */}
                         <Route
