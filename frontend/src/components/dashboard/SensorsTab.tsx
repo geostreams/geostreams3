@@ -195,7 +195,9 @@ const SensorsTab = () => {
                 {totalCount > 0 && (
                     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3 text-sm">
                         <p aria-live="polite" className="text-muted-foreground">
-                            {firstRow}–{lastRow} of {totalCount}
+                            {query.trim()
+                                ? `${visibleSensors.length} of ${sensors.length} on this page match`
+                                : `${firstRow}–${lastRow} of ${totalCount}`}
                         </p>
                         <div className="flex flex-wrap items-center gap-3">
                             <label className="flex items-center gap-2 text-muted-foreground">

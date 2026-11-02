@@ -31,7 +31,7 @@ const SensorRow = ({
                     to={`/dashboard/sensors/${sensor.id}`}
                     className="font-medium text-primary underline-offset-4 hover:underline"
                 >
-                    {sensor.name}
+                    {label}
                 </Link>
             </TableCell>
             <TableCell>
