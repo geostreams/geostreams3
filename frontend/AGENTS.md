@@ -41,10 +41,10 @@ Env vars (see `.env-example`):
 
 | Variable | Purpose |
 |---|---|
-| `REACT_APP_KEYCLOAK_AUTH_URL` | Keycloak realm URL |
-| `REACT_APP_KEYCLOAK_CLIENT_ID` | OIDC client ID |
-| `REACT_APP_BACKEND_URL` | Backend origin for API calls |
-| `REACT_APP_KEYCLOAK_CLIENT_SECRET` | OIDC client secret (if required) |
+| `VITE_KEYCLOAK_AUTH_URL` | Keycloak realm URL |
+| `VITE_KEYCLOAK_CLIENT_ID` | OIDC client ID |
+| `VITE_BACKEND_URL` | Backend origin for API calls |
+| `VITE_KEYCLOAK_CLIENT_SECRET` | OIDC client secret (if required) |
 
 ## Routing
 

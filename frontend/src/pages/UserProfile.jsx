@@ -47,7 +47,7 @@ function UserProfile() {
                     },
                 };
                 const response = await axios.post(
-                    `${process.env.REACT_APP_BACKEND_URL}/auth/generate-api-key/`,
+                    `${import.meta.env.VITE_BACKEND_URL}/auth/generate-api-key/`,
                     null,
                     config,
                 );
