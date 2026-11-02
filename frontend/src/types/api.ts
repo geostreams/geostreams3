@@ -94,6 +94,8 @@ export interface Parameter {
 /** Request body for creating or updating a parameter. */
 export type ParameterInput = Partial<Omit<Parameter, "id" | "categories">> & {
     categories?: Array<string | number>;
+    /** Category name; the backend links the parameter to this category. */
+    category?: string;
 };
 
 export type CategoryInput = Omit<Category, "id">;
