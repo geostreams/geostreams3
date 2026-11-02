@@ -1,17 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
-import { publicApi } from "../api/apiClient";
+import { publicApi, getErrorMessage } from "../api/apiClient";
+import type { Sensor } from "../types/api";
 
 /**
  * Hook for fetching a single sensor by ID.
  * GET is public (no auth needed).
  *
- * @param {number|string} id - Sensor ID
- * @returns {{ sensor: object|null, isLoading: boolean, error: string|null, refetch: Function }}
+ * @param id - Sensor ID
  */
-const useSensor = (id) => {
-    const [sensor, setSensor] = useState(null);
+const useSensor = (id?: number | string) => {
+    const [sensor, setSensor] = useState<Sensor | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
 
     // useCallback to prevent unnecessary re-renders and unnecessary API calls.
     // Doesn't fetch from API unless the id has changed since the last fetch.
@@ -20,10 +20,10 @@ const useSensor = (id) => {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await publicApi.get(`data/sensors/${id}/`);
+            const response = await publicApi.get<Sensor>(`data/sensors/${id}/`);
             setSensor(response.data);
         } catch (err) {
-            setError(err.response?.data?.message || "Failed to fetch sensor");
+            setError(getErrorMessage(err, "Failed to fetch sensor"));
         } finally {
             setIsLoading(false);
         }

@@ -1,13 +1,14 @@
 import { useMemo } from "react";
 import { useAuth } from "react-oidc-context";
+import type { AxiosInstance } from "axios";
 import { createApiClient } from "../api/apiClient";
 
 /**
  * Hook that provides an authenticated axios instance.
  * Memoized so the client is only recreated when the access token changes.
- * @returns {import("axios").AxiosInstance} Authenticated axios instance
+ * @returns Authenticated axios instance
  */
-const useApiClient = () => {
+const useApiClient = (): AxiosInstance => {
     const auth = useAuth();
     const token = auth.user?.access_token;
 

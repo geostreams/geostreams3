@@ -1,13 +1,15 @@
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 import useParameters from "../hooks/useParameters";
+import type { Parameter } from "../types/api";
 
-const ParametersContext = createContext(null);
+type ParametersContextValue = ReturnType<typeof useParameters>;
+
+const ParametersContext = createContext<ParametersContextValue | null>(null);
 
 /**
  * Provides parameters, categories, and visualizations to the component tree.
- * @param {{ children: React.ReactNode }} props
  */
-export const ParametersProvider = ({ children }) => {
+export const ParametersProvider = ({ children }: { children: ReactNode }) => {
     const paramData = useParameters();
 
     return (
@@ -29,22 +31,20 @@ const useParametersContext = () => {
 
 /**
  * Returns the full list of parameter objects.
- * @returns {Array}
  */
-export const useParametersList = () => {
+export const useParametersList = (): Parameter[] => {
     const { parameters } = useParametersContext();
     return parameters;
 };
 
 /**
  * Returns a map of parameter name (id) -> display title.
- * @returns {{ [name: string]: string }}
  */
-export const useParamNames = () => {
+export const useParamNames = (): Record<string, string> => {
     const { parameters } = useParametersContext();
     return useMemo(
         () =>
-            parameters.reduce((acc, p) => {
+            parameters.reduce<Record<string, string>>((acc, p) => {
                 acc[p.name] = p.title || p.name;
                 return acc;
             }, {}),
@@ -54,13 +54,12 @@ export const useParamNames = () => {
 
 /**
  * Returns a map of parameter name (id) -> unit string.
- * @returns {{ [name: string]: string }}
  */
-export const useParamUnits = () => {
+export const useParamUnits = (): Record<string, string> => {
     const { parameters } = useParametersContext();
     return useMemo(
         () =>
-            parameters.reduce((acc, p) => {
+            parameters.reduce<Record<string, string>>((acc, p) => {
                 acc[p.name] = p.unit || "";
                 return acc;
             }, {}),
