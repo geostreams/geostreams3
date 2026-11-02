@@ -1,35 +1,43 @@
 import { useState, useEffect, useCallback } from "react";
-import { publicApi } from "../api/apiClient";
+import { publicApi, getErrorMessage, getErrorStatus } from "../api/apiClient";
+import type {
+    Sensor,
+    SensorInput,
+    Pagination,
+    PaginatedSensors,
+} from "../types/api";
 import useApiClient from "./useApiClient";
 
 /**
  * Hook for fetching, creating, and deleting sensors.
  * GET is public (no auth needed). POST/DELETE require auth.
  *
- * @param {number} page - 0-based page index (default 0)
- * @param {number} rowsPerPage - rows per page; use -1 to fetch all records (default -1)
- * @returns {{ sensors: Array, pagination: object|null, isLoading: boolean, error: string|null, refetch: Function, createSensor: Function, deleteSensor: Function }}
+ * @param page - 0-based page index (default 0)
+ * @param rowsPerPage - rows per page; use -1 to fetch all records (default -1)
  */
 const useSensors = (page = 0, rowsPerPage = -1) => {
     const authApi = useApiClient();
-    const [sensors, setSensors] = useState([]);
-    const [pagination, setPagination] = useState(null);
+    const [sensors, setSensors] = useState<Sensor[]>([]);
+    const [pagination, setPagination] = useState<Pagination | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
 
     const fetchSensors = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
-            const params = { limit: rowsPerPage };
+            const params: Record<string, number> = { limit: rowsPerPage };
             if (rowsPerPage > 0) {
                 params.offset = page * rowsPerPage;
             }
-            const response = await publicApi.get("data/sensors/", { params });
+            const response = await publicApi.get<PaginatedSensors>(
+                "data/sensors/",
+                { params },
+            );
             setSensors(response.data?.sensors || []);
             setPagination(response.data?.pagination ?? null);
         } catch (err) {
-            if (err.response?.status === 404) {
+            if (getErrorStatus(err) === 404) {
                 setSensors([]);
                 setPagination({
                     count: 0,
@@ -38,9 +46,7 @@ const useSensors = (page = 0, rowsPerPage = -1) => {
                     returned: 0,
                 });
             } else {
-                setError(
-                    err.response?.data?.message || "Failed to fetch sensors",
-                );
+                setError(getErrorMessage(err, "Failed to fetch sensors"));
             }
         } finally {
             setIsLoading(false);
@@ -48,8 +54,11 @@ const useSensors = (page = 0, rowsPerPage = -1) => {
     }, [page, rowsPerPage]);
 
     const createSensor = useCallback(
-        async (sensorData) => {
-            const response = await authApi.post("data/sensors/", sensorData);
+        async (sensorData: SensorInput) => {
+            const response = await authApi.post<Sensor>(
+                "data/sensors/",
+                sensorData,
+            );
             await fetchSensors();
             return response.data;
         },
@@ -57,7 +66,7 @@ const useSensors = (page = 0, rowsPerPage = -1) => {
     );
 
     const deleteSensor = useCallback(
-        async (id) => {
+        async (id: number) => {
             await authApi.delete(`data/sensors/${id}/`);
             await fetchSensors();
         },

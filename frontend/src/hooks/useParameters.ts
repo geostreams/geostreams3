@@ -1,5 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
-import { publicApi } from "../api/apiClient";
+import { publicApi, getErrorMessage, getErrorStatus } from "../api/apiClient";
+import type {
+    Category,
+    CategoryInput,
+    CategoriesResponse,
+    Parameter,
+    ParameterInput,
+    ParametersResponse,
+    Visualization,
+    VisualizationInput,
+    VisualizationsResponse,
+} from "../types/api";
 import useApiClient from "./useApiClient";
 
 /**
@@ -11,16 +22,16 @@ const useParameters = () => {
     const authApi = useApiClient();
 
     // Parameters state
-    const [parameters, setParameters] = useState([]);
+    const [parameters, setParameters] = useState<Parameter[]>([]);
     const [isLoadingParams, setIsLoadingParams] = useState(false);
-    const [paramsError, setParamsError] = useState(null);
+    const [paramsError, setParamsError] = useState<string | null>(null);
 
     // Categories state
-    const [categories, setCategories] = useState([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [isLoadingCategories, setIsLoadingCategories] = useState(false);
 
     // Visualizations state
-    const [visualizations, setVisualizations] = useState([]);
+    const [visualizations, setVisualizations] = useState<Visualization[]>([]);
     const [isLoadingVisualizations, setIsLoadingVisualizations] =
         useState(false);
 
@@ -29,14 +40,15 @@ const useParameters = () => {
         setIsLoadingParams(true);
         setParamsError(null);
         try {
-            const response = await publicApi.get("data/parameters/");
+            const response =
+                await publicApi.get<ParametersResponse>("data/parameters/");
             setParameters(response.data?.parameters || []);
         } catch (err) {
-            if (err.response?.status === 404) {
+            if (getErrorStatus(err) === 404) {
                 setParameters([]);
             } else {
                 setParamsError(
-                    err.response?.data?.message || "Failed to fetch parameters",
+                    getErrorMessage(err, "Failed to fetch parameters"),
                 );
             }
         } finally {
@@ -45,8 +57,11 @@ const useParameters = () => {
     }, []);
 
     const createParameter = useCallback(
-        async (data) => {
-            const response = await authApi.post("data/parameters/", data);
+        async (data: ParameterInput) => {
+            const response = await authApi.post<Parameter>(
+                "data/parameters/",
+                data,
+            );
             await fetchParameters();
             return response.data;
         },
@@ -54,8 +69,11 @@ const useParameters = () => {
     );
 
     const updateParameter = useCallback(
-        async (id, data) => {
-            const response = await authApi.put(`data/parameters/${id}/`, data);
+        async (id: number, data: ParameterInput) => {
+            const response = await authApi.put<Parameter>(
+                `data/parameters/${id}/`,
+                data,
+            );
             await fetchParameters();
             return response.data;
         },
@@ -63,7 +81,7 @@ const useParameters = () => {
     );
 
     const deleteParameter = useCallback(
-        async (id) => {
+        async (id: number) => {
             await authApi.delete(`data/parameters/${id}/`);
             await fetchParameters();
         },
@@ -74,7 +92,8 @@ const useParameters = () => {
     const fetchCategories = useCallback(async () => {
         setIsLoadingCategories(true);
         try {
-            const response = await publicApi.get("data/categories/");
+            const response =
+                await publicApi.get<CategoriesResponse>("data/categories/");
             setCategories(response.data?.categories || []);
         } catch {
             // 404 or other error -- treat as empty
@@ -85,8 +104,11 @@ const useParameters = () => {
     }, []);
 
     const createCategory = useCallback(
-        async (data) => {
-            const response = await authApi.post("data/categories/", data);
+        async (data: CategoryInput) => {
+            const response = await authApi.post<Category>(
+                "data/categories/",
+                data,
+            );
             await fetchCategories();
             return response.data;
         },
@@ -94,7 +116,7 @@ const useParameters = () => {
     );
 
     const deleteCategory = useCallback(
-        async (id) => {
+        async (id: number) => {
             await authApi.delete(`data/categories/${id}/`);
             await fetchCategories();
         },
@@ -105,7 +127,9 @@ const useParameters = () => {
     const fetchVisualizations = useCallback(async () => {
         setIsLoadingVisualizations(true);
         try {
-            const response = await publicApi.get("data/visualizations/");
+            const response = await publicApi.get<VisualizationsResponse>(
+                "data/visualizations/",
+            );
             setVisualizations(response.data?.visualizations || []);
         } catch {
             // 404 or other error -- treat as empty
@@ -116,8 +140,11 @@ const useParameters = () => {
     }, []);
 
     const createVisualization = useCallback(
-        async (data) => {
-            const response = await authApi.post("data/visualizations/", data);
+        async (data: VisualizationInput) => {
+            const response = await authApi.post<Visualization>(
+                "data/visualizations/",
+                data,
+            );
             await fetchVisualizations();
             return response.data;
         },
@@ -125,7 +152,7 @@ const useParameters = () => {
     );
 
     const deleteVisualization = useCallback(
-        async (id) => {
+        async (id: number) => {
             await authApi.delete(`data/visualizations/${id}/`);
             await fetchVisualizations();
         },
