@@ -9,8 +9,8 @@ import type {
 import useApiClient from "./useApiClient";
 
 /**
- * Hook for fetching, creating, and deleting sensors.
- * GET is public (no auth needed). POST/DELETE require auth.
+ * Hook for fetching, creating, updating, and deleting sensors.
+ * GET is public (no auth needed). POST/PUT/DELETE require auth.
  *
  * @param page - 0-based page index (default 0)
  * @param rowsPerPage - rows per page; use -1 to fetch all records (default -1)
@@ -65,6 +65,18 @@ const useSensors = (page = 0, rowsPerPage = -1) => {
         [authApi, fetchSensors],
     );
 
+    const updateSensor = useCallback(
+        async (id: number, sensorData: SensorInput) => {
+            const response = await authApi.put<Sensor>(
+                `data/sensors/${id}/`,
+                sensorData,
+            );
+            await fetchSensors();
+            return response.data;
+        },
+        [authApi, fetchSensors],
+    );
+
     const deleteSensor = useCallback(
         async (id: number) => {
             await authApi.delete(`data/sensors/${id}/`);
@@ -84,6 +96,7 @@ const useSensors = (page = 0, rowsPerPage = -1) => {
         error,
         refetch: fetchSensors,
         createSensor,
+        updateSensor,
         deleteSensor,
     };
 };

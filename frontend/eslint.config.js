@@ -71,6 +71,19 @@ export default tseslint.config(
         rules: { "react/no-multi-comp": "off" },
     },
     {
+        // the base rule flags parameter names in TypeScript function types;
+        // the typescript-eslint rule replaces it for real unused variables
+        files: ["**/*.ts", "**/*.tsx"],
+        plugins: { "@typescript-eslint": tseslint.plugin },
+        rules: {
+            "no-unused-vars": "off",
+            "@typescript-eslint/no-unused-vars": [
+                "warn",
+                { caughtErrors: "none" },
+            ],
+        },
+    },
+    {
         files: ["**/*.d.ts"],
         rules: { "no-unused-vars": "off" },
     },

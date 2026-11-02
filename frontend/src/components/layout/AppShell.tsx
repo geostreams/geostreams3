@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { HomeHeader } from "./HomeHeader";
 import { ContourBackdrop } from "./ContourBackdrop";
 
+const HOME_PATH = "/";
+
 interface AppShellProps {
     /** Navigation rail slot. */
     nav?: ReactNode;
@@ -18,7 +20,7 @@ interface AppShellProps {
  */
 export function AppShell({ nav, children }: AppShellProps) {
     // The landing page has no rail, only a transparent header.
-    const isHome = useLocation().pathname === "/";
+    const isHome = useLocation().pathname === HOME_PATH;
     return (
         <TooltipProvider delayDuration={200}>
             <div className="relative min-h-screen bg-background text-foreground">

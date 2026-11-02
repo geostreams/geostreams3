@@ -32,7 +32,7 @@ const PageLayout = ({
     return (
         <div
             className={cn(
-                "mx-auto min-h-[calc(100vh-64px)] w-full px-4 py-6 md:px-6 md:py-8",
+                "mx-auto min-h-[calc(100vh-3.5rem)] lg:min-h-screen w-full px-4 py-6 md:px-6 md:py-8",
                 MAX_WIDTH[maxWidth],
                 className,
             )}

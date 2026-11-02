@@ -47,5 +47,17 @@ export const getErrorMessage = (err: unknown, fallback: string): string => {
         data && typeof data === "object" && "message" in data
             ? (data as { message?: unknown }).message
             : undefined;
-    return (typeof message === "string" && message) || fallback;
+    if (typeof message === "string" && message) return message;
+    // DRF serializer errors: { field: ["error", ...] }, either wrapped in
+    // `message` (create) or the bare body (update); show the first one.
+    for (const errors of [message, data]) {
+        if (!errors || typeof errors !== "object") continue;
+        for (const [field, value] of Object.entries(errors)) {
+            const first: unknown = Array.isArray(value) ? value[0] : value;
+            if (typeof first === "string" && first) {
+                return `${field}: ${first}`;
+            }
+        }
+    }
+    return fallback;
 };

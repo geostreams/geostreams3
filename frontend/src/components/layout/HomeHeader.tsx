@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 import { BookOpen, LogIn } from "lucide-react";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 /** Transparent top bar for the landing page: brand, API docs, sign in. */
 export function HomeHeader() {
     const auth = useAuth();
+    const apiDocsUrl = useMemo(getApiDocsUrl, []);
 
     return (
         <header className="absolute inset-x-0 top-0 z-20 mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 md:px-8">
@@ -20,7 +22,7 @@ export function HomeHeader() {
             <nav aria-label="Main" className="flex items-center gap-1">
                 <Button variant="ghost" asChild>
                     <a
-                        href={getApiDocsUrl()}
+                        href={apiDocsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                     >
