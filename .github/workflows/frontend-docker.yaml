@@ -9,11 +9,6 @@ on:
         - v*
       paths:
         - 'frontend/src/**'
-    pull_request:
-      branches:
-        - main
-      paths:
-        - 'frontend/src/**'
 
 env:
   PLATFORM: linux/amd64,linux/arm64
