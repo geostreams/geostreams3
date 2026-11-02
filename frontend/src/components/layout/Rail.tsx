@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { getApiDocsUrl } from "@/lib/apiDocs";
+import { parseDashboardTab } from "@/lib/dashboardTabs";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,20 +41,22 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-interface RailItem {
+interface RailItemBase {
     label: string;
     icon: LucideIcon;
-    to?: string;
-    href?: string;
-    /** Dashboard tab index this item deep-links to. */
-    tab?: number;
     authOnly?: boolean;
 }
+
+type RailItem =
+    | (RailItemBase & { kind: "external"; href: string })
+    | (RailItemBase & { kind: "route"; to: string })
+    | (RailItemBase & { kind: "tab"; to: string; tab: number });
 
 const ITEMS: RailItem[] = [
     {
         label: "Sensors",
         icon: RadioTower,
+        kind: "tab",
         to: "/dashboard?tab=0",
         tab: 0,
         authOnly: true,
@@ -61,6 +64,7 @@ const ITEMS: RailItem[] = [
     {
         label: "Data properties",
         icon: SlidersHorizontal,
+        kind: "tab",
         to: "/dashboard?tab=1",
         tab: 1,
         authOnly: true,
@@ -68,12 +72,24 @@ const ITEMS: RailItem[] = [
     {
         label: "API access",
         icon: KeyRound,
+        kind: "tab",
         to: "/dashboard?tab=2",
         tab: 2,
         authOnly: true,
     },
-    { label: "API docs", icon: BookOpen, href: getApiDocsUrl() },
-    { label: "Profile", icon: CircleUser, to: "/profile", authOnly: true },
+    {
+        kind: "external",
+        label: "API docs",
+        icon: BookOpen,
+        href: getApiDocsUrl(),
+    },
+    {
+        kind: "route",
+        label: "Profile",
+        icon: CircleUser,
+        to: "/profile",
+        authOnly: true,
+    },
 ];
 
 const itemClass = (active: boolean) =>
@@ -98,8 +114,7 @@ const getInitials = (name?: string) =>
 function useActiveTab() {
     const { pathname, search } = useLocation();
     if (!pathname.startsWith("/dashboard")) return null;
-    const tab = parseInt(new URLSearchParams(search).get("tab") || "0", 10);
-    return tab >= 0 && tab <= 2 ? tab : 0;
+    return parseDashboardTab(new URLSearchParams(search).get("tab"));
 }
 
 function NavItems({ onNavigate }: { onNavigate?: () => void }) {
@@ -118,7 +133,7 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
                             <span>{item.label}</span>
                         </>
                     );
-                    if (item.href) {
+                    if (item.kind === "external") {
                         return (
                             <a
                                 key={item.label}
@@ -136,13 +151,13 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
                         );
                     }
                     const active =
-                        item.tab !== undefined
+                        item.kind === "tab"
                             ? activeTab === item.tab
                             : pathname === item.to;
                     return (
                         <Link
                             key={item.label}
-                            to={item.to!}
+                            to={item.to}
                             aria-current={active ? "page" : undefined}
                             className={itemClass(active)}
                             onClick={onNavigate}
@@ -156,13 +171,13 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
     );
 }
 
-function UserMenu({ onDark = true }: { onDark?: boolean }) {
+function UserMenu({ onNavigate }: { onNavigate?: () => void }) {
     const auth = useAuth();
 
     if (!auth.isAuthenticated) {
         return (
             <Button
-                variant={onDark ? "secondary" : "default"}
+                variant="secondary"
                 className="w-full justify-start gap-3"
                 onClick={() => auth.signinRedirect()}
             >
@@ -213,7 +228,7 @@ function UserMenu({ onDark = true }: { onDark?: boolean }) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                    <Link to="/profile">
+                    <Link to="/profile" onClick={onNavigate}>
                         <CircleUser aria-hidden /> Profile
                     </Link>
                 </DropdownMenuItem>
@@ -272,7 +287,7 @@ export function Rail() {
 
             <header className="sticky top-0 z-30 flex items-center justify-between bg-sidebar px-2 py-2 text-sidebar-foreground lg:hidden">
                 <Sheet open={open} onOpenChange={setOpen}>
-                    <IconTooltip label="Menu">
+                    <IconTooltip label="Open menu">
                         <SheetTrigger asChild>
                             <Button
                                 variant="ghost"
@@ -291,6 +306,7 @@ export function Rail() {
                         <SheetHeader className="p-0">
                             <SheetTitle className="px-3 py-2 font-heading text-xl text-sidebar-foreground">
                                 Geostreams3
+                                <span className="sr-only"> menu</span>
                             </SheetTitle>
                             <SheetDescription className="sr-only">
                                 Site navigation
@@ -298,7 +314,7 @@ export function Rail() {
                         </SheetHeader>
                         <NavItems onNavigate={() => setOpen(false)} />
                         <div className="mt-auto">
-                            <UserMenu />
+                            <UserMenu onNavigate={() => setOpen(false)} />
                         </div>
                     </SheetContent>
                 </Sheet>
