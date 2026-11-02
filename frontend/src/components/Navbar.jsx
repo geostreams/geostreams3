@@ -42,7 +42,7 @@ function Navbar() {
 
     const isAuthenticated = auth.isAuthenticated;
     const [anchorEl, setAnchorEl] = useState(null);
-    const backendUrl = process.env.REACT_APP_BACKEND_URL;
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const apiDocsUrl = (() => {
         if (!backendUrl) {
             return "/geostreams/api/swagger/";

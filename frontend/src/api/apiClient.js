@@ -6,7 +6,7 @@ import axios from "axios";
  * aggregated data are all publicly readable.
  */
 export const publicApi = axios.create({
-    baseURL: process.env.REACT_APP_BACKEND_URL,
+    baseURL: import.meta.env.VITE_BACKEND_URL,
 });
 
 /**
@@ -18,7 +18,7 @@ export const publicApi = axios.create({
  */
 export const createApiClient = (auth) => {
     const client = axios.create({
-        baseURL: process.env.REACT_APP_BACKEND_URL,
+        baseURL: import.meta.env.VITE_BACKEND_URL,
     });
 
     client.interceptors.request.use((config) => {

@@ -2,7 +2,7 @@
 
 ## Stack
 
-- React 18 (CRA via `react-scripts`)
+- React 18 (Vite via `@vitejs/plugin-react`)
 - MUI v5 (`@mui/material`, `@mui/icons-material`) — **no Tailwind**
 - React Router v6 (basename `/geostreams`)
 - Axios for HTTP
@@ -12,8 +12,8 @@
 
 ```
 src/
-├── App.js              # Router setup, auth-gated routes
-├── index.js            # Entry: AuthProvider, ThemeProvider
+├── App.jsx             # Router setup, auth-gated routes
+├── index.jsx           # Entry: AuthProvider, ThemeProvider
 ├── pages/              # Route-level components (Home, UserProfile)
 ├── components/
 │   ├── common/         # Shared layout (PageLayout)
@@ -29,33 +29,34 @@ src/
 ## Commands
 
 ```bash
-npm start        # Dev server (port 3000), proxies /api → backend via setupProxy.js
+npm start        # Dev server (port 3000), proxies /api → http://localhost via vite.config.js
 npm run build    # Production build → build/
+npm run preview  # Serve the production build locally
 ```
 
 ## Auth
 
-`AuthProvider` in `src/index.js` wraps the app with OIDC config pointing at Keycloak.
+`AuthProvider` in `src/index.jsx` wraps the app with OIDC config pointing at Keycloak.
 
-Env vars (see `.env-example`):
+Env vars are read as `import.meta.env.VITE_*` (see `.env-example`):
 
 | Variable | Purpose |
 |---|---|
-| `REACT_APP_KEYCLOAK_AUTH_URL` | Keycloak realm URL |
-| `REACT_APP_KEYCLOAK_CLIENT_ID` | OIDC client ID |
-| `REACT_APP_BACKEND_URL` | Backend origin for API calls |
-| `REACT_APP_KEYCLOAK_CLIENT_SECRET` | OIDC client secret (if required) |
+| `VITE_KEYCLOAK_AUTH_URL` | Keycloak realm URL |
+| `VITE_KEYCLOAK_CLIENT_ID` | OIDC client ID |
+| `VITE_BACKEND_URL` | Backend origin for API calls |
+| `VITE_KEYCLOAK_CLIENT_SECRET` | OIDC client secret (if required) |
 
 ## Routing
 
-All routes use basename `/geostreams` (set in `package.json` `homepage` and Router config).
-Routes are defined in `App.js`. Protected routes check OIDC auth state before rendering.
+All routes use basename `/geostreams` (set as `base` in `vite.config.js` and in the Router config).
+Routes are defined in `App.jsx`. Protected routes check OIDC auth state before rendering.
 
 ## Constraints
 
 - Use MUI components for all UI — do not introduce Tailwind or other CSS frameworks.
-- New JSX component files should use the `.jsx` extension (existing entry files like `App.js` and `index.js` may remain `.js`).
+- New JSX component files should use the `.jsx` extension (the entry files are `App.jsx` and `index.jsx`).
 - Functional components only — no class components.
 - ESLint rules enforced: `no-var` (error), `no-console` (warn), `prefer-const` (warn).
 - Prettier formats on commit via pre-commit hook.
-- Proxy config lives in `setupProxy.js` (not in `package.json`).
+- Proxy config lives in `vite.config.js` (`server.proxy`).

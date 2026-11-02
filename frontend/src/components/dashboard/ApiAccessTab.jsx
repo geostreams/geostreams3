@@ -29,7 +29,7 @@ const ApiAccessTab = () => {
         severity: "success",
     });
 
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || "";
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "";
     const baseApiUrl = (() => {
         if (!backendUrl) return "/geostreams/api/";
         try {
@@ -51,7 +51,7 @@ const ApiAccessTab = () => {
                 headers: { Authorization: `Bearer ${token}` },
             };
             const response = await axios.post(
-                `${process.env.REACT_APP_BACKEND_URL}/auth/generate-api-key/`,
+                `${import.meta.env.VITE_BACKEND_URL}/auth/generate-api-key/`,
                 null,
                 config,
             );
