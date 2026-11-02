@@ -11,12 +11,10 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import { formatUtcDay } from "./chartUtils";
 import type { Stream } from "../../types/api";
 
 const VISIBLE_PARAMETERS = 3;
-
-const formatDay = (iso: string | null) =>
-    iso ? new Date(iso).toLocaleDateString() : "N/A";
 
 interface StreamsSectionProps {
     streams: Stream[];
@@ -58,7 +56,7 @@ const StreamsSection = ({
                         <TableHead>ID</TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Parameters</TableHead>
-                        <TableHead>Time range</TableHead>
+                        <TableHead>Time range (UTC)</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -109,8 +107,8 @@ const StreamsSection = ({
                                         </div>
                                     </TableCell>
                                     <TableCell className="whitespace-nowrap text-muted-foreground tabular-nums">
-                                        {formatDay(stream.start_time)} &mdash;{" "}
-                                        {formatDay(stream.end_time)}
+                                        {formatUtcDay(stream.start_time)}{" "}
+                                        &mdash; {formatUtcDay(stream.end_time)}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <Button

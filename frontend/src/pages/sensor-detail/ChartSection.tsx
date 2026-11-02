@@ -44,6 +44,8 @@ const ChartSection = ({
     const series = useMemo(() => {
         const byParam = new Map<string, AggregateRow[]>();
         rows.forEach((row) => {
+            // Points without a date cannot be placed on the time axis.
+            if (!row.date) return;
             byParam.set(row.parameter, [
                 ...(byParam.get(row.parameter) ?? []),
                 row,
@@ -62,19 +64,19 @@ const ChartSection = ({
             series
                 .filter((s) => !selected || s.parameter === selected)
                 .flatMap((s) =>
-                    [...s.sorted].reverse().map((row, i) => ({
-                        key: `${s.parameter}-${row.date}-${row.stream_id ?? ""}-${i}`,
+                    s.sorted.map((row) => ({
+                        key: `${s.parameter}-${row.date}-${row.stream_id ?? ""}`,
                         parameter: paramNameMap[s.parameter] || s.parameter,
-                        date: row.date
-                            ? formatDate(row.date, loadedPeriod)
-                            : "N/A",
+                        rawDate: row.date ?? "",
+                        date: formatDate(row.date ?? "", loadedPeriod),
                         average: row.average,
                     })),
-                ),
+                )
+                .sort((a, b) => b.rawDate.localeCompare(a.rawDate)),
         [series, selected, paramNameMap, loadedPeriod],
     );
 
-    const showEmpty = rows.length === 0 && !isLoading;
+    const showEmpty = series.length === 0 && !isLoading;
 
     return (
         <section

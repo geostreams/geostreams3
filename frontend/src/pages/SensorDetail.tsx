@@ -90,10 +90,10 @@ const SensorDetail = () => {
         setStatus({ open: true, message, severity });
 
     // Once the sensor loads, seed since/until from its data range and auto-fetch.
-    const autoLoadedRef = useRef(false);
+    const autoLoadedRef = useRef<string | null>(null);
     useEffect(() => {
-        if (!sensor || autoLoadedRef.current) return;
-        autoLoadedRef.current = true;
+        if (!sensor || autoLoadedRef.current === id) return;
+        autoLoadedRef.current = id ?? null;
 
         const defaultSince = sensor.min_start_time
             ? dayjs.utc(sensor.min_start_time)

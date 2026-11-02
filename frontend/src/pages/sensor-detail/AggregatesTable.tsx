@@ -14,6 +14,8 @@ import { formatValue } from "./chartUtils";
 export interface AggregateTableRow {
     key: string;
     parameter: string;
+    /** ISO date, used for ordering. */
+    rawDate: string;
     date: string;
     average: number | null | undefined;
 }

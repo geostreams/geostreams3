@@ -39,3 +39,8 @@ export function formatDate(isoString: string, period: TimePeriod): string {
 export function formatValue(value: number | null | undefined): string {
     return typeof value === "number" ? value.toFixed(4) : "N/A";
 }
+
+/** Formats an ISO timestamp as a UTC calendar day, or "N/A" when missing. */
+export function formatUtcDay(iso: string | null | undefined): string {
+    return iso ? dayjs.utc(iso).format("YYYY-MM-DD") : "N/A";
+}

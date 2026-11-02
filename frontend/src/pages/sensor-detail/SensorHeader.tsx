@@ -3,6 +3,7 @@ import { ArrowLeft, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Sensor } from "../../types/api";
+import { formatUtcDay } from "./chartUtils";
 
 interface SensorHeaderProps {
     sensor: Sensor;
@@ -21,7 +22,8 @@ export const describePoint = (sensor: Sensor): string | null => {
     ) {
         return null;
     }
-    return `${coords[1].toFixed(4)}°N, ${coords[0].toFixed(4)}°E`;
+    const [lon, lat] = coords;
+    return `${Math.abs(lat).toFixed(4)}°${lat < 0 ? "S" : "N"}, ${Math.abs(lon).toFixed(4)}°${lon < 0 ? "W" : "E"}`;
 };
 
 const SensorHeader = ({ sensor, onBack, onDelete }: SensorHeaderProps) => {
@@ -49,7 +51,7 @@ const SensorHeader = ({ sensor, onBack, onDelete }: SensorHeaderProps) => {
                 {point && <Badge variant="outline">Point: {point}</Badge>}
                 {sensor.created && (
                     <Badge variant="outline">
-                        Created: {new Date(sensor.created).toLocaleDateString()}
+                        Created: {formatUtcDay(sensor.created)}
                     </Badge>
                 )}
                 {properties.map(([key, value]) => (
