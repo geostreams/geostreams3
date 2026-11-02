@@ -111,7 +111,6 @@ const DateTimePicker = ({
                 value={text}
                 disabled={disabled}
                 placeholder="YYYY-MM-DD HH:mm"
-                inputMode="numeric"
                 autoComplete="off"
                 aria-invalid={invalid}
                 aria-describedby={id ? `${id}-hint` : undefined}
